@@ -10,3 +10,5 @@ create policy "Allow select for own user"
 on public.worksheets
 for select
 using (auth.uid() = user_id);
+
+---fix reading/ss generators to match grammar generatir

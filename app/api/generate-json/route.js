@@ -1,4 +1,6 @@
 //app/api/generate-json/route.js
+export const runtime = "nodejs";
+
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
@@ -50,6 +52,8 @@ const schemaMap = {
 };
 
 export async function POST(req) {
+  const signal = req.signal; // combine both
+
   const cookieStore = await cookies();
 
   const supabase = createServerClient(
@@ -136,10 +140,6 @@ export async function POST(req) {
 
   //const totalAllowed = planLimit + generationBonus;
 
-  console.log(
-    `🧮 Checking generation limits: count=${generationCount}, plan=${planLimit}, bonus=${generationBonus}, totalAllowed=${totalAllowed}`
-  );
-
   // ⚡ Check only if user EXCEEDS total allowance
   if (generationCount >= totalAllowed) {
     return NextResponse.json(
@@ -148,33 +148,14 @@ export async function POST(req) {
     );
   }
 
-  console.log(
-    `📊 User ${user.id} has generated ${usage.generationCount} and downloads ${usage.downloadCount} items this month`
-  );
-  // // Calculate total allowance
-  // const totalGenerationLimit =
-  //   planInfo.monthlyGenerations + (usage.generationBonus || 0);
-  // const totalDownloadLimit = planInfo.monthlyPdfs + (usage.pdfBonus || 0);
-  // // Check if user exceeded both plan + bonus
-  // if (usage.generationCount >= totalGenerationLimit) {
-  //   return NextResponse.json(
-  //     { error: "You’ve reached your total (plan + bonus) generation limit." },
-  //     { status: 403 }
-  //   );
-  // }
-
-  // if (generationCount >= planInfo.monthlyGenerations) {
-  //   return NextResponse.json(
-  //     { error: "You’ve reached your monthly generation limit." },
-  //     { status: 403 }
-  //   );
-  // }
-  //normalize canDownload to a boolean- handle null or undefined return
-  //const canDownload = !!(usage.downloadCount < planInfo.monthlyPdfs);
   const totalDownloadLimit = planInfo.monthlyPdfs + (usage.pdfBonus || 0);
 
   // Determine download eligibility
   const canDownload = !!(usage.downloadCount || 0) < totalDownloadLimit;
+  if (signal?.aborted) {
+    console.warn("⚠️ Request signal was already aborted — skipping generation");
+    return NextResponse.json({ error: "Aborted early" }, { status: 499 });
+  }
   // ✅ Generate worksheet
   let json, worksheets;
   try {
@@ -184,11 +165,17 @@ export async function POST(req) {
       gradeLevel,
       count,
       examplePdfPath,
+      signal,
     });
 
     json = result.json;
     worksheets = result.worksheets;
   } catch (err) {
+    if (err.name === "AbortError") {
+      console.log("🛑 Generation aborted by user (no DB insert).");
+      return NextResponse.json({ error: "Aborted" }, { status: 499 });
+    }
+
     // Don’t count this attempt — just return error
     console.error("❌ Worksheet generation failed:", err);
     return NextResponse.json(
@@ -200,24 +187,29 @@ export async function POST(req) {
     );
   }
   // ✅ Only decrement bonus after successful generation
+  if (!signal?.aborted) {
+    if (generationCount >= planLimit && generationBonus) {
+      // decrement bonus because this generation uses one
+      const { error: bonusError } = await supabase
+        .from("profiles")
+        .update({ generation_bonus: generationBonus - 1 })
+        .eq("id", user.id);
+      if (bonusError) {
+        console.error("⚠️ Failed to decrement bonus:", bonusError);
+      }
+    }
+    // ✅ Save the generation
+    const { error: insertError } = await supabase
+      .from("ai_generations")
+      .insert({
+        user_id: user.id,
+        generation_type: type,
+        result_json: json,
+      });
 
-  if (generationCount >= planLimit && generationBonus) {
-    // decrement bonus because this generation uses one
-    await supabase
-      .from("profiles")
-      .update({ generation_bonus: generationBonus - 1 })
-      .eq("id", user.id);
-  }
-
-  // ✅ Save the generation
-  const { error: insertError } = await supabase.from("ai_generations").insert({
-    user_id: user.id,
-    generation_type: type,
-    result_json: json,
-  });
-
-  if (insertError) {
-    console.error("❌ Failed to insert ai_generation:", insertError);
+    if (insertError) {
+      console.error("❌ Failed to insert ai_generation:", insertError);
+    }
   }
 
   return NextResponse.json({
@@ -227,6 +219,27 @@ export async function POST(req) {
     remainingBonus: usage.generationBonus, // optional for frontend display
   });
 }
+
+// // Calculate total allowance
+// const totalGenerationLimit =
+//   planInfo.monthlyGenerations + (usage.generationBonus || 0);
+// const totalDownloadLimit = planInfo.monthlyPdfs + (usage.pdfBonus || 0);
+// // Check if user exceeded both plan + bonus
+// if (usage.generationCount >= totalGenerationLimit) {
+//   return NextResponse.json(
+//     { error: "You’ve reached your total (plan + bonus) generation limit." },
+//     { status: 403 }
+//   );
+// }
+
+// if (generationCount >= planInfo.monthlyGenerations) {
+//   return NextResponse.json(
+//     { error: "You’ve reached your monthly generation limit." },
+//     { status: 403 }
+//   );
+// }
+//normalize canDownload to a boolean- handle null or undefined return
+//const canDownload = !!(usage.downloadCount < planInfo.monthlyPdfs);
 
 // .eq("pdf_id", pdfId)
 

@@ -2,7 +2,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import {
   grammarGeneratorSchema,
@@ -10,6 +10,7 @@ import {
   socialStudiesGeneratorSchema,
 } from "@/libs/zodSchemas";
 import toast from "react-hot-toast";
+import { Laila } from "next/font/google";
 const generatorSchemas = {
   reading: readingGeneratorSchema,
   grammar: grammarGeneratorSchema,
@@ -34,6 +35,7 @@ export default function GeneratePage() {
   const [retryCount, setRetryCount] = useState(0);
   const [fileName, setFileName] = useState(null);
   const [session, setSession] = useState(null);
+  const [cooldown, setCooldown] = useState(false); // 👈 prevents spamming
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -94,11 +96,30 @@ export default function GeneratePage() {
         }),
     };
   }
+
+  const controllerRef = useRef(null);
+
   const handleGenerate = async () => {
     if (!session) {
       alert("Please sign in to generate worksheets.");
       return;
     }
+    // Prevent spamming: if currently in cooldown, ignore
+    if (cooldown) {
+      toast.info("Please wait a moment before generating again.");
+      return;
+    }
+
+    // Apply cooldown for 3 seconds after each click
+    setCooldown(true);
+    setTimeout(() => setCooldown(false), 3000);
+
+    // Cancel any previous request before starting a new one
+    if (controllerRef.current) controllerRef.current.abort();
+
+    // Create a fresh controller for this run
+    const controller = new AbortController();
+    controllerRef.current = controller;
 
     setLoading(true);
     console.log("Sending to API:", { topic, concept, gradeLevel, count, type });
@@ -134,6 +155,7 @@ export default function GeneratePage() {
           count: count,
           type: type,
         }),
+        signal: controller.signal,
       });
 
       if (res.status === 401) {
@@ -176,7 +198,10 @@ export default function GeneratePage() {
 
       router.push(`/Worksheet-Editor/${key}?canDownload=${data.canDownload}`);
     } catch (err) {
-      console.error("❌ handleGenerate error:", err);
+      if (err.name === "AbortError") {
+        console.log("Generation request aborted by user.");
+        return;
+      }
       const newRetryCount = retryCount + 1;
       setRetryCount(newRetryCount);
       setLoading(false);
@@ -216,8 +241,16 @@ export default function GeneratePage() {
 
       // Optional: auto-clear toast after 4 seconds
       //setTimeout(() => setToastMessage(""), 4000);
+    } finally {
+      setLoading(false);
     }
   };
+  // Cleanup if user navigates away (abort ongoing fetch)
+  useEffect(() => {
+    return () => {
+      if (controllerRef.current) controllerRef.current.abort();
+    };
+  }, []);
 
   return (
     <main className="max-w-xl mx-auto px-4 py-38">
@@ -294,20 +327,41 @@ export default function GeneratePage() {
           />
         </div> */}
 
-        <div className="flex justify-end">
-          <button
-            onClick={handleGenerate}
-            disabled={loading || retryCount >= 3}
-            className={`bg-purple-600 text-white px-6 py-2 rounded transition ${
-              loading || retryCount >= 3 ? "opacity-60 cursor-not-allowed" : ""
-            }`}
-          >
-            {loading
-              ? "Generating..."
-              : retryCount >= 3
-              ? "Try Again Later"
-              : "Generate Worksheet"}
-          </button>
+        <div className="flex justify-end gap-3 items-center mt-4">
+          {!loading && (
+            <button
+              onClick={handleGenerate}
+              disabled={retryCount >= 3 || cooldown}
+              className={`bg-purple-600 text-white px-6 py-2 rounded transition flex items-center gap-2 ${
+                retryCount >= 3 || cooldown
+                  ? "opacity-60 cursor-not-allowed"
+                  : "hover:bg-purple-700"
+              }`}
+            >
+              {cooldown ? "Please wait..." : "Generate Worksheet"}
+            </button>
+          )}
+
+          {loading && (
+            <div className="flex items-center gap-3">
+              <button
+                disabled
+                className="bg-purple-600 text-white px-6 py-2 rounded flex items-center gap-2 opacity-80 cursor-wait"
+              >
+                <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                Generating...
+              </button>
+              <button
+                onClick={() => {
+                  controllerRef.current?.abort();
+                  setLoading(false);
+                }}
+                className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </main>

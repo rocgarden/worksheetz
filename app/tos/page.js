@@ -172,8 +172,7 @@ Continued use of the Service after updates constitutes acceptance of the revised
 12. Contact
 
 For any questions, contact:
-📧 [your email address or support@yourdomain.com
-]`}
+📧 support@worksheetzai.com`}
         </pre>
       </div>
     </main>

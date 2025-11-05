@@ -26,11 +26,13 @@ export async function generateGrammarJson({
   gradeLevel,
   count,
   examplePdfPath,
+  signal,
 }) {
   //const exampleText = await extractTextFromPDF(examplePdfPath);
   // Read example text from pre-processed file
   const exampleText = await fs.readFile(examplePdfPath, "utf-8");
-  const MAX_RETRIES = 3;
+  const MAX_RETRIES = 2;
+  const perAttemptTimeout = 90000; // 90s per attempt
 
   let attempts = 0;
 
@@ -191,18 +193,74 @@ Return **valid JSON** in the following structure:
   }
 ]
 `;
-
-    const response = await client.chat.completions.create({
-      model: "gpt-4o-mini", // or whichever model
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.7,
-    });
-
-    function cleanJSON(content) {
-      return content.replace(/```json|```/g, "").trim();
+    const timeoutByType = {
+      grammar: 90000,
+      socialStudies: 120000,
+      reading: 90000,
+    };
+    async function withTimeout(promise, ms = 60000) {
+      return Promise.race([
+        promise,
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("⏰ Timeout")), ms)
+        ),
+      ]);
     }
 
+    const timeout = timeoutByType[type] || 90000;
+
+    // try {
+    //   console.time("Ai call duration");
+    //   const response = await withTimeout(
+    //     client.chat.completions.create({
+    //       model: "gpt-4o-mini", // or whichever model
+    //       messages: [{ role: "user", content: prompt }],
+    //       temperature: 0.7,
+    //     }),
+    //     30000
+    //   );
+    //   console.timeEnd(" Call Duration:: ");
+    // } catch (err) {
+    //   console.error("⚠️ AI call failed or timed out:", err.message);
+    //   throw err;
+    // }
+
+    // const response = await
+    //   client.chat.completions.create({
+    //   model: "gpt-4o-mini", // or whichever model
+    //   messages: [{ role: "user", content: prompt }],
+    //   temperature: 0.7,
+    // });
+
+    // function cleanJSON(content) {
+    //   return content.replace(/```json|```/g, "").trim();
+    // }
+    console.log(`🕓 Starting AI call (timeout = ${timeout / 1000}s)`);
+    const label = `AI call duration ${attempts + 1}`;
+    console.time(label);
     try {
+      //-----moved call here
+      const opts = {};
+      if (signal && !signal.aborted) opts.signal = signal; // 👈 only add if active
+
+      const response = await withTimeout(
+        client.chat.completions.create(
+          {
+            model: "gpt-4o-mini", // or whichever model
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.7,
+          },
+          opts
+        ),
+        timeout
+      );
+      console.log("✅ AI response received successfully.");
+
+      function cleanJSON(content) {
+        return content.replace(/```json|```/g, "").trim();
+      }
+
+      //**************************** */
       const parsed = JSON.parse(cleanJSON(response.choices[0].message.content));
 
       // Validate each worksheet before returning
@@ -234,16 +292,21 @@ Return **valid JSON** in the following structure:
         );
       }
     } catch (err) {
+      console.timeEnd(label);
+      if (err.name === "AbortError") {
+        console.warn("🛑 AI generation aborted by user.");
+        throw err; // rethrow to let route handle cleanly
+      }
       console.error(
         `❌ Attempt ${attempts + 1}: JSON parse failed`,
         err.message
       );
     }
     attempts++;
-    await new Promise((res) => setTimeout(res, 300)); // Optional: short delay
+    // await new Promise((res) => setTimeout(res, 300)); // Optional: short delay
   }
 
   throw new Error(
-    "❌ Failed to generate valid worksheet with at least 10 multiple-choice questions after 3 attempts."
+    "❌ Failed to generate valid worksheet with at least 10 multiple-choice questions after 2 attempts."
   );
 }

@@ -14,7 +14,6 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage({ searchParams }) {
   const params = await searchParams; // ✅ Await it once
   const message = params?.message;
-  console.log("message:: ", message);
   const supabase = await createClient();
   // console.log("Supabase client:", supabase);
   // console.log("auth:", supabase.auth);
@@ -72,29 +71,6 @@ export default async function DashboardPage({ searchParams }) {
   // const canDownload =
   //   usage.downloadCount < planInfo.monthlyPdfs ||
   //   (usage.downloadCount < totalDownloadLimit && usage.pdfBonus > 0);
-  console.log({
-    generationCount: usage.generationCount,
-    planGenerations: planInfo.monthlyGenerations,
-    generationBonus: usage.generationBonus,
-    totalGenerationLimit,
-    downloadCount: usage.downloadCount,
-    planPdfs: planInfo.monthlyPdfs,
-    pdfBonus: usage.pdfBonus,
-    totalDownloadLimit,
-    canGenerate,
-  });
-  console.log({
-    //generationCount,
-    planLimit: planInfo.monthlyGenerations,
-    bonusAvailable: usage.generationBonus,
-    bonusUsed: usage.generationCount - planInfo.monthlyGenerations,
-    remainingBonus: Math.max(
-      usage.generationBonus -
-        (usage.generationCount - planInfo.monthlyGenerations),
-      0
-    ),
-    canGenerate,
-  });
   // ✅ Determine plan type
   const activePlan = config.stripe.plans.find(
     (plan) => plan.priceId === profile?.price_id
