@@ -37,7 +37,11 @@ export async function POST(req) {
   //       { status: 400 }
   //     );
   //   }
-
+  console.log("🔍 Looking for worksheet:", {
+    fileName,
+    userId: user.id,
+    type,
+  });
   // 1. Fetch the worksheet from DB
   const { data: worksheet, error: worksheetError } = await supabase
     .from("worksheets")
@@ -46,8 +50,26 @@ export async function POST(req) {
     .eq("user_id", user.id)
     .single();
 
+  console.log("📦 DB result:", {
+    found: !!worksheet,
+    error: worksheetError,
+    fileName_in_db: worksheet?.file_name,
+    fileName_searched: fileName,
+    match: worksheet?.file_name === fileName,
+  });
+
   if (worksheetError || !worksheet?.content) {
-    return NextResponse.json({ error: "Worksheet not found" }, { status: 404 });
+    return NextResponse.json(
+      {
+        error: "Worksheet not found: ",
+        details: {
+          searchedFileName: fileName,
+          errorMessage: worksheetError?.message,
+          errorCode: worksheetError?.code,
+        },
+      },
+      { status: 404 }
+    );
   }
   // 2. Render PDF
   // ✅ Get the user's plan from 'profiles'
@@ -104,7 +126,13 @@ export async function POST(req) {
   );
 
   // ⚡ Check only if user EXCEEDS total allowance
-  if (downloadCount > totalAllowed) {
+  // if (downloadCount > totalAllowed) {
+  //   return NextResponse.json(
+  //     { error: "You’ve reached your total (plan + bonus) PDF limit." },
+  //     { status: 403 }
+  //   );
+  // }
+  if (downloadCount > planLimit && pdfBonus <= 0) {
     return NextResponse.json(
       { error: "You’ve reached your total (plan + bonus) PDF limit." },
       { status: 403 }

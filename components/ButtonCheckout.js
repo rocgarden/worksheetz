@@ -19,11 +19,17 @@ const ButtonCheckout = ({ priceId, mode = "subscription", text = "" }) => {
       const res = await apiClient.post("/stripe/create-checkout", {
         priceId,
         mode,
-        successUrl: window.location.href,
-        cancelUrl: window.location.href,
+        successUrl: window.location.origin + "/dashboard", // ← Always go to dashboard
+        cancelUrl: window.location.origin + "/pricing", // ← Go back to pricing on cancel
       });
+      //   successUrl: window.location.href,
+      //   cancelUrl: window.location.href,
+      // });
 
-      window.location.href = res.url;
+      //window.location.replace(res.url); // ← Use replace instead of href
+      window.open(url, "_blank"); // ← This prevents it from entering history!
+
+      // window.location.href = res.url;
     } catch (e) {
       console.error(e);
     }
@@ -35,6 +41,7 @@ const ButtonCheckout = ({ priceId, mode = "subscription", text = "" }) => {
     <button
       className="btn btn-primary btn-block rounded-full group"
       onClick={() => handlePayment()}
+      disabled={isLoading}
     >
       {isLoading ? (
         <span className="loading loading-spinner loading-xs"></span>

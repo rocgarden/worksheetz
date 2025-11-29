@@ -1,28 +1,16 @@
 import OpenAI from "openai";
 import fs from "fs/promises";
-import path from "path";
-import pkg from "pdfjs-dist/legacy/build/pdf.js";
-
-// Extract text from PDF using pdfjs-dist
-// async function extractTextFromPDF(filePath) {
-//   const data = new Uint8Array(fs.readFileSync(filePath));
-//   const pdf = await getDocument({ data }).promise;
-//   let fullText = "";
-//   for (let i = 1; i <= pdf.numPages; i++) {
-//     const page = await pdf.getPage(i);
-//     const content = await page.getTextContent();
-//     const strings = content.items.map((item) => item.str);
-//     fullText += strings.join(" ") + "\n";
-//   }
-//   return fullText;
-// }
+// import path from "path";
+// import pkg from "pdfjs-dist/legacy/build/pdf.js";
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function generateSocialStudiesJson({
+  type,
   topic,
   gradeLevel,
   examplePdfPath,
+  signal,
 }) {
   const exampleText = await fs.readFile(examplePdfPath, "utf-8");
   const MAX_RETRIES = 3;
@@ -199,17 +187,53 @@ Return worksheets as a valid JSON array like:
 
     // - If `{ includeGuidedPractice = false }`, skip section 3 entirely.
 
-    const response = await client.chat.completions.create({
-      model: "gpt-4o",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.7,
-    });
+    // const response = await client.chat.completions.create({
+    //   model: "gpt-4o",
+    //   messages: [{ role: "user", content: prompt }],
+    //   temperature: 0.7,
+    // });
 
     function cleanJSON(content) {
       return content.replace(/```json|```/g, "").trim();
     }
 
+    const timeoutByType = {
+      grammar: 90000,
+      socialStudies: 120000,
+      reading: 90000,
+    };
+    async function withTimeout(promise, ms = 60000) {
+      return Promise.race([
+        promise,
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("⏰ Timeout")), ms)
+        ),
+      ]);
+    }
+
+    const timeout = timeoutByType[type] || 90000;
+
+    console.log(`🕓 Starting AI call (timeout = ${timeout / 1000}s)`);
+    const label = `AI call duration ${attempts + 1}`;
+    console.time(label);
+    const temp = attempts === 0 ? 0.4 : 0.5 + attempts * 0.1;
+
     try {
+      const opts = {};
+      if (signal && !signal.aborted) opts.signal = signal; // 👈 only add if active
+
+      const response = await withTimeout(
+        client.chat.completions.create(
+          {
+            model: "gpt-4o",
+            messages: [{ role: "user", content: prompt }],
+            temperature: temp,
+          },
+          opts
+        ),
+        timeout
+      );
+
       const parsed = JSON.parse(cleanJSON(response.choices[0].message.content));
 
       // Validate each worksheet before returning
@@ -218,7 +242,6 @@ Return worksheets as a valid JSON array like:
         const mcCount = questions.filter(
           (q) => q.type === "multiple-choice"
         ).length;
-        console.log("count:: ", mcCount);
         return mcCount >= 6;
       });
 
@@ -231,7 +254,8 @@ Return worksheets as a valid JSON array like:
               ws.grade_level ||
               "Unknown"
             ).replace(/\s+/g, "_");
-            const key = `${conceptKey}-${gradeKey}.json`;
+            const timestamp = Date.now(); // ← Add this
+            const key = `${conceptKey}-${gradeKey}-${timestamp}.json`; // ← Add timestamp
             return { key };
           }),
           worksheets: parsed,
@@ -242,6 +266,11 @@ Return worksheets as a valid JSON array like:
         );
       }
     } catch (err) {
+      console.timeEnd(label);
+      if (err.name === "AbortError") {
+        console.warn("🛑 AI generation aborted by user.");
+        throw err; // rethrow to let route handle cleanly
+      }
       if (err.status === 429) {
         console.error("Rate limit exceeded or quota exhausted.");
       } else if (err.code === "ETIMEDOUT") {
@@ -253,7 +282,7 @@ Return worksheets as a valid JSON array like:
         );
     }
     attempts++;
-    await new Promise((res) => setTimeout(res, 300)); // Optional: short delay
+    // await new Promise((res) => setTimeout(res, 300)); // Optional: short delay
   }
 
   throw new Error(

@@ -18,9 +18,9 @@ const config = {
       {
         // REQUIRED — we use this to find the plan in the webhook (for instance if you want to update the user's credits based on the plan)
         priceId:
-          process.env.NODE_ENV === "development"
-            ? "price_1SI9fJPiVrPo29EffY1xtAxP" // "price_1Niyy5AxyNprDp7iZIqEyD2h"
-            : "price_456",
+          //  process.env.NODE_ENV === "development"
+          "price_1SI9fJPiVrPo29EffY1xtAxP", // "price_1Niyy5AxyNprDp7iZIqEyD2h"
+        // : "price_456",
         //  REQUIRED - Name of the plan, displayed on the pricing page
         name: "Starter",
         // A friendly description of the plan, displayed on the pricing page. Tip: explain why this plan and not others
@@ -52,9 +52,9 @@ const config = {
         // This plan will look different on the pricing page, it will be highlighted. You can only have one plan with isFeatured: true
         isFeatured: true,
         priceId:
-          process.env.NODE_ENV === "development"
-            ? "price_1SI9fKPiVrPo29EfviZjKLmE" // "price_1O5KtcAxyNprDp7iftKnrrpw"
-            : "price_456",
+          // process.env.NODE_ENV === "development"
+          "price_1SI9fKPiVrPo29EfviZjKLmE", // "price_1O5KtcAxyNprDp7iftKnrrpw"
+        //: "price_456",
         name: "Pro",
         description:
           "Unlock enhanced AI capabilities and expanded worksheet generation limits for serious educators.",
@@ -89,12 +89,12 @@ const config = {
   },
   resend: {
     // REQUIRED — Email 'From' field to be used when sending magic login links
-    fromNoReply: `Worksheetz Ai <noreply@worksheetzai.com>`,
+    fromNoReply: `Worksheetz Ai <support@support.worksheetzai.com>`,
     // `ShipFast <noreply@resend.shipfa.st>`,
     // REQUIRED — Email 'From' field to be used when sending other emails, like abandoned carts, updates etc..
-    fromAdmin: `Worksheetz Ai <support@worksheetzai.com>`,
+    fromAdmin: `Worksheetz Ai <support@support.worksheetzai.com>`,
     // Email shown to customer if need support. Leave empty if not needed => if empty, set up Crisp above, otherwise you won't be able to offer customer support."
-    supportEmail: "support@worksheetzai.com",
+    supportEmail: "hello@worksheetzai.com",
   },
   colors: {
     // REQUIRED — The DaisyUI theme to use (added to the main layout.js). Leave blank for default (light & dark mode).

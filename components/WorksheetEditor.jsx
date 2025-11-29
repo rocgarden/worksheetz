@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+//import DOMPurify from "isomorphic-dompurify";
+import DOMPurify from "dompurify"; // This works client-side
+import leoProfanity from "leo-profanity";
 import IntroActivityEditor from "./IntroActivityEditor";
 import toast from "react-hot-toast";
 import { saveWorksheetSchema } from "@/libs/zodSchemas";
@@ -26,6 +29,17 @@ export default function WorksheetEditor({ fileName, initialData, type }) {
   const inputProps = {
     disabled: isLocked,
     className: "w-full border border-gray-700 text-gray-700 rounded p-2",
+  };
+
+  const sanitizeText = (input) => {
+    if (!input) return "";
+    let clean = DOMPurify.sanitize(input, {
+      ALLOWED_TAGS: [],
+      ALLOWED_ATTR: [],
+    });
+    clean = clean.normalize("NFKC").replace(/\u00A0/g, " ");
+    clean = leoProfanity.clean(clean);
+    return clean.trim();
   };
 
   // Handle form field changes
@@ -89,9 +103,17 @@ export default function WorksheetEditor({ fileName, initialData, type }) {
 
   const handleSave = async () => {
     setSavedFileName(false);
+
+    const sanitizedWorksheet = {
+      ...worksheet,
+      topic: sanitizeText(worksheet.topic),
+      gradeLevel: sanitizeText(worksheet.gradeLevel),
+      // content: sanitizeText(worksheetText.content),
+    };
+
     sessionStorage.setItem("worksheetFileName", fileName);
-    const topic = worksheet.topic;
-    const gradeLevel = worksheet.gradeLevel;
+    const topic = sanitizedWorksheet.topic;
+    const gradeLevel = sanitizedWorksheet.gradeLevel;
 
     if (!topic || !gradeLevel) {
       alert("Missing topic or grade level");
@@ -105,7 +127,7 @@ export default function WorksheetEditor({ fileName, initialData, type }) {
       .safeParse({
         //userId: "placeholder", // If userId is required, pass it from props or get from session
         fileName,
-        worksheet,
+        sanitizedWorksheet,
         topic,
         gradeLevel,
         type,
@@ -123,9 +145,9 @@ export default function WorksheetEditor({ fileName, initialData, type }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           fileName,
-          worksheet, // your JSON object
-          topic,
-          gradeLevel,
+          worksheet: sanitizedWorksheet, // your JSON object
+          topic: sanitizedWorksheet.topic,
+          gradeLevel: sanitizedWorksheet.gradeLevel,
           type,
         }),
       });
@@ -212,6 +234,12 @@ export default function WorksheetEditor({ fileName, initialData, type }) {
       <h2 className="text-2xl font-semibold mb-6 text-purple-800">
         📝 Edit Worksheet
       </h2>
+      <p className="text-sm text-orange-600 mb-4">
+        📌 <strong>Review Reminder:</strong> This worksheet was generated using
+        AI and may contain incomplete or incorrect content or answers. Please
+        review each section carefully before using or sharing.
+      </p>
+
       {!worksheet ? (
         <>Loading Paragraph, please wait...</>
       ) : (
@@ -224,11 +252,12 @@ export default function WorksheetEditor({ fileName, initialData, type }) {
             <textarea
               rows={4}
               {...inputProps}
-              className="w-full border border-gray-700 text-gray-700 rounded p-2"
+              className="w-full border border-gray-700 text-gray-700 rounded p-2 bg-gray-100"
               value={worksheet.concept_introduction}
-              onChange={(e) =>
-                handleChange("concept_introduction", e.target.value)
-              }
+              readOnly
+              // onChange={(e) =>
+              //   handleChange("concept_introduction", e.target.value)
+              // }
             />
           </div>
           {/* Example */}
@@ -239,9 +268,10 @@ export default function WorksheetEditor({ fileName, initialData, type }) {
             <textarea
               rows={2}
               {...inputProps}
-              className="w-full border border-gray-700 text-gray-700 rounded p-2"
+              className="w-full border border-gray-700 text-gray-700 rounded p-2 bg-gray-100"
               value={worksheet.example}
-              onChange={(e) => handleChange("example", e.target.value)}
+              readOnly
+              // onChange={(e) => handleChange("example", e.target.value)}
             />
           </div>
 
@@ -290,7 +320,7 @@ export default function WorksheetEditor({ fileName, initialData, type }) {
                 {q.type === "multiple-choice" && type === "reading" && (
                   <div className="mb-2">
                     <label className="block font-medium text-gray-700 mb-1">
-                      Paragraph
+                      Paragraph - extend box to view
                     </label>
                     <textarea
                       {...inputProps}
@@ -423,8 +453,8 @@ export default function WorksheetEditor({ fileName, initialData, type }) {
                               const updatedAnswers = Array.isArray(q.answer)
                                 ? q.answer.filter((ans) => ans !== choice.id)
                                 : q.answer === choice.id
-                                ? null
-                                : q.answer;
+                                  ? null
+                                  : q.answer;
 
                               handleQuestionChange(
                                 "guided_practice",
@@ -598,8 +628,8 @@ export default function WorksheetEditor({ fileName, initialData, type }) {
                               const updatedAnswers = Array.isArray(q.answer)
                                 ? q.answer.filter((ans) => ans !== choice.id)
                                 : q.answer === choice.id
-                                ? null
-                                : q.answer;
+                                  ? null
+                                  : q.answer;
 
                               handleQuestionChange(
                                 "independent_practice",
@@ -775,8 +805,8 @@ export default function WorksheetEditor({ fileName, initialData, type }) {
                                 const updatedAnswers = Array.isArray(q.answer)
                                   ? q.answer.filter((ans) => ans !== choice.id)
                                   : q.answer === choice.id
-                                  ? null
-                                  : q.answer;
+                                    ? null
+                                    : q.answer;
 
                                 handleQuestionChange(
                                   "independent_practice",
@@ -866,10 +896,24 @@ export default function WorksheetEditor({ fileName, initialData, type }) {
                 </button>
               </>
             ) : (
-              <p className="text-sm text-gray-500 mt-2">
-                🚫 You’ve reached your PDF download limit. Upgrade your plan to
-                continue.
-              </p>
+              <>
+                <p className="text-sm text-gray-500 mt-2">
+                  🚫 You’ve reached your PDF download limit. Upgrade your plan
+                  to continue.
+                </p>
+                <button
+                  className="btn text-purple-700 rounded-full  border-purple-700  p-2 mt-2 hover:bg-purple-700 hover:text-white"
+                  onClick={() => {
+                    sessionStorage.removeItem("worksheetDraft");
+                    sessionStorage.removeItem("worksheetFileName");
+
+                    // Optional: redirect to regenerate
+                    router.push("/dashboard");
+                  }}
+                >
+                  Dashboard
+                </button>
+              </>
             )}
           </div>
         )}
@@ -890,8 +934,8 @@ export default function WorksheetEditor({ fileName, initialData, type }) {
                 {loadingPdf
                   ? "Creating PDF..."
                   : retryCount >= 3
-                  ? "Try Again Later"
-                  : "⬇️ Download PDF"}{" "}
+                    ? "Try Again Later"
+                    : "⬇️ Download PDF"}{" "}
               </button>
               <p className="text-sm text-red-600 mt-2 font-medium">
                 You must download your PDF now — it cannot be regenerated after

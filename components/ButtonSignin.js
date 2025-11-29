@@ -1,3 +1,4 @@
+//app/components/ButtonSignin.js
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
@@ -5,6 +6,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { createClient } from "@/libs/supabase/client";
 import config from "@/config";
+import { components } from "daisyui/imports";
 
 // A simple button to sign in with our providers (Google & Magic Links).
 // It automatically redirects user to callbackUrl (config.auth.callbackUrl) after login, which is normally a private page for users to manage their accounts.
@@ -14,25 +16,47 @@ const ButtonSignin = ({
   extraStyle,
   renderLinks,
   redirectTo,
+  user: externalUser, // 👈 Accept user from parent if provided
 }) => {
   const supabase = createClient();
-  const [user, setUser] = useState(null);
+  const [internalUser, setInternalUser] = useState(null);
+  //changed this useEffect to add a listener
+  // useEffect(() => {
+  //   const getUser = async () => {
+  //     const {
+  //       data: { user },
+  //     } = await supabase.auth.getUser();
+  //     setUser(user);
+  //   };
 
+  //   getUser();
+  // }, [supabase]);
+  // 🧠 Choose the user source
+  const user = externalUser !== undefined ? externalUser : internalUser;
+
+  // 🧩 Only fetch user internally when not provided by parent
   useEffect(() => {
+    if (externalUser !== undefined) return; // Parent controls state
+
     const getUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setUser(user);
+      const { data } = await supabase.auth.getUser();
+      setInternalUser(data.user);
     };
-
     getUser();
-  }, [supabase]);
+  }, [externalUser, supabase]);
 
+  // Sign out
   const handleSignOut = async () => {
+    localStorage.removeItem("session_start"); // ← Add this line
     await supabase.auth.signOut();
-    setUser(null);
-    window.location.href = "/"; // or use router.push() if you're using next/navigation
+    // setUser(null);
+    window.location.href = "/"; // router.push() if using next/navigation
+    // If this is a tab that was opened from billing, close it
+    if (window.opener) {
+      window.close();
+    } else {
+      window.location.href = "/";
+    }
   };
   // If renderLinks is passed, use that to render dynamic nav links
   if (renderLinks) {
@@ -73,9 +97,9 @@ const ButtonSignin = ({
     );
   }
   // ✅ If not logged in, build the login link dynamically
-  const loginUrl = `${config.auth.loginUrl}?redirectTo=${
-    redirectTo || config.auth.callbackUrl
-  }`;
+  // const loginUrl = `${config.auth.loginUrl}?redirectTo=${
+  //   redirectTo || config.auth.callbackUrl
+  // }`;
 
   return (
     // <Link

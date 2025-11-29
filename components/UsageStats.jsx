@@ -5,6 +5,7 @@ export default function UsageStats({
   pdfBonus,
   planGenerations,
   planPdfs,
+  cancelDate,
 }) {
   return (
     <div className="bg-white shadow-md rounded-lg p-6 border border-gray-200">
@@ -45,6 +46,10 @@ export default function UsageStats({
           )}
         </ul>
       </ul>
+      {/* <p className="text-yellow-600 text-sm mt-2">
+        ⚠️ Your subscription will end on{" "}
+        {new Date(cancelDate).toLocaleDateString()}.
+      </p> */}
     </div>
   );
 }

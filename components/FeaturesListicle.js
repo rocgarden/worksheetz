@@ -116,17 +116,13 @@ const features = [
     svg: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        fill="none"
         viewBox="0 0 24 24"
         strokeWidth={1.5}
         stroke="currentColor"
+        fill="none"
         className="w-8 h-8"
       >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"
-        />
+        <path d="M12 16v-4m0 4l-2-2m2 2l2-2m6-6v10a2 2 0 01-2 2H8a2 2 0 01-2-2V6a2 2 0 012-2h6l4 4z" />
       </svg>
     ),
   },
@@ -136,7 +132,7 @@ const features = [
       <>
         <ul className="space-y-2">
           {[
-            "Choose from specialized models tuned for educational content.",
+            "Specialized models tuned for educational content.",
             "Generate consistent, structured responses every time.",
             "Built to support real teaching goals — not just generic AI output.",
           ].map((item) => (
@@ -198,7 +194,7 @@ const features = [
       <>
         <ul className="space-y-2">
           {[
-            "Get started with no subscription required.",
+            "Get started with no paid subscription required.",
             "Includes monthly worksheet generations and downloads.",
             "Perfect for testing the platform or light classroom use.",
           ].map((item) => (
@@ -250,6 +246,52 @@ const features = [
           strokeLinecap="round"
           strokeLinejoin="round"
           d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125"
+        />
+      </svg>
+    ),
+  },
+  {
+    name: "Secure Payments",
+    description: (
+      <>
+        <ul className="space-y-2">
+          {[
+            "All payments are securely processed through Stripe.",
+            "Your financial data is encrypted and never stored on our servers.",
+            "Trusted by millions of businesses worldwide.",
+          ].map((item) => (
+            <li key={item} className="flex items-center gap-3">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="w-[18px] h-[18px] inline shrink-0 opacity-80"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              {item}
+            </li>
+          ))}
+        </ul>
+      </>
+    ),
+    svg: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth={1.5}
+        stroke="currentColor"
+        className="w-8 h-8"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"
         />
       </svg>
     ),

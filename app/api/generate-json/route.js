@@ -24,7 +24,7 @@ const __dirname = path.dirname(__filename);
 const examplePdfMap = {
   reading: path.resolve(
     process.cwd(),
-    "pdfExamples/processed/Nounsexample.txt"
+    "pdfExamples/processed/readingExample.txt"
   ),
   grammar: path.resolve(
     process.cwd(),
@@ -32,7 +32,7 @@ const examplePdfMap = {
   ),
   socialStudies: path.resolve(
     process.cwd(),
-    "pdfExamples/processed/Nounsexample.txt"
+    "pdfExamples/processed/socialStudiesExample.txt"
   ), // 👈 use correct file
   // Add more subjects if needed
 };
@@ -152,6 +152,8 @@ export async function POST(req) {
 
   // Determine download eligibility
   const canDownload = !!(usage.downloadCount || 0) < totalDownloadLimit;
+  //  const canDownload = (usage.downloadCount || 0) < totalDownloadLimit;
+
   if (signal?.aborted) {
     console.warn("⚠️ Request signal was already aborted — skipping generation");
     return NextResponse.json({ error: "Aborted early" }, { status: 499 });
@@ -160,6 +162,7 @@ export async function POST(req) {
   let json, worksheets;
   try {
     const result = await generatorFn({
+      type,
       topic,
       concept,
       gradeLevel,

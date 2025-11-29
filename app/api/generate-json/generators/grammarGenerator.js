@@ -1,21 +1,7 @@
+//app/api/generate-json/generators/grammarGenerator.js
 import OpenAI from "openai";
 import fs from "fs/promises";
-import path from "path";
-import pkg from "pdfjs-dist/legacy/build/pdf.js";
-
-//Extract text from PDF using pdfjs-dist
-// async function extractTextFromPDF(examplePdfPath) {
-//   const data = new Uint8Array(fs.readFileSync(examplePdfPath));
-//   const pdf = await getDocument({ data }).promise;
-//   let fullText = "";
-//   for (let i = 1; i <= pdf.numPages; i++) {
-//     const page = await pdf.getPage(i);
-//     const content = await page.getTextContent();
-//     const strings = content.items.map((item) => item.str);
-//     fullText += strings.join(" ") + "\n";
-//   }
-//   return fullText;
-// }
+import { getCachedConcept, setCachedConcept } from "@/libs/redis-cache";
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -28,11 +14,12 @@ export async function generateGrammarJson({
   examplePdfPath,
   signal,
 }) {
-  //const exampleText = await extractTextFromPDF(examplePdfPath);
   // Read example text from pre-processed file
   const exampleText = await fs.readFile(examplePdfPath, "utf-8");
   const MAX_RETRIES = 2;
   const perAttemptTimeout = 90000; // 90s per attempt
+  // ✅ Check cache first
+  const cachedConcept = await getCachedConcept("grammar", concept, gradeLevel);
 
   let attempts = 0;
 
@@ -53,9 +40,15 @@ Concept: **${concept}**
 
 ### Requirements for EACH worksheet:
 1. **Concept Introduction** 
-- Concept
-- Brief explanation of the concept (2–3 sentences, age-appropriate). 
-- Include 1 clear example.
+${
+  cachedConcept
+    ? `Use these EXACT values for the concept introduction (do not modify):
+     - Explanation: "${cachedConcept.introduction}"
+     - Example: "${cachedConcept.example}"`
+    : `- Concept: ${concept}
+     - Brief explanation of the concept (2–3 sentences, age-appropriate). 
+     - Include 1 clear example.`
+}
 2. **Guided Practice** 
 - "instructions": short instructions for a task (e.g. "Choose the noun or nouns in each sentence below. Each sentence may have more than 1 choice."). 
 - "guided_practice": An array of 7-8 practice items. 
@@ -232,12 +225,11 @@ Return **valid JSON** in the following structure:
     //   temperature: 0.7,
     // });
 
-    // function cleanJSON(content) {
-    //   return content.replace(/```json|```/g, "").trim();
-    // }
     console.log(`🕓 Starting AI call (timeout = ${timeout / 1000}s)`);
     const label = `AI call duration ${attempts + 1}`;
     console.time(label);
+    const temp = attempts === 0 ? 0.4 : 0.5 + attempts * 0.1;
+
     try {
       //-----moved call here
       const opts = {};
@@ -248,7 +240,7 @@ Return **valid JSON** in the following structure:
           {
             model: "gpt-4o-mini", // or whichever model
             messages: [{ role: "user", content: prompt }],
-            temperature: 0.7,
+            temperature: temp,
           },
           opts
         ),
@@ -273,6 +265,20 @@ Return **valid JSON** in the following structure:
       });
 
       if (isValid) {
+        // ✅ Cache the concept intro if we didn't have one
+        if (
+          !cachedConcept &&
+          parsed[0]?.concept_introduction &&
+          parsed[0]?.example
+        ) {
+          await setCachedConcept(
+            "grammar",
+            parsed[0].concept,
+            gradeLevel,
+            parsed[0].concept_introduction,
+            parsed[0].example
+          );
+        }
         return {
           json: parsed.map((ws) => {
             const conceptKey = ws.concept?.replace(/\s+/g, "_") || "Concept";
@@ -281,7 +287,8 @@ Return **valid JSON** in the following structure:
               ws.grade_level ||
               "Unknown"
             ).replace(/\s+/g, "_");
-            const key = `${conceptKey}-${gradeKey}.json`;
+            const timestamp = Date.now(); // ← Add this
+            const key = `${conceptKey}-${gradeKey}-${timestamp}.json`; // ← Add timestamp
             return { key };
           }),
           worksheets: parsed,

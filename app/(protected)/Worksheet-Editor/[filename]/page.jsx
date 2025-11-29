@@ -4,9 +4,9 @@
 import { useState, useEffect } from "react";
 import WorksheetEditor from "@/components/WorksheetEditor";
 import { useRouter } from "next/navigation";
+import Disclaimer from "@/components/Disclaimer";
 
 export default function WorksheetEditorPage() {
-  const [session, setSession] = useState(null);
   const [initialData, setInitialData] = useState(null);
   const [fileName, setFileName] = useState(null);
   const [saved, setSaved] = useState(false); // 🔒 gate rendering
@@ -22,10 +22,9 @@ export default function WorksheetEditorPage() {
     const dataStr = sessionStorage.getItem("worksheetDraft");
     const nameStr = sessionStorage.getItem("worksheetFileName");
     const type = sessionStorage.getItem("pdfType");
-    console.log("session items:: ", dataStr, nameStr, type);
     if (!dataStr || !nameStr) {
-      // 🚨 Invalid access — kick user out
-      router.push("/");
+      // 🚨 Invalid access — redirect to dashboard
+      router.push("/dashboard");
       return;
     }
 
@@ -48,6 +47,7 @@ export default function WorksheetEditorPage() {
       if (!saved) {
         sessionStorage.removeItem("worksheetDraft");
         sessionStorage.removeItem("worksheetFileName");
+        sessionStorage.removeItem("pdfType");
       }
     };
 
@@ -86,6 +86,7 @@ export default function WorksheetEditorPage() {
       <h1 className="text-2xl font-bold text-black mb-4">
         Worksheet Editor Page
       </h1>
+      <Disclaimer variant="editor" />
       <WorksheetEditor
         type={pdfType}
         fileName={fileName}

@@ -9,13 +9,38 @@ import logo from "@/app/icon1.png";
 import config from "@/config";
 import ButtonAccount from "./ButtonAccount";
 import ButtonCheckout from "./ButtonCheckout";
+import { createClient } from "@/libs/supabase/client";
+
 const Header = () => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [user, setUser] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
+  const supabase = createClient();
 
   const isHome = pathname === "/";
+
+  // 🔐 Listen for auth changes globally
+  useEffect(() => {
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUser(data.user);
+    };
+
+    getUser();
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === "SIGNED_OUT" || !session) {
+          setUser(null);
+        } else {
+          getUser();
+        }
+      }
+    );
+    return () => listener?.subscription.unsubscribe();
+  }, []);
 
   // For closing mobile menu when route/search changes
   useEffect(() => {
@@ -94,7 +119,8 @@ const Header = () => {
         <div className="hidden lg:flex lg:items-center justify-between px-6 lg:gap-30">
           <ButtonSignin
             extraStyle="hidden"
-            renderLinks={({ user }) => (
+            // renderLinks={({ user }) => (
+            renderLinks={() => (
               <>
                 {user && <ButtonAccount />}
                 {(user ? authLinks : isHome ? unauthLinks : []).map((link) => (
@@ -120,6 +146,7 @@ const Header = () => {
         {/* CTA (Sign in/out) */}
         <div className="hidden lg:flex lg:justify-end lg:flex-1">
           <ButtonSignin
+            user={user}
             redirectTo={`/checkout?priceId=${config.stripe.plans[0].priceId}`}
             extraStyle="btn-primary"
           />
@@ -198,6 +225,7 @@ const Header = () => {
           {/* Mobile links */}
           <div className="flex flex-col space-y-4">
             <ButtonSignin
+              user={user}
               extraStyle="hidden"
               renderLinks={({ user }) => (
                 <>
@@ -232,7 +260,7 @@ const Header = () => {
 
           {/* CTA button */}
           <div className="m-2">
-            <ButtonSignin extraStyle="btn-primary w-full" />
+            <ButtonSignin user={user} extraStyle="btn-primary w-full" />
           </div>
           {/* </div> */}
           {/* </div> */}

@@ -160,7 +160,7 @@ The latest version will always be available on our website.
 10. Contact Us
 
 For privacy-related requests or questions, email:
-📧 support@worksheetzai.com`}
+📧 hello@worksheetzai.com`}
         </pre>
       </div>
     </main>

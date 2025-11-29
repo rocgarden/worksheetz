@@ -5,12 +5,14 @@ import { createClient } from "@supabase/supabase-js";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-
+import { sendEmail } from "@/libs/resend";
+import { welcomeTemplate } from "@/libs/emails/welcomeTemplate";
 // This is where we receive Stripe webhook events
 // It used to update the user data, send emails, etc...
 // By default, it'll store the user in the database
 // See more: https://shipfa.st/docs/features/payments
 export async function POST(req) {
+  console.log("📩 Stripe webhook received");
   // Check for required environment variables
   if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
     console.error("Missing required Stripe environment variables");
@@ -58,12 +60,54 @@ export async function POST(req) {
         // First payment is successful and a subscription is created (if mode was set to "subscription" in ButtonCheckout)
         // ✅ Grant access to the product
         const stripeObject = event.data.object;
+        const eventId = event.id;
+        // ✅ Check if we've already processed this event
+        const { data: existingEvent } = await supabase
+          .from("stripe_events") // create this table
+          .select("id")
+          .eq("event_id", eventId)
+          .single();
+
+        if (existingEvent) {
+          console.log(`⚠️ Event ${eventId} already processed, skipping`);
+          return NextResponse.json({ received: true });
+        }
+        const subscriptionId = stripeObject.subscription;
 
         const session = await findCheckoutSession(stripeObject.id);
 
         const customerId = session?.customer;
         const priceId = session?.line_items?.data[0]?.price.id;
-        const userId = stripeObject.client_reference_id;
+        //const userId = stripeObject.client_reference_id;
+
+        // ✅ NEW: prefer metadata.user_id if present, fallback to client_reference_id
+        const userId =
+          stripeObject.metadata?.user_id || stripeObject.client_reference_id;
+        console.log("🪝 Stripe webhook checkout.session.completed:", {
+          userId,
+          priceId,
+          customerId,
+        });
+
+        // ✅ 1️⃣ Cancel any other active subscriptions for this customer
+        const activeSubs = await stripe.subscriptions.list({
+          customer: customerId,
+          status: "active",
+          expand: ["data.items"],
+        });
+
+        for (const sub of activeSubs.data) {
+          const activePrice = sub.items.data[0]?.price?.id;
+          if (activePrice !== priceId) {
+            await stripe.subscriptions.update(sub.id, {
+              cancel_at_period_end: true, // let current cycle finish
+            });
+            console.log(
+              `⚠️ Scheduled cancellation of old subscription ${sub.id} (${activePrice})`
+            );
+          }
+        }
+
         const plan = configFile.stripe.plans.find((p) => p.priceId === priceId);
 
         const customer = await stripe.customers.retrieve(customerId);
@@ -123,26 +167,93 @@ export async function POST(req) {
           throw new Error("User ID is required for profile creation");
         }
 
-        const { error } = await supabase.from("profiles").upsert({
-          id: user.id,
-          email: customer.email,
-          customer_id: customerId,
-          price_id: priceId,
-          has_access: true,
-        });
+        const { data: existingProfile } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("id", user.id)
+          .single();
 
-        if (error) {
-          console.error("Failed to upsert profile:", error);
-          throw error;
+        const currentPeriodEnd = session.subscription
+          ? new Date(
+              (await stripe.subscriptions.retrieve(session.subscription))
+                .current_period_end * 1000
+            )
+          : null;
+
+        if (existingProfile) {
+          // ✅ update existing user
+          const { error } = await supabase
+            .from("profiles")
+            .update({
+              email: customer.email,
+              customer_id: customerId,
+              price_id: priceId,
+              has_access: true,
+              stripe_subscription_id: subscriptionId,
+              plan_name: plan.name,
+              subscription_status: "active",
+              current_period_end: currentPeriodEnd,
+              cancel_at_period_end: false, // explicitly reset on upgrade
+            })
+            .eq("id", user.id);
+
+          if (error) console.error("Failed to update profile:", error);
+          else console.log(`✅ Updated profile for upgrade: ${user.id}`);
+        } else {
+          // 🆕 new user
+          const { error } = await supabase.from("profiles").insert({
+            id: user.id,
+            email: customer.email,
+            customer_id: customerId,
+            price_id: priceId,
+            has_access: true,
+            stripe_subscription_id: subscriptionId,
+            plan_name: plan.name,
+            subscription_status: "active",
+            current_period_end: currentPeriodEnd,
+          });
+          if (error) console.error("Failed to insert new profile:", error);
+          else console.log(`🆕 Inserted new profile for ${customer.email}`);
         }
 
-        // Extra: send email with user link, product page, etc...
-        // try {
-        //   await sendEmail(...);
-        // } catch (e) {
-        //   console.error("Email issue:" + e?.message);
-        // }
+        try {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("welcome_email_sent")
+            .eq("id", user.id)
+            .single();
+          if (!profile?.welcome_email_sent) {
+            await sendEmail({
+              to: customer.email,
+              subject: `🎉 Welcome to ${plan.name}!`,
+              text: `Thanks for subscribing to the ${plan.name} plan. We're excited to have you!`,
+              html: welcomeTemplate({
+                planName: plan.name,
+                userName: customer.name || customer.email,
+              }),
+            });
+            await supabase
+              .from("profiles")
+              .update({ welcome_email_sent: true })
+              .eq("id", user.id);
+            console.log(`📧 Welcome email sent to ${customer.email}`);
+          }
+        } catch (emailError) {
+          console.error("⚠️ Failed to send welcome email:", emailError.message);
+        }
 
+        // ✅ After successful processing, store the event
+        console.log("🔍 About to insert event:", { eventId, eventType });
+
+        const { data: insertedEvent, error: insertError } = await supabase
+          .from("stripe_events")
+          .insert({ event_id: eventId, event_type: eventType });
+
+        if (insertError) {
+          console.error("❌ Failed to insert event:", insertError);
+        } else {
+          console.log("✅ Event logged:", insertedEvent);
+        }
         break;
       }
       // case "checkout.session.completed": {
@@ -180,15 +291,102 @@ export async function POST(req) {
       case "checkout.session.expired": {
         // User didn't complete the transaction
         // You don't need to do anything here, by you can send an email to the user to remind him to complete the transaction, for instance
+        // const session = event.data.object;
+        // const email = session.customer_details?.email;
+        //console.log(`⚠️ Checkout session expired for ${email}`);
+        // Optionally send a reminder email via Resend
         break;
       }
 
       case "customer.subscription.updated": {
-        // The customer might have changed the plan (higher or lower plan, cancel soon etc...)
-        // You don't need to do anything here, because Stripe will let us know when the subscription is canceled for good (at the end of the billing cycle) in the "customer.subscription.deleted" event
-        // You can update the user data to show a "Cancel soon" badge for instance
+        const subscription = event.data.object;
+        const customerId = subscription.customer;
+        const priceId = subscription.items.data[0]?.price?.id;
+        const status = subscription.status;
+        const planName = subscription.items.data[0]?.price?.nickname;
+
+        console.log("🔄 Subscription updated:", {
+          customerId,
+          priceId,
+          status,
+        });
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("id, email")
+          .eq("customer_id", customerId)
+          .single();
+
+        if (!profile) break;
+
+        // if (status === "active" || status === "trialing") {
+        const { error } = await supabase
+          .from("profiles")
+          .update({
+            price_id: priceId,
+            has_access: true,
+            cancel_at_period_end: subscription.cancel_at_period_end,
+            current_period_end: new Date(
+              subscription.current_period_end * 1000
+            ),
+            subscription_status: status,
+            plan_name: planName,
+          })
+          .eq("customer_id", customerId);
+        if (error) console.error("❌ Supabase update failed:", error);
+        else console.log("✅ Updated subscription for", customerId);
+        console.log(
+          `✅ Updated subscription status for ${profile.email} (cancel_at_period_end=${subscription.cancel_at_period_end})`
+        );
+        // }
+
         break;
       }
+
+      // case "customer.subscription.updated": {
+      // The customer might have changed the plan (higher or lower plan, cancel soon etc...)
+      // You don't need to do anything here, because Stripe will let us know when the subscription is canceled for good (at the end of the billing cycle) in the "customer.subscription.deleted" event
+      // You can update the user data to show a "Cancel soon" badge for instance
+      // const subscription = event.data.object;
+      // const customerId = subscription.customer;
+      // const priceId = subscription.items.data[0]?.price?.id;
+      // const status = subscription.status;
+      // const customer = await stripe.customers.retrieve(customerId);
+
+      // console.log("🔄 Subscription updated:", {
+      //   customerId,
+      //   priceId,
+      //   status,
+      // });
+
+      // const { data: profile } = await supabase
+      //   .from("profiles")
+      //   .select("id, email")
+      //   .eq("customer_id", customerId)
+      //   .single();
+
+      // if (!profile) break;
+      // const { error } = await supabase.from("profiles").upsert({
+      //   id: user.id,
+      //   email: customer.email,
+      //   customer_id: customerId,
+      //   price_id: priceId,
+      //   has_access: true,
+      //   stripe_subscription_id: subscriptionId,
+      //   current_period_end: new Date(
+      //     session.subscription
+      //       ? (await stripe.subscriptions.retrieve(session.subscription))
+      //           .current_period_end * 1000
+      //       : null
+      //   ),
+      // });
+      // if (error) {
+      //   console.error("Failed to upsert profile:", error);
+      //   throw error;
+      // }
+
+      //  break;
+      //  }
 
       case "customer.subscription.deleted": {
         // The customer subscription stopped
@@ -200,7 +398,12 @@ export async function POST(req) {
 
         await supabase
           .from("profiles")
-          .update({ has_access: false })
+          .update({
+            has_access: false,
+            cancel_at_period_end: false,
+            current_period_end: null,
+            subscription_status: "canceled",
+          })
           .eq("customer_id", subscription.customer);
         break;
       }
@@ -222,10 +425,13 @@ export async function POST(req) {
         // Make sure the invoice is for the same plan (priceId) the user subscribed to
         if (profile.price_id !== priceId) break;
 
+        // ✅  Add null check
+        if (!profile || profile.price_id !== priceId) break;
+
         // Grant the profile access to your product. It's a boolean in the database, but could be a number of credits, etc...
         await supabase
           .from("profiles")
-          .update({ has_access: true })
+          .update({ has_access: true, payment_failed: false })
           .eq("customer_id", customerId);
 
         break;
@@ -237,11 +443,24 @@ export async function POST(req) {
         // ⏳ OR wait for the customer to pay (more friendly):
         //      - Stripe will automatically email the customer (Smart Retries)
         //      - We will receive a "customer.subscription.deleted" when all retries were made and the subscription has expired
+        const invoice = event.data.object;
+        const customerId = invoice.customer;
+
+        await supabase
+          .from("profiles")
+          .update({
+            payment_failed: true,
+          })
+          .eq("customer_id", customerId);
+
+        console.warn(`⚠️ Payment failed for customer ${customerId}`);
 
         break;
 
-      default:
-      // Unhandled event type
+      default: {
+        console.warn(`Unhandled Stripe event type: ${eventType}`);
+        break;
+      }
     }
   } catch (e) {
     console.error("stripe error: ", e.message);
@@ -249,3 +468,44 @@ export async function POST(req) {
 
   return NextResponse.json({});
 }
+
+// case "customer.subscription.updated": {
+//   // The customer might have changed the plan (higher or lower plan, cancel soon etc...)
+//   // You don't need to do anything here, because Stripe will let us know when the subscription is canceled for good (at the end of the billing cycle) in the "customer.subscription.deleted" event
+//   // You can update the user data to show a "Cancel soon" badge for instance
+//   break;
+// }
+
+// const { error } = await supabase.from("profiles").upsert({
+//   id: user.id,
+//   email: customer.email,
+//   customer_id: customerId,
+//   price_id: priceId,
+//   has_access: true,
+//   stripe_subscription_id: subscriptionId,
+//   current_period_end: new Date(
+//     session.subscription
+//       ? (await stripe.subscriptions.retrieve(session.subscription))
+//           .current_period_end * 1000
+//       : null
+//   ),
+// });
+// if (error) {
+//   console.error("Failed to upsert profile:", error);
+//   throw error;
+// }
+
+// Extra: send email with user link, product page, etc...
+// try {
+//   await sendEmail(...);
+// } catch (e) {
+//   console.error("Email issue:" + e?.message);
+// }
+
+// html: `
+//   <h1>Welcome to ${plan.name}!</h1>
+//   <p>Hi ${customer.name || customer.email},</p>
+//   <p>Thanks for subscribing to the <strong>${plan.name}</strong>. You're all set to start using your new features.</p>
+//   <p><a href="https://yourapp.com/dashboard">Go to your dashboard</a></p>
+//   <p>— The Your App Team</p>
+// `,

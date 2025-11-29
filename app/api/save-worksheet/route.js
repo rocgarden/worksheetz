@@ -1,8 +1,50 @@
 // app/api/save-worksheet/route.js
+export const runtime = "nodejs";
+
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import leoProfanity from "leo-profanity";
+//import DOMPurify from "isomorphic-dompurify";
+import { sanitizeInput, deepSanitize } from "@/libs/sanitize"; // ← Use wrapper
 import { saveWorksheetSchema } from "@/libs/zodSchemas";
+
+leoProfanity.loadDictionary();
+
+// Small helper that handles both HTML sanitization and bad words
+// function sanitizeAndFilter(text) {
+//   if (!text) return "";
+//   //let clean = DOMPurify.sanitize(text, { ALLOWED_TAGS: [] });
+//   let clean = sanitizeInput(text);
+
+//   clean = leoProfanity.clean(clean);
+//   return clean.trim();
+// }
+
+// 🧠 Recursively sanitize all text values inside an object or array
+// function deepSanitize(obj) {
+//   if (Array.isArray(obj)) {
+//     return obj.map(deepSanitize);
+//   } else if (obj && typeof obj === "object") {
+//     const sanitized = {};
+//     for (const key in obj) {
+//       sanitized[key] = deepSanitize(obj[key]);
+//     }
+//     return sanitized;
+//   } else if (typeof obj === "string") {
+//     return sanitizeAndFilter(obj);
+//   } else {
+//     return obj;
+//   }
+// }
+
+function sanitizeAndFilter(text) {
+  if (!text) return "";
+  let clean = sanitizeInput(text);
+  clean = leoProfanity.clean(clean);
+  return clean.trim();
+}
+
 export async function POST(req) {
   try {
     const cookieStore = await cookies();
@@ -61,17 +103,25 @@ export async function POST(req) {
 
     // const canDownload = downloadCount < planInfo.monthlyPdfs;
 
+    // ✅ Apply profanity + HTML sanitization
+    const safeWorksheet = deepSanitize(worksheet);
+    const safeTopic = sanitizeAndFilter(topic);
+    const safeGradeLevel = sanitizeAndFilter(gradeLevel);
+    console.log("💾 Saving worksheet with file_name:", fileName);
+
     const { data: worksheetData, error: insertError } = await supabase
       .from("worksheets")
       .insert({
         user_id: user.id,
         file_name: fileName,
-        topic,
-        grade_level: gradeLevel,
+        topic: safeTopic,
+        grade_level: safeGradeLevel,
         type,
-        content: worksheet,
+        content: safeWorksheet,
       })
       .select();
+    console.log("✅ Saved with file_name:", worksheetData?.[0]?.file_name);
+
     if (insertError) {
       console.error("Supabase insert error:", insertError);
       return NextResponse.json(

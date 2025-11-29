@@ -4,6 +4,7 @@ import PDFDocument from "pdfkit";
 import { PassThrough } from "stream";
 import path from "path";
 import { fileURLToPath } from "url";
+import { json } from "zod";
 
 // Setup __dirname since you're using ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -95,17 +96,28 @@ export async function grammarPdfTemplate(data) {
 
     console.log("🧠 Rendering guided practice...");
 
-    // --- GUIDED PRACTICE ---
+    // --- GUIDED PRACTICE stays on pg 1 ---
     renderGuidedPractice(doc, jsonData.guided_practice);
-    doc.addPage();
 
-    // --- INDEPENDENT PRACTICE ---
-    renderIndependentPractice(doc, jsonData.independent_practice);
+    // --- INDEPENDENT PRACTICE 1---
+    if (
+      jsonData.independent_practice.story ||
+      jsonData.independent_practice.questions.length > 0
+    ) {
+      doc.addPage();
+      renderIndependentPractice(doc, jsonData.independent_practice);
+    }
 
-    // --- INDEPENDENT PRACTICE ---
-    renderIndependentPractice(doc, jsonData.independent_practice_2);
-
+    // --- INDEPENDENT PRACTICE -2--
+    if (
+      jsonData.independent_practice_2.story ||
+      jsonData.independent_practice_2.questions.length > 0
+    ) {
+      doc.addPage();
+      renderIndependentPractice(doc, jsonData.independent_practice_2);
+    }
     // --- ANSWER KEY ---
+    doc.addPage();
     renderAnswerKey(
       doc,
       jsonData.guided_practice,
@@ -196,7 +208,7 @@ function renderGuidedPractice(doc, guided) {
 }
 
 function renderIndependentPractice(doc, independent) {
-  doc.addPage();
+  // doc.addPage();
   const boxX = doc.page.margins.left;
   const boxWidth =
     doc.page.width - doc.page.margins.left - doc.page.margins.right;

@@ -65,25 +65,46 @@ export const userUsageSchema = z.object({
   limitReached: z.boolean().default(false),
 });
 
+// 🧩 Common nested question shapes (optional fields, safe to evolve)
+const questionSchema = z.object({
+  type: z.string().optional(),
+  paragraph: z.string().max(2000).optional(),
+  question: z.string().max(1000).optional(),
+  prompt: z.string().max(1000).optional(),
+  choices: z.array(z.string().max(300)).optional(),
+  answer: z
+    .union([z.string().max(500), z.array(z.string().max(300))])
+    .optional(),
+});
+
 // ✅ Save Worksheet Schema
 export const saveWorksheetSchema = z.object({
   userId: z.string(),
-  fileName: z.string().min(1, "File name is required"),
-  worksheet: z.any(), // or use z.record(...) if you know structure
-  topic: z.string().optional(),
+  fileName: z.string().min(1, "File name is required").max(200), //added max
+  // worksheet: z.any(), // or use z.record(...) if you know structure
+  worksheet: z
+    .object({
+      topic: z.string().max(200).optional(),
+      gradeLevel: z.string().max(100).optional(),
+      questions: z.array(questionSchema).optional(),
+      instructions: z.string().max(2000).optional(),
+    })
+    .passthrough() // 👈 allows extra AI-generated fields you haven’t modeled yet
+    .optional(),
+  topic: z.string().max(200).optional(), //added max
   gradeLevel: z.string().optional(),
   type: z.enum(["reading", "grammar", "socialStudies"]),
 });
 
 // Common nested question shapes
-const questionSchema = z.object({
-  type: z.string().optional(),
-  paragraph: z.string().optional(),
-  question: z.string().optional(),
-  prompt: z.string().optional(),
-  choices: z.array(z.string()).optional(),
-  answer: z.union([z.string(), z.array(z.string())]).optional(),
-});
+// const questionSchema = z.object({
+//   type: z.string().optional(),
+//   paragraph: z.string().optional(),
+//   question: z.string().optional(),
+//   prompt: z.string().optional(),
+//   choices: z.array(z.string()).optional(),
+//   answer: z.union([z.string(), z.array(z.string())]).optional(),
+// });
 
 const practiceSchema = z.object({
   instructions: z.string().optional(),

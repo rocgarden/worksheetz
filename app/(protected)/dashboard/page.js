@@ -1,4 +1,5 @@
-//app/dashboard/page.js
+//app/(protected)/dashboard/page.js
+
 import { createClient } from "@/libs/supabase/server";
 import ProfileCard from "@/components/ProfileCard"; // your UI component
 import UsageStats from "@/components/UsageStats";
@@ -8,8 +9,11 @@ import ButtonAccount from "@/components/ButtonAccount";
 import ButtonCheckout from "@/components/ButtonCheckout";
 import config from "@/config";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
 
 export default async function DashboardPage({ searchParams }) {
   const params = await searchParams; // ✅ Await it once
@@ -25,12 +29,15 @@ export default async function DashboardPage({ searchParams }) {
     console.error("Auth error:", userError.message);
   }
   if (!user) {
-    return <p>Not signed in</p>; // or redirect
+    redirect(config.auth.loginUrl); // 👈 force redirect instead of rendering fallback
+    // return <p>Not signed in</p>; // or redirect
   }
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles") // or 'profiles' depending on your schema
-    .select("id, name, email, created_at, customer_id, price_id, has_access")
+    .select(
+      "id, name, email, created_at, customer_id, price_id, has_access, cancel_at_period_end, current_period_end, payment_failed"
+    )
     .eq("id", user.id)
     .single();
 
@@ -46,6 +53,12 @@ export default async function DashboardPage({ searchParams }) {
     user.id,
     planInfo
   );
+  // Add this right after getting the profile
+  console.log("🔍 Dashboard Debug:");
+  console.log("User ID:", user.id);
+  console.log("Profile price_id:", profile?.price_id);
+  console.log("Plan Info:", planInfo);
+  console.log("Timestamp:", new Date().toISOString());
 
   // ✅ Determine limits
   const totalGenerationLimit =
@@ -127,11 +140,12 @@ export default async function DashboardPage({ searchParams }) {
 
         {/* ✅ CASE 2: Free plan → offer upgrade to Pro */}
         {isFreePlan && (
-          <ButtonCheckout
-            mode="subscription"
-            priceId={proPlan.priceId}
-            text="Upgrade to Pro"
-          />
+          // <ButtonCheckout
+          //   mode="subscription"
+          //   priceId={proPlan.priceId}
+          //   text="Upgrade to Pro"
+          // />
+          <ButtonAccount text="Upgrade to Pro" />
         )}
 
         {/* ✅ CASE 3: Pro plan → no upgrade button */}
@@ -149,10 +163,10 @@ export default async function DashboardPage({ searchParams }) {
               >
                 Generate Worksheet
               </Link>
-              {!canDownload && (
+              {!canDownload && usage.pdfBonus === 0 && (
                 <p className="text-yellow-600 text-sm mt-2">
                   ⚠️ You’ve reached your monthly PDF download limit (
-                  {totalDownloadLimit}). You can still generate worksheets but
+                  {planInfo.monthlyPdfs}). You can still generate worksheets but
                   won’t be able to download them.
                 </p>
               )}

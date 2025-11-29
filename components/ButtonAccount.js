@@ -13,7 +13,7 @@ import apiClient from "@/libs/api";
 //     This is only available if the customer has a customerId (they made a purchase previously)
 //  2. Logout: sign out and go back to homepage
 // See more at https://shipfa.st/docs/components/buttonAccount
-const ButtonAccount = () => {
+const ButtonAccount = ({ text = "Account" }) => {
   const supabase = createClient();
   const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState(null);
@@ -40,10 +40,13 @@ const ButtonAccount = () => {
 
     try {
       const { url } = await apiClient.post("/stripe/create-portal", {
-        returnUrl: window.location.href,
+        //returnUrl: window.location.href,
+        returnUrl: window.location.origin + "/dashboard", // ← Return to dashboard, not current page
       });
 
-      window.location.href = url;
+      //window.location.href = url;
+      //window.location.replace(url); // ← Use replace instead of href
+      window.open(url, "_blank"); // ← This prevents it from entering history!
     } catch (e) {
       console.error(e);
     }
@@ -74,7 +77,7 @@ const ButtonAccount = () => {
             {
               // user?.user_metadata?.name ||
               // user?.email?.split("@")[0] ||
-              "Account"
+              `${text}` || "Account"
             }
 
             {isLoading ? (

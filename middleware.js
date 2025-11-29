@@ -16,6 +16,61 @@
 //     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
 //   ],
 // };
+
+//app/middleware.js
+// import { updateSession } from "@/libs/supabase/middleware";
+// import { NextResponse } from "next/server";
+// import { Ratelimit } from "@upstash/ratelimit";
+// import { Redis } from "@upstash/redis";
+
+// // ✅ Set up Upstash Redis
+// const redis = new Redis({
+//   url: process.env.UPSTASH_REDIS_REST_URL,
+//   token: process.env.UPSTASH_REDIS_REST_TOKEN,
+// });
+
+// // ✅ Configure rate limit: 5 requests per 60 seconds
+// const ratelimit = new Ratelimit({
+//   redis,
+//   limiter: Ratelimit.slidingWindow(5, "60 s"),
+// });
+
+// // ✅ Define which routes to rate-limit
+// const urlsToRateLimit = ["/api/generate-json", "/api/generate-pdf"];
+
+// export async function middleware(request) {
+//   const pathname = request.nextUrl.pathname;
+
+//   // ✅ Apply rate limit only to selected API routes
+//   if (urlsToRateLimit.includes(pathname)) {
+//     const ip =
+//       request.ip ??
+//       request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+//       "127.0.0.1";
+
+//     const { success } = await ratelimit.limit(ip);
+
+//     if (!success) {
+//       return NextResponse.json(
+//         { error: "Rate limit exceeded. Please wait and try again." },
+//         { status: 429 }
+//       );
+//     }
+//   }
+
+//   // ✅ Always refresh Supabase session
+//   return await updateSession(request);
+// }
+
+// // ✅ Apply middleware to all routes except static/image assets
+// export const config = {
+//   matcher: [
+//     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+//   ],
+// };
+
+//****************new version with headers */
+// middleware.js (at project root)
 import { updateSession } from "@/libs/supabase/middleware";
 import { NextResponse } from "next/server";
 import { Ratelimit } from "@upstash/ratelimit";
@@ -34,7 +89,12 @@ const ratelimit = new Ratelimit({
 });
 
 // ✅ Define which routes to rate-limit
-const urlsToRateLimit = ["/api/generate-json", "/api/generate-pdf"];
+const urlsToRateLimit = [
+  "/api/generate-json",
+  "/api/generate-pdf",
+  "/api/stripe/create-portal",
+  "/api/stripe/create-checkout",
+];
 
 export async function middleware(request) {
   const pathname = request.nextUrl.pathname;
@@ -57,7 +117,45 @@ export async function middleware(request) {
   }
 
   // ✅ Always refresh Supabase session
-  return await updateSession(request);
+  let response = await updateSession(request);
+
+  // If updateSession returned a redirect, return it immediately
+  if (response.status === 307 || response.headers.get("location")) {
+    return response;
+  }
+
+  // ✅ Add strict no-cache headers for protected routes
+  // const protectedPaths = ["/dashboard", "/generate", "/Worksheet-Editor"];
+  // const isProtectedRoute = protectedPaths.some((path) =>
+  //   pathname.startsWith(path)
+  // );
+
+  // if (isProtectedRoute) {
+  //   response.headers.set(
+  //     "Cache-Control",
+  //     "no-store, no-cache, must-revalidate, private, max-age=0"
+  //   );
+  //   response.headers.set("Pragma", "no-cache");
+  //   response.headers.set("Expires", "0");
+  //   response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  // }
+
+  // return response;
+  const aggressiveNoCachePaths = ["/generate", "/Worksheet-Editor"];
+  const needsAggressiveNoCache = aggressiveNoCachePaths.some((path) =>
+    pathname.startsWith(path)
+  );
+
+  if (needsAggressiveNoCache) {
+    response.headers.set(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, private, max-age=0"
+    );
+    response.headers.set("Pragma", "no-cache");
+    response.headers.set("Expires", "0");
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  }
+  return response;
 }
 
 // ✅ Apply middleware to all routes except static/image assets

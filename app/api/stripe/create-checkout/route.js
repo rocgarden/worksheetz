@@ -54,12 +54,12 @@ export async function POST(req) {
         limit: 1,
       });
       if (existingCustomers.data.length > 0) {
-        customerId = existingCustomers.data[0].id;
+        //customerId = existingCustomers.data[0].id;
         // Save it in Supabase so it’s reused next time
-        // await supabase
-        //   .from("profiles")
-        //   .update({ customer_id: customerId })
-        //   .eq("id", user?.id);
+        await supabase
+          .from("profiles")
+          .update({ customer_id: customerId })
+          .eq("id", user?.id);
       } else {
         // 2️⃣ Create a new Stripe customer
         const customer = await stripe.customers.create({

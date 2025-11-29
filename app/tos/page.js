@@ -71,11 +71,10 @@ You must be 18 years or older to use this website.
 No children or minors are permitted to register or use the Service.
 
 2. Account and Access
-
-You must use a valid email address and legitimate payment method when subscribing.
-Accounts using fake emails or invalid credit cards may be terminated without notice.
-Subscribers may access general information about their account—such as generation count, PDF downloads count, and active subscription plan—through the website.
-Billing details are handled by Stripe and can be managed via your Stripe billing portal.
+You must use a valid email address and legitimate payment method when subscribing. 
+Accounts using fake emails or invalid credit cards may be terminated without notice. Each email address may be associated with only one account at a time. Creating multiple accounts using the same email is not permitted.
+Users may not sign up or create accounts on behalf of other individuals. Subscribers may access general information about their account—such as generation count, PDF downloads count, and active subscription plan—through the website. 
+Billing details are handled by Stripe and can be managed via your Stripe billing portal. Any violation may result in immediate account deactivation without refund.
 
 3. Acceptable Use
 
@@ -172,7 +171,7 @@ Continued use of the Service after updates constitutes acceptance of the revised
 12. Contact
 
 For any questions, contact:
-📧 support@worksheetzai.com`}
+📧 hello@worksheetzai.com`}
         </pre>
       </div>
     </main>

@@ -10,6 +10,7 @@ export const createCheckout = async ({
   couponId,
   clientReferenceId,
   user,
+  metadata,
 }) => {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -49,6 +50,7 @@ export const createCheckout = async ({
       : [],
     success_url: successUrl,
     cancel_url: cancelUrl,
+    metadata,
     ...extraParams,
   });
 
@@ -59,6 +61,22 @@ export const createCheckout = async ({
 export const createCustomerPortal = async ({ customerId, returnUrl }) => {
   try {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+    // ✅ Validate returnUrl is your domain
+    // ✅ ADD THIS: Validate returnUrl
+    const allowedDomains = [
+      process.env.NEXT_PUBLIC_APP_URL,
+      "http://localhost:3000",
+      "https://localhost:3000",
+    ].filter(Boolean);
+
+    const isValidUrl = allowedDomains.some((domain) =>
+      returnUrl.startsWith(domain)
+    );
+
+    if (!isValidUrl) {
+      throw new Error("Invalid return URL");
+    }
 
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customerId,
@@ -78,9 +96,10 @@ export const findCheckoutSession = async (sessionId) => {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
     const session = await stripe.checkout.sessions.retrieve(sessionId, {
-      expand: ["line_items"],
+      // expand: ["line_items"],
+      expand: ["line_items.data.price"],
     });
-
+    console.log("🔍 Line items:", session?.line_items?.data);
     return session;
   } catch (e) {
     console.error(e);

@@ -1,9 +1,13 @@
-//app/generate/layout.js
+//app/(protected)/generate/layout.js
 import { redirect } from "next/navigation";
 import { createClient } from "@/libs/supabase/server";
 import { getUserMonthlyUsage } from "@/libs/usage";
 import { getPlanByPriceId } from "@/libs/planutils";
 import config from "@/config";
+
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
 
 export default async function GenerateLayout({ children }) {
   const supabase = await createClient();
