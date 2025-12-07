@@ -20,14 +20,14 @@ const ButtonCheckout = ({ priceId, mode = "subscription", text = "" }) => {
         priceId,
         mode,
         successUrl: window.location.origin + "/dashboard", // ← Always go to dashboard
-        cancelUrl: window.location.origin + "/pricing", // ← Go back to pricing on cancel
+        cancelUrl: window.location.origin + "/#pricing", // ← Go back to pricing on cancel
       });
       //   successUrl: window.location.href,
       //   cancelUrl: window.location.href,
       // });
 
       //window.location.replace(res.url); // ← Use replace instead of href
-      window.open(url, "_blank"); // ← This prevents it from entering history!
+      window.open(res.url, "_blank"); // ← This prevents it from entering history!
 
       // window.location.href = res.url;
     } catch (e) {

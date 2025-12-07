@@ -10,6 +10,7 @@ import { Toaster } from "react-hot-toast";
 import { Tooltip } from "react-tooltip";
 import config from "@/config";
 import { useRouter } from "next/navigation";
+
 // Crisp customer chat support:
 // This component is separated from ClientLayout because it needs to be wrapped with <SessionProvider> to use useSession() hook
 const CrispChat = () => {
@@ -100,6 +101,32 @@ const CrispChat = () => {
 const ClientLayout = ({ children }) => {
   const router = useRouter();
   const supabase = createClient();
+  // 🔄 Always refresh Supabase session after coming back from Stripe Checkout
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function syncSession() {
+      try {
+        const { data } = await supabase.auth.getSession();
+
+        // Only refresh if a session exists
+        if (data?.session) {
+          await supabase.auth.refreshSession();
+          if (!isCancelled) {
+            router.refresh(); // refresh all server components instantly
+          }
+        }
+      } catch (e) {
+        console.error("Failed to refresh Supabase session:", e);
+      }
+    }
+
+    syncSession();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [supabase, router]);
 
   // 🔒 SIGN OUT LISTENER (always keep this)
   // useEffect(() => {

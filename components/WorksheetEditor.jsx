@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 //import DOMPurify from "isomorphic-dompurify";
 import DOMPurify from "dompurify"; // This works client-side
 import leoProfanity from "leo-profanity";
@@ -9,7 +9,6 @@ import IntroActivityEditor from "./IntroActivityEditor";
 import toast from "react-hot-toast";
 import { saveWorksheetSchema } from "@/libs/zodSchemas";
 import AnswerKeyReview from "./AnswerKeyReview";
-import { useSearchParams } from "next/navigation";
 
 export default function WorksheetEditor({ fileName, initialData, type }) {
   const searchParams = useSearchParams();
@@ -23,8 +22,9 @@ export default function WorksheetEditor({ fileName, initialData, type }) {
   const [isLocked, setIsLocked] = useState(false);
   const [worksheetId, setWorksheetId] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
-  const [toastMessage, setToastMessage] = useState("");
   const router = useRouter();
+  // 👉 Ref for bottom of the form
+  const bottomRef = useRef(null);
 
   const inputProps = {
     disabled: isLocked,
@@ -40,14 +40,6 @@ export default function WorksheetEditor({ fileName, initialData, type }) {
     clean = clean.normalize("NFKC").replace(/\u00A0/g, " ");
     clean = leoProfanity.clean(clean);
     return clean.trim();
-  };
-
-  // Handle form field changes
-  const handleChange = (field, value) => {
-    setWorksheet((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
   };
 
   const handleNestedChange = (section, field, value) => {
@@ -159,7 +151,7 @@ export default function WorksheetEditor({ fileName, initialData, type }) {
         // 👉 Show warning toast
         toast.error(
           "⚠️ Download your PDF now — it can't be regenerated later if you leave this page.",
-          { duration: 8000 }
+          { duration: 8000, style: { background: "#f87171", color: "#fff" } }
         );
         setSavedFileName(true);
         setIsLocked(true); // if you're locking after save
@@ -234,12 +226,24 @@ export default function WorksheetEditor({ fileName, initialData, type }) {
       <h2 className="text-2xl font-semibold mb-6 text-purple-800">
         📝 Edit Worksheet
       </h2>
-      <p className="text-sm text-orange-600 mb-4">
+      <p className="text-sm text-orange-600 mb-6">
         📌 <strong>Review Reminder:</strong> This worksheet was generated using
         AI and may contain incomplete or incorrect content or answers. Please
         review each section carefully before using or sharing.
       </p>
 
+      {/* Scroll to bottom button */}
+      <div className="flex justify-center my-6">
+        <button
+          type="button"
+          onClick={() =>
+            bottomRef.current?.scrollIntoView({ behavior: "smooth" })
+          }
+          className="btn border-purple-500 text-purple-500 rounded-full hover:bg-purple-300 animate-bounce"
+        >
+          <span>↓ </span>
+        </button>
+      </div>
       {!worksheet ? (
         <>Loading Paragraph, please wait...</>
       ) : (
@@ -862,7 +866,10 @@ export default function WorksheetEditor({ fileName, initialData, type }) {
       )}
       {/* Buttons */}
 
-      <div className="text-right mt-4 flex flex-wrap gap-4 justify-end">
+      <div
+        ref={bottomRef}
+        className="text-right mt-4 flex flex-wrap gap-4 justify-end"
+      >
         {!savedFileName && (
           <div>
             {canDownload ? (

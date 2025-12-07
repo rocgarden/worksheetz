@@ -79,19 +79,30 @@ const Footer = () => {
 
               <div className="flex flex-col justify-center items-center md:items-start gap-2 mb-10 text-sm">
                 {config.resend.supportEmail && (
-                  <a
-                    href={`mailto:${config.resend.supportEmail}`}
-                    target="_blank"
-                    className="link link-hover"
-                    aria-label="Contact Support"
-                  >
-                    Support
-                  </a>
+                  <>
+                    <a
+                      href={`mailto:${config.resend.supportEmail}`}
+                      target="_blank"
+                      className="link link-hover"
+                      aria-label="Contact Support"
+                    >
+                      Support
+                    </a>
+                  </>
                 )}
                 <Link href="/#pricing" className="link link-hover">
                   Pricing
                 </Link>
-
+                <Link href="/contact" className="link link-hover">
+                  Contact
+                </Link>
+                {/* <span className="text-base-content/80">Contact us:</span> */}
+                <a
+                  href={`mailto:${config.resend.supportEmail}`}
+                  className="link link-hover text-base-content/80 font-medium"
+                >
+                  {config.resend.supportEmail}
+                </a>
                 {/* <a href="/#" target="_blank" className="link link-hover">
                   Affiliates
                 </a> */}

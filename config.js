@@ -24,12 +24,12 @@ const config = {
         //  REQUIRED - Name of the plan, displayed on the pricing page
         name: "Starter",
         // A friendly description of the plan, displayed on the pricing page. Tip: explain why this plan and not others
-        description: "Perfect for small projects",
+        description: "Perfect for teachers getting started with AI worksheets.",
         // The price you want to display, the one user will be charged on Stripe.
         price: 0,
         isFree: false,
         // If you have an anchor price (i.e. $29) that you want to display crossed out, put it here. Otherwise, leave it empty
-        priceAnchor: 0,
+        // priceAnchor: 0,
         monthlyGenerations: 2,
         monthlyPdfs: 1,
         features: [
@@ -55,7 +55,7 @@ const config = {
           // process.env.NODE_ENV === "development"
           "price_1SI9fKPiVrPo29EfviZjKLmE", // "price_1O5KtcAxyNprDp7iftKnrrpw"
         //: "price_456",
-        name: "Pro",
+        name: "Teacher Plus",
         description:
           "Unlock enhanced AI capabilities and expanded worksheet generation limits for serious educators.",
         price: 5 + "/mo",
@@ -95,6 +95,7 @@ const config = {
     fromAdmin: `Worksheetz Ai <support@support.worksheetzai.com>`,
     // Email shown to customer if need support. Leave empty if not needed => if empty, set up Crisp above, otherwise you won't be able to offer customer support."
     supportEmail: "hello@worksheetzai.com",
+    replyTo: "hello@worksheetzai.com", // ← Add this
   },
   colors: {
     // REQUIRED — The DaisyUI theme to use (added to the main layout.js). Leave blank for default (light & dark mode).

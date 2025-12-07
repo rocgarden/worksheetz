@@ -231,6 +231,7 @@ export async function POST(req) {
                 planName: plan.name,
                 userName: customer.name || customer.email,
               }),
+              replyTo: configFile.email.replyTo,
             });
             await supabase
               .from("profiles")
