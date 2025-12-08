@@ -16,7 +16,6 @@ import { socialStudiesGeneratorSchema } from "@/libs/zodSchemas";
 import { readingGeneratorSchema } from "@/libs/zodSchemas";
 import { grammarGeneratorSchema } from "@/libs/zodSchemas";
 import { getPlanByPriceId } from "@/libs/planutils";
-import { ca } from "zod/v4/locales";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

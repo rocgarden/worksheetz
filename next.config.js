@@ -1,5 +1,5 @@
 const nextConfig = {
-  serverExternalPackages: ["pdfkit", "canvas", "jsdom", "pdfjs-dist"], // ← Add canvas and jsdom
+  serverExternalPackages: ["pdfkit", "jsdom", "pdfjs-dist"], // ← Add canvas and jsdom
 
   reactStrictMode: true,
   // Disable ESLint during build (fix those warnings later)
@@ -97,18 +97,18 @@ const nextConfig = {
         module: /node_modules\/@supabase\/supabase-js/,
         message: /A Node\.js API is used \(process\.version/,
       },
-      // ✅ Ignore canvas/sharp dylib conflicts
-      {
-        module: /node_modules\/canvas/,
-        message: /Class GNotificationCenterDelegate is implemented in both/,
-      },
+      // // ✅ Ignore canvas/sharp dylib conflicts
+      // {
+      //   module: /node_modules\/canvas/,
+      //   message: /Class GNotificationCenterDelegate is implemented in both/,
+      // },
     ];
     // ✅ CRITICAL: Tell webpack to ignore canvas/jsdom on client-side
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
-        canvas: false,
-        jsdom: false,
+        // canvas: false,
+        // jsdom: false,
         fs: false,
         "pdfjs-dist": false, // ← Add this
       };
@@ -129,7 +129,7 @@ const nextConfig = {
     // ✅ Also externalize these for client bundles
     config.externals = config.externals || [];
     config.externals.push({
-      canvas: "canvas",
+      // canvas: "canvas",
       jsdom: "jsdom",
       "pdfjs-dist": "pdfjs-dist",
     });
