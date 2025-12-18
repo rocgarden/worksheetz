@@ -38,6 +38,7 @@ export default function Login() {
           provider,
           options: {
             redirectTo: redirectURL,
+            prompt: "consent",
           },
         });
       } else if (type === "magic_link") {
