@@ -18,15 +18,15 @@ const config = {
       {
         // REQUIRED — we use this to find the plan in the webhook (for instance if you want to update the user's credits based on the plan)
         priceId:
-          //  process.env.NODE_ENV === "development"
-          "price_1SI9fJPiVrPo29EffY1xtAxP", // "price_1Niyy5AxyNprDp7iZIqEyD2h"
-        // : "price_456",
+          //  process.env.NODE_ENV === "development",
+          "price_1Sct9QEZ6GaUMPgOyiDWQnym",
+        //   "price_1SI9fJPiVrPo29EffY1xtAxP", <-testing
         //  REQUIRED - Name of the plan, displayed on the pricing page
         name: "Starter",
         // A friendly description of the plan, displayed on the pricing page. Tip: explain why this plan and not others
         description: "Perfect for teachers getting started with AI worksheets.",
         // The price you want to display, the one user will be charged on Stripe.
-        price: 0,
+        price: 0 + "/mo",
         isFree: false,
         // If you have an anchor price (i.e. $29) that you want to display crossed out, put it here. Otherwise, leave it empty
         // priceAnchor: 0,
@@ -51,10 +51,10 @@ const config = {
       {
         // This plan will look different on the pricing page, it will be highlighted. You can only have one plan with isFeatured: true
         isFeatured: true,
-        priceId:
-          // process.env.NODE_ENV === "development"
-          "price_1SI9fKPiVrPo29EfviZjKLmE", // "price_1O5KtcAxyNprDp7iftKnrrpw"
-        //: "price_456",
+        priceId: "price_1Sct5VEZ6GaUMPgO7lXmcKjB ",
+        // process.env.NODE_ENV === "development"
+        //"price_1SI9fKPiVrPo29EfviZjKLmE", <-testing id
+
         name: "Teacher Plus",
         description:
           "Unlock enhanced AI capabilities and expanded worksheet generation limits for serious educators.",
