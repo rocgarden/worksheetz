@@ -467,7 +467,11 @@ export async function POST(req) {
     console.error("stripe error: ", e.message);
   }
 
-  return NextResponse.json({});
+  return NextResponse.json({ received: true }, { status: 200 });
+}
+
+export async function GET(req) {
+  return new Response("Stripe webhook endpoint - POST only", { status: 200 });
 }
 
 // case "customer.subscription.updated": {
