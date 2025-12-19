@@ -70,7 +70,7 @@ export async function POST(req) {
 
         if (existingEvent) {
           console.log(`⚠️ Event ${eventId} already processed, skipping`);
-          return NextResponse.json({ received: true });
+          return NextResponse.json({ received: true }, { status: 200 });
         }
         const subscriptionId = stripeObject.subscription;
 
@@ -257,37 +257,6 @@ export async function POST(req) {
         }
         break;
       }
-      // case "checkout.session.completed": {
-      //   const session = event.data.object;
-      //   const userId = session.client_reference_id; // ✅ always provided now
-      //   const customerId = session.customer;
-      //   const subscriptionId = session.subscription;
-      //   const priceId =
-      //     session.metadata?.price_id ||
-      //     session?.line_items?.data?.[0]?.price?.id;
-
-      //   if (!userId) {
-      //     console.error("Missing client_reference_id in session.");
-      //     break;
-      //   }
-
-      //   const { error } = await supabase
-      //     .from("profiles")
-      //     .update({
-      //       customer_id: customerId,
-      //       stripe_subscription_id: subscriptionId,
-      //       price_id: priceId,
-      //       has_access: true,
-      //     })
-      //     .eq("id", userId);
-
-      //   if (error) {
-      //     console.error("Failed to update profile:", error);
-      //     throw error;
-      //   }
-
-      //   break;
-      // }
 
       case "checkout.session.expired": {
         // User didn't complete the transaction
@@ -343,51 +312,6 @@ export async function POST(req) {
 
         break;
       }
-
-      // case "customer.subscription.updated": {
-      // The customer might have changed the plan (higher or lower plan, cancel soon etc...)
-      // You don't need to do anything here, because Stripe will let us know when the subscription is canceled for good (at the end of the billing cycle) in the "customer.subscription.deleted" event
-      // You can update the user data to show a "Cancel soon" badge for instance
-      // const subscription = event.data.object;
-      // const customerId = subscription.customer;
-      // const priceId = subscription.items.data[0]?.price?.id;
-      // const status = subscription.status;
-      // const customer = await stripe.customers.retrieve(customerId);
-
-      // console.log("🔄 Subscription updated:", {
-      //   customerId,
-      //   priceId,
-      //   status,
-      // });
-
-      // const { data: profile } = await supabase
-      //   .from("profiles")
-      //   .select("id, email")
-      //   .eq("customer_id", customerId)
-      //   .single();
-
-      // if (!profile) break;
-      // const { error } = await supabase.from("profiles").upsert({
-      //   id: user.id,
-      //   email: customer.email,
-      //   customer_id: customerId,
-      //   price_id: priceId,
-      //   has_access: true,
-      //   stripe_subscription_id: subscriptionId,
-      //   current_period_end: new Date(
-      //     session.subscription
-      //       ? (await stripe.subscriptions.retrieve(session.subscription))
-      //           .current_period_end * 1000
-      //       : null
-      //   ),
-      // });
-      // if (error) {
-      //   console.error("Failed to upsert profile:", error);
-      //   throw error;
-      // }
-
-      //  break;
-      //  }
 
       case "customer.subscription.deleted": {
         // The customer subscription stopped
@@ -514,3 +438,80 @@ export async function GET(req) {
 //   <p><a href="https://yourapp.com/dashboard">Go to your dashboard</a></p>
 //   <p>— The Your App Team</p>
 // `,
+
+// case "checkout.session.completed": {
+//   const session = event.data.object;
+//   const userId = session.client_reference_id; // ✅ always provided now
+//   const customerId = session.customer;
+//   const subscriptionId = session.subscription;
+//   const priceId =
+//     session.metadata?.price_id ||
+//     session?.line_items?.data?.[0]?.price?.id;
+
+//   if (!userId) {
+//     console.error("Missing client_reference_id in session.");
+//     break;
+//   }
+
+//   const { error } = await supabase
+//     .from("profiles")
+//     .update({
+//       customer_id: customerId,
+//       stripe_subscription_id: subscriptionId,
+//       price_id: priceId,
+//       has_access: true,
+//     })
+//     .eq("id", userId);
+
+//   if (error) {
+//     console.error("Failed to update profile:", error);
+//     throw error;
+//   }
+
+//   break;
+// }
+
+// case "customer.subscription.updated": {
+// The customer might have changed the plan (higher or lower plan, cancel soon etc...)
+// You don't need to do anything here, because Stripe will let us know when the subscription is canceled for good (at the end of the billing cycle) in the "customer.subscription.deleted" event
+// You can update the user data to show a "Cancel soon" badge for instance
+// const subscription = event.data.object;
+// const customerId = subscription.customer;
+// const priceId = subscription.items.data[0]?.price?.id;
+// const status = subscription.status;
+// const customer = await stripe.customers.retrieve(customerId);
+
+// console.log("🔄 Subscription updated:", {
+//   customerId,
+//   priceId,
+//   status,
+// });
+
+// const { data: profile } = await supabase
+//   .from("profiles")
+//   .select("id, email")
+//   .eq("customer_id", customerId)
+//   .single();
+
+// if (!profile) break;
+// const { error } = await supabase.from("profiles").upsert({
+//   id: user.id,
+//   email: customer.email,
+//   customer_id: customerId,
+//   price_id: priceId,
+//   has_access: true,
+//   stripe_subscription_id: subscriptionId,
+//   current_period_end: new Date(
+//     session.subscription
+//       ? (await stripe.subscriptions.retrieve(session.subscription))
+//           .current_period_end * 1000
+//       : null
+//   ),
+// });
+// if (error) {
+//   console.error("Failed to upsert profile:", error);
+//   throw error;
+// }
+
+//  break;
+//  }
