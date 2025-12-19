@@ -98,6 +98,10 @@ const urlsToRateLimit = [
 
 export async function middleware(request) {
   const pathname = request.nextUrl.pathname;
+  // ✅ Skip ALL middleware for webhooks (they don't need sessions or rate limiting)
+  if (pathname.startsWith("/api/webhook/")) {
+    return NextResponse.next();
+  }
 
   // ✅ Apply rate limit only to selected API routes
   if (urlsToRateLimit.includes(pathname)) {
@@ -161,6 +165,8 @@ export async function middleware(request) {
 // ✅ Apply middleware to all routes except static/image assets
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$|api/webhook).*)",
   ],
 };
+
+//"/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
