@@ -35,8 +35,7 @@ export const createCheckout = async ({
     mode,
     allow_promotion_codes: true,
     client_reference_id: clientReferenceId,
-    payment_method_collection:
-      mode === "subscription" ? "if_required" : "always", // ← ADD
+    payment_method_collection: mode === "subscription" ? "always" : "always", // ← ADD
     line_items: [
       {
         price: priceId,

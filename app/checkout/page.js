@@ -42,7 +42,10 @@ export default async function CheckoutPage() {
 
   // const priceId = await searchParams.priceId;
   // if (!priceId) return redirect("/#pricing");
-
+  // ✅  Redirect if not logged in
+  if (!user) {
+    return redirect("/?signup=true"); // Redirect to home with signup prompt
+  }
   // ✅ Check if user already has a subscription
   const { data: profile } = await supabase
     .from("profiles")
