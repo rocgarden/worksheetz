@@ -96,6 +96,9 @@ const config = {
     supportEmail: "hello@worksheetzai.com",
     replyTo: "hello@worksheetzai.com", // ← Add this
   },
+  email: {
+    replyTo: "hello@worksheetzai.com",
+  },
   colors: {
     // REQUIRED — The DaisyUI theme to use (added to the main layout.js). Leave blank for default (light & dark mode).
     theme: "light",

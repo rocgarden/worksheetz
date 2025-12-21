@@ -1,5 +1,5 @@
 //app/api/webhook/stripe/route.js
-import configFile from "@/config";
+import config from "@/config";
 import { findCheckoutSession } from "@/libs/stripe";
 import { createClient } from "@supabase/supabase-js";
 import { headers } from "next/headers";
@@ -108,7 +108,7 @@ export async function POST(req) {
           }
         }
 
-        const plan = configFile.stripe.plans.find((p) => p.priceId === priceId);
+        const plan = config.stripe.plans.find((p) => p.priceId === priceId);
 
         const customer = await stripe.customers.retrieve(customerId);
 
@@ -231,7 +231,7 @@ export async function POST(req) {
                 planName: plan.name,
                 userName: customer.name || customer.email,
               }),
-              replyTo: configFile.email.replyTo,
+              replyTo: config.email.replyTo,
             });
             await supabase
               .from("profiles")
@@ -265,6 +265,13 @@ export async function POST(req) {
         // const email = session.customer_details?.email;
         //console.log(`⚠️ Checkout session expired for ${email}`);
         // Optionally send a reminder email via Resend
+        break;
+      }
+      case "customer.subscription.created": {
+        // Subscription created - usually handled by checkout.session.completed
+        // But good to have for completeness
+        const subscription = event.data.object;
+        console.log("✅ Subscription created:", subscription.id);
         break;
       }
 
@@ -337,6 +344,11 @@ export async function POST(req) {
         // Customer just paid an invoice (for instance, a recurring payment for a subscription)
         // ✅ Grant access to the product
         const stripeObject = event.data.object;
+        // ✅ Add null checks
+        if (!stripeObject.lines?.data?.[0]?.price?.id) {
+          console.log("⚠️ Invoice paid but no price found, skipping");
+          break;
+        }
         const priceId = stripeObject.lines.data[0].price.id;
         const customerId = stripeObject.customer;
 

@@ -98,8 +98,9 @@ const urlsToRateLimit = [
 
 export async function middleware(request) {
   const pathname = request.nextUrl.pathname;
-  // ✅ Skip ALL middleware for webhooks (they don't need sessions or rate limiting)
-  if (pathname.startsWith("/api/webhook/")) {
+  // ✅ CRITICAL: Skip ALL processing for webhooks
+  if (pathname === "/api/webhook/stripe") {
+    console.log("⚠️ Webhook request detected, bypassing middleware");
     return NextResponse.next();
   }
 
@@ -165,8 +166,15 @@ export async function middleware(request) {
 // ✅ Apply middleware to all routes except static/image assets
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$|api/webhook).*)",
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api/webhook (webhooks)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
 
-//"/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+// "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$|api/webhook).*)",
