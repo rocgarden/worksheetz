@@ -1,7 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import label from "daisyui/components/label";
 
 export default function SamplePdfCarousel() {
   const images = [
@@ -62,7 +61,8 @@ export default function SamplePdfCarousel() {
   }, [index]);
 
   return (
-    <section className="bg-gradient-to-b from-purple-800 via-purple-600 to-purple-500 text-neutral-content">
+    <section className="bg-gradient-to-b from-purple-500 via-purple-400 to-purple-300 text-neutral-content">
+      {/* <section className="text-neutral-content"> */}
       <div className=" px-8 py-4 md:py-14 text-center">
         {/* SEO-Friendly Heading */}{" "}
         <h2 className="text-center sm:text-4xl font-bold text-white/90 py-4 tracking-light">
@@ -77,8 +77,8 @@ export default function SamplePdfCarousel() {
         >
           {" "}
           {/* Fade edges */}
-          <div className="pointer-events-none absolute left-0 top-0 h-full w-10 bg-gradient-to-r from-purple-700 to-transparent z-20"></div>
-          <div className="pointer-events-none absolute right-0 top-0 h-full w-10 bg-gradient-to-l from-purple-700 to-transparent z-20"></div>
+          {/* <div className="pointer-events-none absolute left-0 top-0 h-full w-10 bg-gradient-to-r from-purple-700 to-transparent z-20"></div> */}
+          {/* <div className="pointer-events-none absolute right-0 top-0 h-full w-30 bg-gradient-to-l from-purple-700 to-transparent z-20"></div> */}
           {/* Smooth Auto-Scroll Track */}
           <div className="flex flex-nowrap whitespace-nowrap min-w-[200%] animate-scroll gap-4">
             {" "}

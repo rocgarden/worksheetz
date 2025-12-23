@@ -38,7 +38,7 @@ const Pricing = ({ isAuthenticated = false, hasActiveSubscription }) => {
                 ></div>
               )}
 
-              <div className="relative flex flex-col h-full gap-5 lg:gap-8 z-10 bg-base-100 p-8 rounded-lg">
+              <div className="relative flex flex-col h-full gap-5 lg:gap-8 z-10 bg-purple-100 p-8 rounded-lg">
                 <div className="flex justify-between items-center gap-4">
                   <div>
                     <p className="text-lg lg:text-xl font-bold">{plan.name}</p>
