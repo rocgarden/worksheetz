@@ -9,6 +9,8 @@ import FAQ from "@/components/FAQ";
 import FeaturesGrid from "@/components/FeaturesGrid";
 import FeaturesListicle from "@/components/FeaturesListicle";
 import FeaturesAccordion from "@/components/FeaturesAccordion";
+import SamplePdfCarousel from "@/components/SamplePdfCarousel";
+import CTA from "@/components/CTA";
 
 export default async function Page() {
   const supabase = await createClient();
@@ -75,6 +77,8 @@ export default async function Page() {
           hasActiveSubscription={hasActiveSubscription}
         />
         <FAQ />
+        <SamplePdfCarousel />
+        <CTA isAuthenticated={!!user} />
       </main>
     </>
   );

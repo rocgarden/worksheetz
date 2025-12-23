@@ -6,7 +6,7 @@ export default function Contact() {
       <h1 className="text-3xl font-bold text-purple-800 mb-6">Contact Us</h1>
       <p className="text-gray-700 mb-8">
         We’re here to help! If you have questions about your account, billing,
-        or using {config.resend.supportEmail}, please reach out.
+        or using {config.appName}, please reach out.
       </p>
 
       <div className="bg-gray-100 rounded-lg p-6 mb-8">

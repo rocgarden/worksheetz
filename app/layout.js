@@ -7,7 +7,9 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Disclaimer from "@/components/Disclaimer";
 import { Suspense } from "react";
-import { Analytics } from "@vercel/analytics/react";
+import ConditionalAnalytics from "@/components/ConditionalAnalytics";
+import CookieBanner from "@/components/CookieBanner";
+// import GoogleAnalytics from "@/components/GoogleAnalytics";
 const font = Inter({ subsets: ["latin"] });
 
 export const viewport = {
@@ -33,7 +35,9 @@ export default function RootLayout({ children }) {
           {children}
           <Disclaimer />
           <Footer />
-          <Analytics />
+          <ConditionalAnalytics />
+          {/* <GoogleAnalytics /> */}
+          <CookieBanner />
         </ClientLayout>
       </body>
     </html>

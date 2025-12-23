@@ -4,6 +4,8 @@ import { createClient } from "@/libs/supabase/server";
 import { createCustomerPortal } from "@/libs/stripe";
 
 export async function POST(req) {
+  console.log("🔵 Portal session request received");
+
   try {
     const supabase = await createClient();
 
