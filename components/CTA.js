@@ -10,12 +10,12 @@ const CTA = ({ isAuthenticated = false }) => {
         {" "}
         <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-6">
           {" "}
-          Ready to Create Beautiful Worksheets in{" "}
+          Create custom, high-quality worksheets in{" "}
           <span className="bg-purple-700 px-1 text-white rounded-sm">
             {" "}
             minutes{" "}
           </span>{" "}
-          ?{" "}
+          {/* ?{" "} */}
         </h2>{" "}
         <div className="flex justify-center mb-6">
           {" "}

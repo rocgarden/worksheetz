@@ -67,8 +67,12 @@ export default function SamplePdfCarousel() {
         {/* SEO-Friendly Heading */}{" "}
         <h2 className="text-center sm:text-4xl font-bold text-white/90 py-4 tracking-light">
           {" "}
-          Featured Sample Worksheets{" "}
+          Featured Worksheets{" "}
         </h2>{" "}
+        <p className="text-white/90 max-w-3xl mx-auto">
+          Sample worksheets created by AI — tailored to your subject, grade
+          level, and goals.
+        </p>
         {/* Carousel Wrapper */}{" "}
         <div
           className="relative p-4 max-w-6xl mx-auto rounded-md w-full overflow-hidden"
