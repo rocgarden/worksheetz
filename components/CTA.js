@@ -22,7 +22,7 @@ const CTA = ({ isAuthenticated = false }) => {
           <span className="text-4xl">⏱️</span>{" "}
         </div>
         <p className="text-lg md:text-xl text-purple-500 max-w-2xl mx-auto mb-10">
-          Generate unlimited, high‑quality worksheets for any subject using AI.
+          Generate ready-to-use, high‑quality worksheets by subject using AI.
           Save time, stay organized, and give your students the best learning
           experience.
         </p>

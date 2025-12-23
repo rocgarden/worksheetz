@@ -484,7 +484,7 @@ const FeaturesListicle = () => {
             Stop wasting time formatting AI responses. Our templates are built
             for real classrooms — just generate, download, and assign. Whether
             you&apos;re teaching grammar, reading, or social studies, your
-            materials are ready in seconds.Every template follows standardized
+            materials are ready in minutes. Every template follows standardized
             formatting and rigor, with guided and independent sections to
             support real learning.
           </div>
