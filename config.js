@@ -52,7 +52,7 @@ const config = {
         // This plan will look different on the pricing page, it will be highlighted. You can only have one plan with isFeatured: true
         isFeatured: true,
         // "price_1Sg8JUINKxz4XaqKCOB5rQgE", //-- testing id
-        priceId: "price_1Sct5VEZ6GaUMPgO7lXmcKjB ", //--live id
+        priceId: "price_1Sct5VEZ6GaUMPgO7lXmcKjB", //--live id
         name: "Teacher Plus",
         description:
           "Unlock enhanced AI capabilities and expanded worksheet generation limits for serious educators.",
