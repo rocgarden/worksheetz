@@ -150,7 +150,12 @@ export async function POST(req) {
   const totalDownloadLimit = planInfo.monthlyPdfs + (usage.pdfBonus || 0);
 
   // Determine download eligibility
-  const canDownload = !!(usage.downloadCount || 0) < totalDownloadLimit;
+  //  const canDownload = !!(usage.downloadCount || 0) < totalDownloadLimit;
+  const canDownload = usage.downloadCount < totalDownloadLimit;
+  console.log(
+    `📦 canDownload=${canDownload} (count=${usage.downloadCount}, limit=${totalDownloadLimit})`
+  );
+
   //  const canDownload = (usage.downloadCount || 0) < totalDownloadLimit;
 
   if (signal?.aborted) {
