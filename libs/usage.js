@@ -53,11 +53,22 @@ export async function getUserMonthlyUsage(supabase, tableName, userId) {
   startOfMonth.setDate(1);
   startOfMonth.setHours(0, 0, 0, 0);
 
-  const effectiveStart = profile.upgrade_date
+  // 1️⃣ Fetch the user's bonus from profiles
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("generation_bonus, pdf_bonus, upgrade_date")
+    .eq("id", userId)
+    .single();
+
+  if (profileError) {
+    console.error("❌ Failed to fetch profile bonuses:", profileError);
+  }
+  // 2️⃣ Determine effective start date
+  const effectiveStart = profile?.upgrade_date
     ? new Date(profile.upgrade_date)
     : startOfMonth;
 
-  // 1️⃣ Count monthly usage for both types
+  // 3️⃣ Count usage since effectiveStart for both types
   const { count: generationCount } = await supabase
     .from("ai_generations")
     .select("*", { count: "exact", head: true })
@@ -69,17 +80,6 @@ export async function getUserMonthlyUsage(supabase, tableName, userId) {
     .select("*", { count: "exact", head: true })
     .eq("user_id", userId)
     .gte("created_at", effectiveStart.toISOString());
-
-  // 2️⃣ Fetch the user's bonus from profiles
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("generation_bonus, pdf_bonus")
-    .eq("id", userId)
-    .single();
-
-  if (profileError) {
-    console.error("❌ Failed to fetch profile bonuses:", profileError);
-  }
 
   let generationBonus = profile?.generation_bonus ?? 0;
   let pdfBonus = profile?.pdf_bonus ?? 0;
