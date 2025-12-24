@@ -58,18 +58,22 @@ export async function getUserMonthlyUsage(
   startOfMonth.setDate(1);
   startOfMonth.setHours(0, 0, 0, 0);
 
+  const effectiveStart = profile.upgrade_date
+    ? new Date(profile.upgrade_date)
+    : startOfMonth;
+
   // 1️⃣ Count monthly usage for both types
   const { count: generationCount } = await supabase
     .from("ai_generations")
     .select("*", { count: "exact", head: true })
     .eq("user_id", userId)
-    .gte("created_at", startOfMonth.toISOString());
+    .gte("created_at", effectiveStart.toISOString());
 
   const { count: downloadCount } = await supabase
     .from("pdf_downloads")
     .select("*", { count: "exact", head: true })
     .eq("user_id", userId)
-    .gte("created_at", startOfMonth.toISOString());
+    .gte("created_at", effectiveStart.toISOString());
 
   // 2️⃣ Fetch the user's bonus from profiles
   const { data: profile, error: profileError } = await supabase

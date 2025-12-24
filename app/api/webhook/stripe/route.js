@@ -194,6 +194,7 @@ export async function POST(req) {
               subscription_status: "active",
               current_period_end: currentPeriodEnd,
               cancel_at_period_end: false, // explicitly reset on upgrade
+              upgrade_date: new Date().toISOString(),
             })
             .eq("id", user.id);
 
@@ -296,6 +297,19 @@ export async function POST(req) {
 
         if (!profile) break;
 
+        // 🔥 Detect if this is a real upgrade (price changed)
+        const oldPriceId =
+          event.data.previous_attributes?.items?.data?.[0]?.price?.id;
+
+        const isUpgrade = oldPriceId && oldPriceId !== priceId;
+
+        let upgradeDateUpdate = {};
+
+        if (isUpgrade) {
+          upgradeDateUpdate = { upgrade_date: new Date().toISOString() };
+          console.log("🚀 Detected plan upgrade — resetting usage window");
+        }
+
         // if (status === "active" || status === "trialing") {
         const { error } = await supabase
           .from("profiles")
@@ -308,6 +322,7 @@ export async function POST(req) {
             ),
             subscription_status: status,
             plan_name: planName,
+            ...upgradeDateUpdate, // ⭐ only added when upgrading
           })
           .eq("customer_id", customerId);
         if (error) console.error("❌ Supabase update failed:", error);
