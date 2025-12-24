@@ -132,9 +132,13 @@ export async function POST(req) {
   //     { status: 403 }
   //   );
   // }
-  if (downloadCount > planLimit && pdfBonus <= 0) {
+  //if (downloadCount > planLimit && pdfBonus <= 0) {
+  if (downloadCount >= totalAllowed) {
     return NextResponse.json(
-      { error: "You’ve reached your total (plan + bonus) PDF limit." },
+      {
+        error:
+          "You’ve reached your total (plan + bonus) PDF limit. Try upgrading your plan or using bonus credits.",
+      },
       { status: 403 }
     );
   }
