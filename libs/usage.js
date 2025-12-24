@@ -48,12 +48,7 @@
  * Returns a user's current monthly usage and manages plan + bonus credits.
  * Works for both generations and downloads.
  */
-export async function getUserMonthlyUsage(
-  supabase,
-  tableName,
-  userId,
-  planInfo
-) {
+export async function getUserMonthlyUsage(supabase, tableName, userId) {
   const startOfMonth = new Date();
   startOfMonth.setDate(1);
   startOfMonth.setHours(0, 0, 0, 0);
