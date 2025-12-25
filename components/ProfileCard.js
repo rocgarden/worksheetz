@@ -20,10 +20,15 @@ export default function ProfileCard({ profile, planInfo }) {
         <strong>Joined:</strong>{" "}
         {new Date(profile.created_at).toLocaleDateString()}
       </p>
-      {profile.cancel_at_period_end && (
+      {profile.cancel_at_period_end && profile.current_period_end && (
         <p className="text-yellow-600 text-sm mt-2">
           ⚠️ Your subscription will end on{" "}
-          {new Date(profile.current_period_end).toLocaleDateString()}.
+          {new Date(profile.current_period_end).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+          .
         </p>
       )}
       {profile.payment_failed && (

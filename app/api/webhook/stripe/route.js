@@ -79,6 +79,18 @@ export async function POST(req) {
         const customerId = session?.customer;
         const priceId = session?.line_items?.data[0]?.price.id;
         //const userId = stripeObject.client_reference_id;
+        // ✅ ALWAYS get current_period_end from subscription
+        let currentPeriodEnd = null;
+        if (subscriptionId) {
+          try {
+            const subscription =
+              await stripe.subscriptions.retrieve(subscriptionId);
+            currentPeriodEnd = new Date(subscription.current_period_end * 1000);
+            console.log("✅ Current period end:", currentPeriodEnd);
+          } catch (err) {
+            console.error("Failed to get subscription period:", err);
+          }
+        }
 
         // ✅ NEW: prefer metadata.user_id if present, fallback to client_reference_id
         const userId =
@@ -173,12 +185,12 @@ export async function POST(req) {
           .eq("id", user.id)
           .single();
 
-        const currentPeriodEnd = session.subscription
-          ? new Date(
-              (await stripe.subscriptions.retrieve(session.subscription))
-                .current_period_end * 1000
-            )
-          : null;
+        // const currentPeriodEnd = session.subscription
+        //   ? new Date(
+        //       (await stripe.subscriptions.retrieve(session.subscription))
+        //         .current_period_end * 1000
+        //     )
+        //   : null;
 
         if (existingProfile) {
           // ✅ update existing user

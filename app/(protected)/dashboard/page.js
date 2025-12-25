@@ -7,6 +7,7 @@ import { getUserMonthlyUsage } from "@/libs/usage";
 import { getPlanByPriceId } from "@/libs/planutils";
 import ButtonAccount from "@/components/ButtonAccount";
 import ButtonCheckout from "@/components/ButtonCheckout";
+import BillingDetailsForm from "@/components/BillingDetailsForm";
 import config from "@/config";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -119,7 +120,7 @@ export default async function DashboardPage({ searchParams }) {
       <section className="max-w-xl mx-auto space-y-8">
         <h1 className="text-3xl font-bold">Welcome back!</h1>
         <ProfileCard profile={profile} planInfo={planInfo.name} />
-
+        <BillingDetailsForm profile={profile} />
         <UsageStats
           generationCount={usage.generationCount || 0}
           downloadCount={usage.downloadCount || 0}
