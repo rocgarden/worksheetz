@@ -4,9 +4,6 @@ import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import Stripe from "stripe";
-import config from "@/config";
-
-const stripe = new Stripe(config.stripe.secretKey);
 
 export async function POST(req) {
   // 1️⃣ Create Supabase server client (same as generate-pdf)
@@ -36,7 +33,7 @@ export async function POST(req) {
   const billingName = formData.get("billing_name")?.trim() || "";
   const billingAddress = formData.get("billing_address")?.trim() || "";
 
-  // 4️⃣ Fetch profile to get Stripe customer_id
+  // 4️⃣ Fetch profile
   const { data: profile } = await supabase
     .from("profiles")
     .select("customer_id")
@@ -50,7 +47,18 @@ export async function POST(req) {
     );
   }
 
-  // 5️⃣ Update Supabase
+  // 5️⃣ Stripe client using env vars (same as webhook)
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: "2023-08-16",
+  });
+
+  // 6️⃣ Update Stripe
+  await stripe.customers.update(profile.customer_id, {
+    name: billingName || undefined,
+    address: billingAddress ? { line1: billingAddress } : undefined,
+  });
+
+  // 7️⃣ Update Supabase
   await supabase
     .from("profiles")
     .update({
@@ -59,12 +67,6 @@ export async function POST(req) {
     })
     .eq("id", user.id);
 
-  // 6️⃣ Update Stripe
-  await stripe.customers.update(profile.customer_id, {
-    name: billingName || undefined,
-    address: billingAddress ? { line1: billingAddress } : undefined,
-  });
-
-  // 7️⃣ Redirect back to dashboard
+  // 8️⃣ Redirect back to dashboard
   return NextResponse.redirect("/dashboard");
 }
