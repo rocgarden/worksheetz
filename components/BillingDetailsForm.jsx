@@ -3,80 +3,63 @@
 import { useState } from "react";
 
 export default function BillingDetailsForm({ profile }) {
-  const [errors, setErrors] = useState({});
-
-  const validate = (form) => {
-    const newErrors = {};
-    const name = form.get("billing_name")?.trim() || "";
-    const address = form.get("billing_address")?.trim() || "";
-
-    // Billing name: optional, but if provided must be 2+ words
-    if (name && name.split(" ").length < 2) {
-      newErrors.billing_name = "Please enter your full first and last name.";
-    }
-
-    // Billing address: optional, but must be reasonable
-    if (address && address.length < 5) {
-      newErrors.billing_address = "Billing address looks too short.";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e) => {
-    const form = new FormData(e.target);
-
-    if (!validate(form)) {
-      e.preventDefault();
-    }
-  };
+  const [open, setOpen] = useState(false);
 
   return (
-    <div className="p-4 border rounded-lg space-y-4">
-      <h2 className="text-xl font-semibold">Billing Details</h2>
-
-      <form
-        action="/api/update-billing"
-        method="POST"
-        onSubmit={handleSubmit}
-        className="space-y-4"
+    <div className="border rounded-lg">
+      {/* Header */}
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full flex justify-between items-center p-4 text-left"
       >
-        <div>
-          <input
-            type="text"
-            name="billing_name"
-            defaultValue={profile.billing_name || ""}
-            placeholder="Full name for invoices"
-            className="w-full border p-2 rounded"
-          />
-          {errors.billing_name && (
-            <p className="text-red-600 text-sm mt-1">{errors.billing_name}</p>
-          )}
-        </div>
+        <span className="text-lg font-semibold">Billing Details</span>
+        <span className="text-gray-500">{open ? "▲" : "▼"}</span>
+      </button>
 
-        <div>
-          <input
-            type="text"
-            name="billing_address"
-            defaultValue={profile.billing_address || ""}
-            placeholder="Billing address (optional)"
-            className="w-full border p-2 rounded"
-          />
-          {errors.billing_address && (
-            <p className="text-red-600 text-sm mt-1">
-              {errors.billing_address}
-            </p>
-          )}
-        </div>
+      {/* Collapsible content */}
+      {open && (
+        <div className="p-4 border-t space-y-4 bg-gray-50">
+          <form
+            action="/api/update-billing"
+            method="POST"
+            className="space-y-4"
+          >
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Full Name for Invoices
+              </label>
+              <input
+                type="text"
+                name="billing_name"
+                defaultValue={profile.billing_name || ""}
+                placeholder="First and last name"
+                className="w-full border p-2 rounded"
+              />
+            </div>
 
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded"
-        >
-          Save Billing Details
-        </button>
-      </form>
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Billing Address (optional)
+              </label>
+              <input
+                type="text"
+                name="billing_address"
+                defaultValue={profile.billing_address || ""}
+                placeholder="Address for invoices"
+                className="w-full border p-2 rounded"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            >
+              Save Billing Details
+            </button>
+          </form>
+        </div>
+      )}
     </div>
   );
 }
