@@ -37,7 +37,7 @@ export default async function DashboardPage({ searchParams }) {
   const { data: profile, error: profileError } = await supabase
     .from("profiles") // or 'profiles' depending on your schema
     .select(
-      "id, name, email, created_at, customer_id, price_id, has_access, cancel_at_period_end, current_period_end, payment_failed, upgrade_date"
+      "id, name, email, created_at, customer_id, price_id, has_access, cancel_at_period_end, current_period_end, payment_failed, upgrade_date, billing_name, billing_address"
     )
     .eq("id", user.id)
     .single();

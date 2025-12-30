@@ -1,10 +1,11 @@
 // components/ProfileCard.js
 export default function ProfileCard({ profile, planInfo }) {
+  const displayName = profile.billing_name || profile.name || "—";
   return (
     <div className="bg-white shadow-md rounded-lg p-6 border border-gray-200">
       <h2 className="text-xl font-semibold mb-2">👤 Profile</h2>
       <p>
-        <strong>Name:</strong> {profile.name || "—"}
+        <strong>Name:</strong> {displayName}
       </p>
       <p>
         <strong>Email:</strong> {profile.email}

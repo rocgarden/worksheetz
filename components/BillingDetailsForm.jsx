@@ -6,14 +6,14 @@ export default function BillingDetailsForm({ profile }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="border rounded-lg">
+    <div className="border border-gray-200 rounded-lg">
       {/* Header */}
       <button
         type="button"
         onClick={() => setOpen(!open)}
         className="w-full flex justify-between items-center p-4 text-left"
       >
-        <span className="text-lg font-semibold">Billing Details</span>
+        <span className="text-lg font-semibold">Update Billing Details</span>
         <span className="text-gray-500">{open ? "▲" : "▼"}</span>
       </button>
 

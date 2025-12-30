@@ -68,5 +68,7 @@ export async function POST(req) {
     .eq("id", user.id);
 
   // 8️⃣ Redirect back to dashboard
-  return NextResponse.redirect("/dashboard?billing=success");
+  return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`);
+
+  //  return NextResponse.redirect("/dashboard?billing=success");
 }
