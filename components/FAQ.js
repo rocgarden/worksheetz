@@ -1,9 +1,9 @@
+//components/FAQ.js
 "use client";
 
 import { useRef, useState } from "react";
 
-// <FAQ> component is a lsit of <Item> component
-// Just import the FAQ & add your FAQ content to the const faqList
+// <FAQ> component is a list of <Item> component
 
 const faqList = [
   {

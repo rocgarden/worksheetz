@@ -6,6 +6,8 @@ import FAQ from "@/components/FAQ";
 import FeaturesListicle from "@/components/FeaturesListicle";
 import SamplePdfCarousel from "@/components/SamplePdfCarousel";
 import CTA from "@/components/CTA";
+import { renderFAQSchema } from "@/libs/seo";
+import { faqSchemaItems } from "@/data/faq-schema";
 
 export default async function Page() {
   const supabase = await createClient();
@@ -64,6 +66,7 @@ export default async function Page() {
             Fancy a blog?
           </Link>
         </section> */}
+        {renderFAQSchema(faqSchemaItems)}
         <Hero isAuthenticated={!!user} />
         <Problem />
         <FeaturesListicle />
