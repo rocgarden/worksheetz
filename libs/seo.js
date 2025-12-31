@@ -1,3 +1,4 @@
+//libs/seo.js
 import config from "@/config";
 
 // These are all the SEO tags you can add to your pages.
@@ -34,13 +35,14 @@ export const getSEOTags = ({
       url: openGraph?.url || `https://${config.domainName}/`,
       siteName: openGraph?.title || config.appName,
       // If you add an opengraph-image.(jpg|jpeg|png|gif) image to the /app folder, you don't need the code below
-      // images: [
-      //   {
-      //     url: `https://${config.domainName}/share.png`,
-      //     width: 1200,
-      //     height: 660,
-      //   },
-      // ],
+      images: [
+        {
+          url: `https://${config.domainName}/share.png`,
+          width: 1200,
+          height: 630,
+          alt: "Worksheetz AI - Custom Worksheets Powered by AI",
+        },
+      ],
       locale: "en_US",
       type: "website",
     },
@@ -50,6 +52,7 @@ export const getSEOTags = ({
       description: openGraph?.description || config.appDescription,
       // If you add an twitter-image.(jpg|jpeg|png|gif) image to the /app folder, you don't need the code below
       // images: [openGraph?.image || defaults.og.image],
+      images: [`https://${config.domainName}/share.png`],
       card: "summary_large_image",
       //creator: "@marc_louvion",
     },
@@ -60,7 +63,10 @@ export const getSEOTags = ({
     }),
 
     // If you want to add extra tags, you can pass them here
-    ...extraTags,
+    extraTags: {
+      "og:image": `https://${config.domainName}/share.png`,
+      "twitter:image": `https://${config.domainName}/share.png`,
+    },
   };
 };
 
@@ -81,7 +87,7 @@ export const renderSchemaTags = () => {
           "@type": "SoftwareApplication",
           name: config.appName,
           description: config.appDescription,
-          image: `https://${config.domainName}/icon.png`,
+          image: `https://${config.domainName}/share.png`,
           url: `https://${config.domainName}/`,
           author: {
             "@type": "Person",

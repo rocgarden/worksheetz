@@ -1,14 +1,9 @@
-import Link from "next/link";
-import { Suspense } from "react";
 import { createClient } from "@/libs/supabase/server";
 import Hero from "@/components/Hero";
 import Pricing from "@/components/Pricing";
-import ButtonLead from "@/components/ButtonLead";
 import Problem from "@/components/Problem";
 import FAQ from "@/components/FAQ";
-import FeaturesGrid from "@/components/FeaturesGrid";
 import FeaturesListicle from "@/components/FeaturesListicle";
-import FeaturesAccordion from "@/components/FeaturesAccordion";
 import SamplePdfCarousel from "@/components/SamplePdfCarousel";
 import CTA from "@/components/CTA";
 
