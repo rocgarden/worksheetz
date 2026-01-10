@@ -85,7 +85,7 @@ export default function Login() {
 
       <div className="space-y-8 max-w-xl mx-auto">
         <button
-          className="btn btn-block"
+          className="btn btn-block border-purple-800/30 rounded-lg flex items-center justify-center gap-3"
           onClick={(e) =>
             handleSignup(e, { type: "oauth", provider: "google" })
           }
@@ -119,7 +119,12 @@ export default function Login() {
           )}
           Sign-up with Google
         </button>
-
+        <div className="mt-15">
+          <p className="text-sm text-base-content mt-4 text-center max-w-md mx-auto">
+            🔒 No charges today. A card is only needed if you upgrade later.
+            Payments are securely handled by Stripe.
+          </p>
+        </div>
         {/* <div className="divider text-xs text-base-content/50 font-medium">
           OR
         </div>

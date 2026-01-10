@@ -197,6 +197,7 @@ const features = [
             "Get started with no paid subscription required.",
             "Includes monthly worksheet generations and downloads.",
             "Perfect for testing the platform or light classroom use.",
+            "Easy upgrade to our affordable plans.",
           ].map((item) => (
             <li key={item} className="flex items-center gap-3">
               <svg

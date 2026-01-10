@@ -52,11 +52,16 @@ const Hero = ({ isAuthenticated = false }) => {
         <div className="mt-8">
           {/* 👇 Show Checkout if not authenticated */}
           {!isAuthenticated ? (
-            <ButtonSignin
-              redirectTo={`/checkout?priceId=${config.stripe.plans[0].priceId}`}
-              extraStyle="btn-primary"
-              text="Get Worksheetz Ai"
-            />
+            <>
+              <ButtonSignin
+                redirectTo={`/checkout?priceId=${config.stripe.plans[0].priceId}`}
+                extraStyle="btn-primary"
+                text="Get Worksheetz Ai"
+              />
+              <p className="text-sm text-base-content mt-2 opacity-70">
+                Free to start. Affordable to upgrade. Built for educators.
+              </p>
+            </>
           ) : (
             <p className="text-sm text-base-content/70 text-center"> </p>
           )}
