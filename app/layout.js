@@ -9,6 +9,8 @@ import Disclaimer from "@/components/Disclaimer";
 import { Suspense } from "react";
 import ConditionalAnalytics from "@/components/ConditionalAnalytics";
 import CookieBanner from "@/components/CookieBanner";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
+import AnalyticsRouteTracker from "@/components/AnalyticsRouteTracker";
 // import GoogleAnalytics from "@/components/GoogleAnalytics";
 const font = Inter({ subsets: ["latin"] });
 
@@ -28,6 +30,8 @@ export default function RootLayout({ children }) {
     <html lang="en" data-theme={config.colors.theme} className={font.className}>
       <body>
         {/* ClientLayout contains all the client wrappers (Crisp chat support, toast messages, tooltips, etc.) */}
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+        <AnalyticsRouteTracker />
         <ClientLayout>
           <Suspense fallback={<div />}>
             <Header />
@@ -36,7 +40,6 @@ export default function RootLayout({ children }) {
           <Disclaimer />
           <Footer />
           <ConditionalAnalytics />
-          {/* <GoogleAnalytics /> */}
           <CookieBanner />
         </ClientLayout>
       </body>
