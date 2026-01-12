@@ -31,7 +31,10 @@ export default function RootLayout({ children }) {
       <body>
         {/* ClientLayout contains all the client wrappers (Crisp chat support, toast messages, tooltips, etc.) */}
         <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
-        <AnalyticsRouteTracker />
+        {/* ✅ Required because AnalyticsRouteTracker uses useSearchParams */}
+        <Suspense fallback={null}>
+          <AnalyticsRouteTracker />
+        </Suspense>{" "}
         <ClientLayout>
           <Suspense fallback={<div />}>
             <Header />
