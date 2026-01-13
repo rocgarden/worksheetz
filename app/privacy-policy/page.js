@@ -157,7 +157,42 @@ We do not knowingly collect personal data from minors.
 We may revise this Privacy Policy from time to time.
 The latest version will always be available on our website.
 
-10. Contact Us
+10. Google User Data
+
+Our application supports sign-in using Google OAuth. When you choose to sign in with Google, we request access only to the following non-sensitive Google account information:
+
+Data Accessed
+- Basic account information associated with your Google account, including:
+  - Your email address
+  - Your name
+  - Your profile picture
+- A unique Google account identifier used for authentication purposes
+
+These permissions correspond to the following Google OAuth scopes:
+- openid
+- https://www.googleapis.com/auth/userinfo.email
+- https://www.googleapis.com/auth/userinfo.profile
+
+Data Usage
+We use this Google user data solely to:
+- Authenticate you and allow secure sign-in to your account
+- Create and manage your user account within Worksheetz AI
+- Display basic account information (such as your name or profile image) within the application
+
+We do not use Google user data for advertising, marketing, or profiling purposes.
+
+Data Storage
+- We store only the minimum information necessary to operate your account (such as your email address, name, and profile image URL).
+- Google access tokens, if stored, are secured and used only to maintain your login session.
+
+Data Sharing
+- We do not sell, rent, or trade Google user data.
+- Google user data is not shared with third parties except as necessary to operate the Service (such as secure hosting or database providers), or if required by law.
+
+Data Deletion
+You may request deletion of your account and associated data at any time by contacting us at hello@worksheetzai.com. Upon deletion, any stored Google account information will be permanently removed.
+
+11. Contact Us
 
 For privacy-related requests or questions, email:
 📧 hello@worksheetzai.com`}
