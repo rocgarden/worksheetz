@@ -94,6 +94,9 @@ const Footer = () => {
                 <Link href="/contact" className="link link-hover">
                   Contact
                 </Link>
+                <Link href="/about" className="link link-hover">
+                  About
+                </Link>
                 {/* <span className="text-base-content/80">Contact us:</span> */}
                 <a
                   href={`mailto:${config.resend.supportEmail}`}
@@ -114,13 +117,13 @@ const Footer = () => {
 
               <div className="flex flex-col justify-center items-center md:items-start gap-2 mb-10 text-sm">
                 <Link href="/tos" className="link link-hover">
-                  Terms of services
+                  Terms of Services
                 </Link>
                 <Link href="/privacy-policy" className="link link-hover">
-                  Privacy policy
+                  Privacy Policy
                 </Link>
                 <Link href="/refund-policy" className="link link-hover">
-                  Refund policy
+                  Refund Policy
                 </Link>
               </div>
             </div>

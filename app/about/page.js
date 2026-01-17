@@ -1,5 +1,4 @@
 import Link from "next/link";
-import BetterIcon from "@/components/BetterIcon";
 export const metadata = {
   title: "About WorksheetzAI - AI-Powered Worksheets for Teachers",
   description:
