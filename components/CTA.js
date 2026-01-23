@@ -29,7 +29,8 @@ const CTA = ({ isAuthenticated = false }) => {
         <div className="mt-8">
           {!isAuthenticated ? (
             <ButtonSignin
-              redirectTo={`/checkout?priceId=${config.stripe.plans[0].priceId}`}
+              redirectTo={`/dashboard`}
+              //redirectTo={`/checkout?priceId=${config.stripe.plans[0].priceId}`}
               extraStyle="btn-primary"
               text="Get Worksheetz Ai"
             />

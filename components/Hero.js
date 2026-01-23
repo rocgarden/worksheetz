@@ -1,3 +1,4 @@
+//components/Hero.js
 import Image from "next/image";
 import TestimonialsAvatars from "./TestimonialsAvatars";
 import ButtonCheckout from "./ButtonCheckout";
@@ -54,7 +55,8 @@ const Hero = ({ isAuthenticated = false }) => {
           {!isAuthenticated ? (
             <>
               <ButtonSignin
-                redirectTo={`/checkout?priceId=${config.stripe.plans[0].priceId}`}
+                redirectTo={`/dashboard`}
+                //redirectTo={`/checkout?priceId=${config.stripe.plans[0].priceId}`}
                 extraStyle="btn-primary"
                 text="Get Worksheetz Ai"
               />

@@ -11,6 +11,8 @@ import BillingDetailsForm from "@/components/BillingDetailsForm";
 import config from "@/config";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import NoSubLibrarySection from "@/components/NoSubLibrarySection";
+import AdminPublishPanel from "@/components/AdminPublishPanel";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -33,6 +35,7 @@ export default async function DashboardPage({ searchParams }) {
     redirect(config.auth.loginUrl); // 👈 force redirect instead of rendering fallback
     // return <p>Not signed in</p>; // or redirect
   }
+  const isAdmin = (user.email || "").toLowerCase() === "rgarcia646@gmail.com";
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles") // or 'profiles' depending on your schema
@@ -183,9 +186,22 @@ export default async function DashboardPage({ searchParams }) {
             <p className="text-gray-500 text-sm mt-2">
               Upgrade your plan to unlock more worksheet generations.
             </p>
+            <div className="mt-10">
+              <NoSubLibrarySection />
+            </div>
           </div>
         )}
       </section>
+      {isAdmin && (
+        <div className="border rounded-xl p-8 m-20">
+          <h2 className="text-xl font-bold">Admin: Publish Giveaway PDFs</h2>
+          <p className="text-sm opacity-70">
+            Select a worksheet and publish it to the samples bucket.
+          </p>
+
+          <AdminPublishPanel />
+        </div>
+      )}
     </main>
   );
 }

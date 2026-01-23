@@ -95,7 +95,7 @@ const Pricing = ({ isAuthenticated = false, hasActiveSubscription }) => {
                   {
                     !isAuthenticated ? (
                       <ButtonSignin
-                        text="Sign in to subscribe"
+                        text="Choose Plan"
                         // redirectTo={`/auth/callback?next=/checkout?priceId=${plan.priceId}`}
                         redirectTo={`/checkout?priceId=${plan.priceId}`}
                         extraStyle="btn btn-primary btn-wide"

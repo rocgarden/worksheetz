@@ -147,7 +147,8 @@ const Header = () => {
         <div className="hidden lg:flex lg:justify-end lg:flex-1">
           <ButtonSignin
             user={user}
-            redirectTo={`/checkout?priceId=${config.stripe.plans[0].priceId}`}
+            redirectTo={`/dashboard`}
+            // redirectTo={`/checkout?priceId=${config.stripe.plans[0].priceId}`}
             extraStyle="btn-primary"
           />
         </div>

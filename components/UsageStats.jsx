@@ -9,7 +9,10 @@ export default function UsageStats({
 }) {
   return (
     <div className="bg-white shadow-md rounded-lg p-6 border border-gray-200">
-      <h2 className="text-xl font-semibold mb-4"> 📋 Your Usage This Month</h2>
+      <h2 className="text-xl font-semibold mb-4">
+        {" "}
+        📋 Your Plan Usage This Month
+      </h2>
       <ul className="space-y-2 font-medium">
         <li>
           <p>
