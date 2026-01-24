@@ -186,11 +186,11 @@ export default async function DashboardPage({ searchParams }) {
             <p className="text-gray-500 text-sm mt-2">
               Upgrade your plan to unlock more worksheet generations.
             </p>
-            <div className="mt-10">
-              <NoSubLibrarySection />
-            </div>
           </div>
         )}
+        <div className="mt-10">
+          <NoSubLibrarySection />
+        </div>
       </section>
       {isAdmin && (
         <div className="border rounded-xl p-8 m-20">
