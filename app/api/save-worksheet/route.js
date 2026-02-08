@@ -8,6 +8,7 @@ import leoProfanity from "leo-profanity";
 //import DOMPurify from "isomorphic-dompurify";
 import { sanitizeInput, deepSanitize } from "@/libs/sanitize"; // ← Use wrapper
 import { saveWorksheetSchema } from "@/libs/zodSchemas";
+import { staarReadingWorksheetSchema } from "@/libs/zodSchemas";
 
 leoProfanity.loadDictionary();
 
@@ -69,6 +70,8 @@ export async function POST(req) {
     }
 
     const body = await req.json();
+    console.log("📥 Incoming body:", body);
+
     // ✅ Validate using Zod
     const validated = saveWorksheetSchema.parse({
       userId: user.id,
@@ -109,32 +112,60 @@ export async function POST(req) {
     const safeGradeLevel = sanitizeAndFilter(gradeLevel);
     console.log("💾 Saving worksheet with file_name:", fileName);
 
-    const { data: worksheetData, error: insertError } = await supabase
-      .from("worksheets")
-      .insert({
+     if (type === "staarReading") {
+    const parsed = staarReadingWorksheetSchema.safeParse(safeWorksheet);
+      if (!parsed.success) {
+        return NextResponse.json(
+          console.error("❌ STAAR schema failed:", parsed.error.format()),
+          { error: "Invalid STAAR worksheet format", details: parsed.error.format(),  },
+          { status: 400 }
+        );
+      }
+    }
+
+    // ✅ Choose table based on type
+const tableName = type === "staarReading" ? "staar_worksheets" : "worksheets";
+// ✅ Build insert payload
+const insertPayload =
+  type === "staarReading"
+    ? {
         user_id: user.id,
         file_name: fileName,
         topic: safeTopic,
         grade_level: safeGradeLevel,
-        type,
+        subject: "reading",
+        version: "3-5",
         content: safeWorksheet,
-      })
-      .select();
-    console.log("✅ Saved with file_name:", worksheetData?.[0]?.file_name);
+      }
+    : {
+        user_id: user.id,
+        file_name: fileName,
+        topic: safeTopic,
+        grade_level: safeGradeLevel,
+        type, // keeps your existing behavior
+        content: safeWorksheet,
+      };
+
+
+    const { data: worksheetData, error: insertError } = await supabase
+    .from(tableName)
+    .upsert(insertPayload)
+    .select()
+    .single();
 
     if (insertError) {
-      console.error("Supabase insert error:", insertError);
+      console.error("Supabase insert error:", insertError.message);
       return NextResponse.json(
         { error: "Failed to save worksheet" },
         { status: 500 }
       );
     }
 
-    const savedWorksheet = worksheetData?.[0];
-    const worksheetId = savedWorksheet?.id;
-    if (!savedWorksheet) {
+    const savedWorksheet = worksheetData;
+    const worksheetId = worksheetData?.id;
+    if (!worksheetData) {
       return NextResponse.json(
-        { error: "Worksheet insert failed" },
+        { error: "Worksheet insert failed"},
         { status: 500 }
       );
     }
@@ -145,11 +176,13 @@ export async function POST(req) {
     });
   } catch (err) {
     if (err.name === "ZodError") {
+      console.log(err);
       return NextResponse.json({ error: err.errors }, { status: 400 });
     }
     console.error("Unexpected error saving worksheet:", err);
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: "Internal Server Error" ,
+      details: err?.message || err},
       { status: 500 }
     );
   }

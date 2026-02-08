@@ -43,34 +43,42 @@ export async function POST(req) {
     type,
   });
   // 1. Fetch the worksheet from DB
-  const { data: worksheet, error: worksheetError } = await supabase
-    .from("worksheets")
-    .select("content")
-    .eq("file_name", fileName)
-    .eq("user_id", user.id)
-    .single();
+// 1. Fetch the worksheet from the correct table
+const tableName = type === "staarReading" ? "staar_worksheets" : "worksheets";
 
-  console.log("📦 DB result:", {
-    found: !!worksheet,
-    error: worksheetError,
-    fileName_in_db: worksheet?.file_name,
-    fileName_searched: fileName,
-    match: worksheet?.file_name === fileName,
-  });
+const { data: worksheet, error: worksheetError } = await supabase
+  .from(tableName)
+  .select("id, file_name, content")
+  .eq("file_name", fileName)
+  .eq("user_id", user.id)
+  .maybeSingle();
 
-  if (worksheetError || !worksheet?.content) {
-    return NextResponse.json(
-      {
-        error: "Worksheet not found: ",
-        details: {
-          searchedFileName: fileName,
-          errorMessage: worksheetError?.message,
-          errorCode: worksheetError?.code,
-        },
-      },
-      { status: 404 }
-    );
-  }
+console.log("📦 DB result:", {
+  tableName,
+  found: !!worksheet,
+  error: worksheetError,
+  fileName_in_db: worksheet?.file_name,
+  fileName_searched: fileName,
+  match: worksheet?.file_name === fileName,
+});
+
+if (worksheetError) {
+  return NextResponse.json(
+    { error: "Failed to fetch worksheet", details: worksheetError.message },
+    { status: 500 }
+  );
+}
+
+if (!worksheet?.content) {
+  return NextResponse.json(
+    {
+      error: "Worksheet not found",
+      details: { searchedFileName: fileName, tableName },
+    },
+    { status: 404 }
+  );
+}
+
   // 2. Render PDF
   // ✅ Get the user's plan from 'profiles'
   const { data: profile } = await supabase
@@ -119,19 +127,18 @@ export async function POST(req) {
   const planLimit = planInfo.monthlyPdfs;
   const downloadCount = usage.downloadCount || 0;
   const pdfBonus = usage.pdfBonus || 0;
-  const totalAllowed = planLimit + pdfBonus;
+  // How many bonuses have already been consumed beyond the plan limit (lifetime since effectiveStart)
+const bonusUsed = Math.max(downloadCount - planLimit, 0);
+// Total bonuses ever granted = remaining wallet + already-used bonuses
+const totalBonusGranted = pdfBonus + bonusUsed;
+  // Total allowance = plan limit + total bonuses ever granted
+const totalAllowed = planLimit + totalBonusGranted;
+
+//const totalAllowed = planLimit + pdfBonus;
 
   console.log(
     `🧮 Checking PDF limits: count=${downloadCount}, plan=${planLimit}, bonus=${pdfBonus}, totalAllowed=${totalAllowed}`
   );
-
-  // ⚡ Check only if user EXCEEDS total allowance
-  // if (downloadCount > totalAllowed) {
-  //   return NextResponse.json(
-  //     { error: "You’ve reached your total (plan + bonus) PDF limit." },
-  //     { status: 403 }
-  //   );
-  // }
   //if (downloadCount > planLimit && pdfBonus <= 0) {
   if (downloadCount >= totalAllowed) {
     return NextResponse.json(

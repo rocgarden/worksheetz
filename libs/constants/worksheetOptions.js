@@ -58,6 +58,17 @@ export const TOPIC_SUGGESTIONS = {
     "Government Branches",
     "World War II",
   ],
+    staarReading: [
+     "Landforms",
+    "Texas History and Culture",
+    "Famous Scientists",
+    "Natural Disasters",
+    "Sports Heroes",
+    "Geography", "NASA",
+    "Environmental Issues",
+    "Historic Discoveries",
+    "Unusual Inventions"
+  ],
 };
 
 export const GRADE_LEVELS = [

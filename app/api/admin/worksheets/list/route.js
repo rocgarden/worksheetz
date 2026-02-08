@@ -1,11 +1,13 @@
+//api/admin/worksheets/list/route
 import { NextResponse } from "next/server";
 import { createClient } from "@/libs/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-const ADMIN_EMAIL = "rgarcia646@gmail.com";
 // Optional: if you want to hard-lock to a specific user_id, use this too:
-const ADMIN_USER_ID = "e2c77f91-bbc2-4390-9876-161075e63be0";
+
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+const ADMIN_USER_ID = process.env.ADMIN_USER_ID;
 
 export async function GET() {
   const supabase = await createClient();
@@ -17,7 +19,7 @@ export async function GET() {
   if (error || !user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  if ((user.email || "").toLowerCase() !== ADMIN_EMAIL) {
+  if ((user.email || "").toLowerCase() !== ADMIN_EMAIL?.toLowerCase()) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

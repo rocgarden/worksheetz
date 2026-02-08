@@ -35,7 +35,8 @@ export default async function DashboardPage({ searchParams }) {
     redirect(config.auth.loginUrl); // 👈 force redirect instead of rendering fallback
     // return <p>Not signed in</p>; // or redirect
   }
-  const isAdmin = (user.email || "").toLowerCase() === "rgarcia646@gmail.com";
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const isAdmin = (user.email || "").toLowerCase() === adminEmail?.toLowerCase();
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles") // or 'profiles' depending on your schema
@@ -184,7 +185,7 @@ export default async function DashboardPage({ searchParams }) {
         ) : (
           <div>
             <p className="text-gray-500 text-sm mt-2">
-              Upgrade your plan to unlock more worksheet generations.
+              Upgrade to the free Start plan to unlock more worksheet generations.
             </p>
           </div>
         )}

@@ -8,6 +8,7 @@ import {
   grammarGeneratorSchema,
   readingGeneratorSchema,
   socialStudiesGeneratorSchema,
+  staarReadingGenerateRequestSchema
 } from "@/libs/zodSchemas";
 import toast from "react-hot-toast";
 import leoProfanity from "leo-profanity";
@@ -35,6 +36,7 @@ const generatorSchemas = {
   reading: readingGeneratorSchema,
   grammar: grammarGeneratorSchema,
   socialStudies: socialStudiesGeneratorSchema,
+  staarReading: staarReadingGenerateRequestSchema
 };
 
 const supabase = createBrowserClient(
@@ -49,6 +51,7 @@ export default function GenerateClient({ user }) {
   const [concept, setConcept] = useState("");
   const [count, setCount] = useState(1);
   const [type, setType] = useState("grammar");
+  const [genre, setGenre] = useState("nonfiction");
   const [toastMessage, setToastMessage] = useState("");
   const [retryCount, setRetryCount] = useState(0);
   const [fileName, setFileName] = useState(null);
@@ -59,9 +62,14 @@ export default function GenerateClient({ user }) {
   const [showTopicSuggestions, setShowTopicSuggestions] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const concepts = CONCEPTS[type];
-  const topicSuggestions = TOPIC_SUGGESTIONS[type];
-  const showConceptField = type !== "socialStudies";
+const concepts = CONCEPTS[type] || [];
+const topicSuggestions = TOPIC_SUGGESTIONS[type] || [];
+//const showConceptField = !["socialStudies", "staarReading"].includes(type);
+//const showConceptField = type === "grammar" || type === "reading"; 
+const showConceptField = type !== "socialStudies" && type !== "staarReading";
+
+const isStaar = type === "staarReading";
+
   const showCustomConcept = selectedConcept === "Custom...";
 
   // What gets sent to API
@@ -154,27 +162,55 @@ export default function GenerateClient({ user }) {
       gradeLevel,
       count,
       type,
+      genre
     });
-    const input = {
-      topic,
-      concept: finalConcept, // ← Use the helper
-      gradeLevel,
-      count: count || 1, // use default if not set
-    };
+    //   const input = {
+    //   topic,
+    //   gradeLevel,
+    //   count: isStaar ? 1 : (count || 1),
+    //   ...(showConceptField ? { concept: finalConcept } : {}),
+    //   type,
+    // };
 
-    const schema = generatorSchemas[type]; // pick correct schema
-    if (schema) {
-      const parsed = schema.safeParse(input);
-      if (!parsed.success) {
-        console.error("❌ Zod validation failed:", parsed.error.format());
-        toast.error("Please check your inputs for this subject.");
-        setLoading(false);
-        return;
+
+    // ✅ pick correct schema
+const schema = generatorSchemas[type];
+
+// ✅ sanitize first (you already do this)
+const cleanTopic = sanitizeInput(topic);
+const cleanConcept = sanitizeInput(finalConcept);
+
+// ✅ build the exact object that matches each schema
+const input =
+  type === "staarReading"
+    ? {
+        topic: cleanTopic.slice(0, 200),
+        gradeLevel,
+        count: 1,
+        type: "staarReading",
+        genre,
       }
-    }
+    : {
+        topic: cleanTopic.slice(0, 200),
+        concept: cleanConcept.slice(0, 200),
+        gradeLevel,
+        count: count || 1,
+      };
 
-    const cleanTopic = sanitizeInput(topic);
-    const cleanConcept = sanitizeInput(finalConcept);
+// ✅ validate
+if (schema) {
+  const parsed = schema.safeParse(input);
+  if (!parsed.success) {
+    console.error("❌ Zod validation failed:", parsed.error.format());
+    toast.error("Please check your inputs for this subject.");
+    setLoading(false);
+    return;
+  }
+}
+
+
+    // const cleanTopic = sanitizeInput(topic);
+    // const cleanConcept = sanitizeInput(finalConcept);
 
     //setResult(null);
     try {
@@ -183,13 +219,9 @@ export default function GenerateClient({ user }) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          topic: cleanTopic.slice(0, 200),
-          concept: cleanConcept.slice(0, 200),
-          gradeLevel: gradeLevel,
-          count: count,
-          type: type,
-        }),
+      body: JSON.stringify(
+      type === "staarReading" ? input : { ...input, type } // keep type for server routing
+      ),
         signal: controller.signal,
       });
 
@@ -222,7 +254,9 @@ export default function GenerateClient({ user }) {
         setFileName(key);
       }
       // ✅ Normalize the question structure
-      worksheetJson = normalizeWorksheet(worksheetJson, type);
+      if (type !== "staarReading") {
+        worksheetJson = normalizeWorksheet(worksheetJson, type);
+      }
       //setResult(worksheetJson);
 
       // Save temp data to sessionStorage
@@ -230,8 +264,12 @@ export default function GenerateClient({ user }) {
       sessionStorage.setItem("worksheetFileName", key); // <== NEW LINE
       sessionStorage.setItem("pdfType", type); // <== NEW LINE
       console.log("Navigating to:", `/Worksheet-Editor/${key}`);
+      const editorPath =
+        type === "staarReading" ? `/Staar-Editor/${key}` : `/Worksheet-Editor/${key}`;
 
-      router.push(`/Worksheet-Editor/${key}?canDownload=${data.canDownload}`);
+      router.push(`${editorPath}?canDownload=${data.canDownload}`);
+
+      //router.push(`/Worksheet-Editor/${key}?canDownload=${data.canDownload}`);
     } catch (err) {
       if (err.name === "AbortError") {
         console.log("Generation request aborted by user.");
@@ -280,6 +318,18 @@ export default function GenerateClient({ user }) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+  if (type === "staarReading") {
+    // Force 3–5
+    if (!["3", "4", "5"].includes(String(gradeLevel))) {
+      setGradeLevel("4");
+    }
+    setCount(1); // STAAR is always 1 set (8 MC + 1 SCR)
+  }
+}, [type]);
+
+
   // Cleanup if user navigates away (abort ongoing fetch)
   useEffect(() => {
     return () => {
@@ -321,8 +371,28 @@ export default function GenerateClient({ user }) {
             <option value="grammar">Grammar</option>
             <option value="reading">Reading Comprehension</option>
             <option value="socialStudies">Social Studies</option>
+            <option value="staarReading">STAAR Reading</option>
           </select>
         </div>
+        {type === "staarReading" && (
+  <div className="mt-4">
+    <label className="block text-sm font-medium text-gray-700 mb-1">
+      Genre
+    </label>
+
+    <select
+      value={genre}
+      onChange={(e) => setGenre(e.target.value)}
+      className="w-full border border-gray-300 rounded-md p-2 text-sm"
+    >
+      <option value="nonfiction">Nonfiction</option>
+      <option value="fiction">Fiction</option>
+      {/* Later you can add: */}
+      {/* <option value="drama">Drama</option> */}
+    </select>
+  </div>
+)}
+
 
         {/* Topic (Content/Theme) - Suggestions First */}
         <div>
@@ -365,6 +435,8 @@ export default function GenerateClient({ user }) {
                   ? "e.g., The Solar System, Butterflies, Recycling"
                   : type === "reading"
                     ? "e.g., Famous Inventors, Natural Disasters, Sports"
+                    : type === "staarReading"
+                    ? "e.g., Animal Adaptations, Space Ecploration, Texas Landmarks"
                     : "e.g., Ancient Greece, World War I"
               }
               className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:outline-none"
@@ -435,7 +507,7 @@ export default function GenerateClient({ user }) {
         </div>
 
         {/* Example Preview */}
-        {topic && selectedConcept && selectedConcept !== "Custom..." && (
+        {/* {topic && selectedConcept && selectedConcept !== "Custom..." && (
           <div className="p-3 bg-purple-50 border border-purple-200 rounded-md">
             <p className="text-xs text-purple-700 font-medium mb-1">
               📝 You'll get:
@@ -448,7 +520,24 @@ export default function GenerateClient({ user }) {
                   : `A social studies worksheet about "${topic}"`}
             </p>
           </div>
+        )} */}
+        {topic &&  (
+          <div className="p-3 bg-purple-50 border border-purple-200 rounded-md">
+             <p className="text-xs text-purple-700 font-medium mb-1">
+              📝 You'll get:
+            </p>
+            <p className="text-sm text-gray-700">
+              {type === "staarReading"
+                ? `A STAAR-style reading passage + 8 questions + 1 SCR about "${topic}"`
+                : type === "grammar"
+                ? `A grammar worksheet about "${topic}" focusing on ${selectedConcept}`
+                : type === "reading"
+                ? `A reading comprehension worksheet about "${topic}" focusing on ${selectedConcept}`
+                : `A social studies worksheet about "${topic}"`}
+            </p>
+          </div>
         )}
+
 
         {/* Generate Button */}
         {/* Generate/Cancel Buttons */}

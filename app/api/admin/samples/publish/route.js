@@ -6,7 +6,7 @@ import { createClient as createServiceClient } from "@supabase/supabase-js";
 export const dynamic = "force-dynamic";
 
 const BUCKET = "samples";
-const ADMIN_EMAIL = "rgarcia646@gmail.com";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 
 function safeSlug(input = "") {
   return input
@@ -32,7 +32,7 @@ export async function POST(req) {
 
   // ✅ Optional: add an admin gate later (recommended)
   // e.g. check user.email against your email, or a role in profiles
-  if ((user.email || "").toLowerCase() !== ADMIN_EMAIL) {
+  if ((user.email || "").toLowerCase() !== ADMIN_EMAIL?.toLocaleLowerCase()) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

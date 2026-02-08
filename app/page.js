@@ -8,6 +8,7 @@ import SamplePdfCarousel from "@/components/SamplePdfCarousel";
 import CTA from "@/components/CTA";
 import { renderFAQSchema } from "@/libs/seo";
 import { faqSchemaItems } from "@/data/faq-schema";
+import ReadingPassagesSection from "@/components/ReadingPassagesSection";
 
 export default async function Page() {
   const supabase = await createClient();
@@ -77,6 +78,7 @@ export default async function Page() {
         <FAQ />
         <SamplePdfCarousel />
         <CTA isAuthenticated={!!user} />
+        <ReadingPassagesSection/>
       </main>
     </>
   );

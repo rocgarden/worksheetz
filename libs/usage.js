@@ -64,10 +64,18 @@ export async function getUserMonthlyUsage(supabase, tableName, userId) {
     console.error("❌ Failed to fetch profile bonuses:", profileError);
   }
   // 2️⃣ Determine effective start date
+  // const effectiveStart = profile?.upgrade_date
+  //   ? new Date(profile.upgrade_date)
+  //   : startOfMonth;
+   
   const effectiveStart = profile?.upgrade_date
-    ? new Date(profile.upgrade_date)
+    ? new Date(
+        Math.max(
+          startOfMonth.getTime(),
+          new Date(profile.upgrade_date).getTime()
+        )
+      )
     : startOfMonth;
-
   // 3️⃣ Count usage since effectiveStart for both types
   const { count: generationCount } = await supabase
     .from("ai_generations")

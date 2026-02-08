@@ -10,11 +10,13 @@ import { fileURLToPath } from "url";
 import { generateGrammarJson } from "./generators/grammarGenerator";
 import { generateReadingJson } from "./generators/readingGenerator";
 import { generateSocialStudiesJson } from "./generators/socialStudiesGenerator";
+import { generateStaarReadingJson } from "./generators/staarReadingGenerator";
 import { getUserMonthlyUsage } from "@/libs/usage";
-import { generateJsonSchema } from "@/libs/zodSchemas";
+import { generateJsonSchema, staarReadingWorksheetSchema } from "@/libs/zodSchemas";
 import { socialStudiesGeneratorSchema } from "@/libs/zodSchemas";
 import { readingGeneratorSchema } from "@/libs/zodSchemas";
 import { grammarGeneratorSchema } from "@/libs/zodSchemas";
+import { staarReadingGenerateRequestSchema} from "@/libs/zodSchemas";
 import { getPlanByPriceId } from "@/libs/planutils";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -33,13 +35,18 @@ const examplePdfMap = {
     process.cwd(),
     "pdfExamples/processed/socialStudiesExample.txt"
   ), // 👈 use correct file
-  // Add more subjects if needed
+  staarReading: path.resolve(
+    process.cwd(),
+    "pdfExamples/processed/staarReadingExample.txt"
+  ),
+
 };
 
 const generatorMap = {
   grammar: generateGrammarJson,
   reading: generateReadingJson,
   socialStudies: generateSocialStudiesJson,
+  staarReading: generateStaarReadingJson,
   // writing: generateWritingJson,
   // etc.
 };
@@ -48,6 +55,7 @@ const schemaMap = {
   grammar: grammarGeneratorSchema,
   reading: readingGeneratorSchema,
   socialStudies: socialStudiesGeneratorSchema,
+  staarReading: staarReadingGenerateRequestSchema
 };
 
 export async function POST(req) {
@@ -74,7 +82,7 @@ export async function POST(req) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const body = await req.json();
-  const { type, ...payload } = body;
+  const type = body?.type;
   //validate schema
   const schema = schemaMap[type];
   if (!schema) {
@@ -83,18 +91,25 @@ export async function POST(req) {
       { status: 400 }
     );
   }
+console.log("Body received:", body);
 
-  const result = schema.safeParse(payload);
+  //const result = schema.safeParse(payload);
+    const result = schema.safeParse(body);
+
   if (!result.success) {
+        console.log("❌ generate-json invalid input:", result.error.flatten());
     return NextResponse.json(
       { error: "Invalid input", details: result.error.flatten() },
       { status: 400 }
     );
   }
+  const payload = result.data;
+
   //const validated = generateJsonSchema.parse(body);
 
   const validated = result.data;
-  const { topic, concept, gradeLevel, count } = validated;
+  const { topic, gradeLevel, count, genre } = validated;
+  const concept = payload.concept ?? "";
   //verify generator and example paths
   const generatorFn = generatorMap[type];
   const examplePdfPath = examplePdfMap[type];
@@ -150,8 +165,9 @@ export async function POST(req) {
   const totalDownloadLimit = planInfo.monthlyPdfs + (usage.pdfBonus || 0);
 
   // Determine download eligibility
-  //  const canDownload = !!(usage.downloadCount || 0) < totalDownloadLimit;
-  const canDownload = usage.downloadCount < totalDownloadLimit;
+    const canDownload = !!(usage.downloadCount || 0) < totalDownloadLimit;
+ // const canDownload = usage.downloadCount < totalDownloadLimit;
+ 
   console.log(
     `📦 canDownload=${canDownload} (count=${usage.downloadCount}, limit=${totalDownloadLimit})`
   );
@@ -171,6 +187,7 @@ export async function POST(req) {
       concept,
       gradeLevel,
       count,
+      genre,
       examplePdfPath,
       signal,
     });
