@@ -9,6 +9,7 @@ import CTA from "@/components/CTA";
 import { renderFAQSchema } from "@/libs/seo";
 import { faqSchemaItems } from "@/data/faq-schema";
 import ReadingPassagesSection from "@/components/ReadingPassagesSection";
+import SubjectCard from "@/components/SubjectCard";
 
 export default async function Page() {
   const supabase = await createClient();
@@ -79,6 +80,34 @@ export default async function Page() {
         <SamplePdfCarousel />
         <CTA isAuthenticated={!!user} />
         <ReadingPassagesSection/>
+
+        <section className="py-16">
+          <h2 className="text-3xl font-bold text-center mb-12">
+            Browse Worksheets by Subject
+          </h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto px-6">
+            <SubjectCard 
+              title="Reading Comprehension"
+              href="/worksheets/reading-comprehension/grade-3"
+              icon="📖"
+            />
+            <SubjectCard 
+              title="Grammar"
+              href="/worksheets/grammar/grade-4"
+              icon="✏️"
+            />
+            <SubjectCard 
+              title="Social Studies"
+              href="/worksheets/social-studies/grade-5"
+              icon="🌎"
+            />
+            <SubjectCard 
+              title="STAAR Reading"
+              href="/worksheets/staar-reading/grade-3"
+              icon="📝"
+            />
+          </div>
+        </section>
       </main>
     </>
   );

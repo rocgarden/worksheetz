@@ -27,7 +27,7 @@ export async function GET() {
     .from("worksheets")
     .select("id, file_name, topic, grade_level, type, created_at")
     // If you want to ensure only admin-owned rows appear, uncomment:
-    .eq("user_id", ADMIN_USER_ID)
+   // .eq("user_id", ADMIN_USER_ID)
     .order("created_at", { ascending: false })
     .limit(50);
 
