@@ -1,0 +1,165 @@
+[
+  {
+    "title": "The Last Practice Before the Show",
+    "genre": "fiction",
+    "passage": "(1) Maya stared at the crooked cardboard backdrop and wondered how their school play would ever be ready in time. (2) Opening night was only two days away, and half the props were still covered in wet paint. (3) Her best friend Leo sat on the edge of the stage, flipping through his script with a worried frown. (4) \"We’re never going to remember all these lines,\" he muttered. (5) Maya felt the same way, but she straightened her shoulders and walked to the center of the stage. (6) \"Let’s run Scene Three again,\" she said. (7) The rest of the cast groaned, but they shuffled into their places. (8) As the scene began, Maya forgot about the messy backdrop and focused on her character’s words. (9) When Leo missed a line, she gently prompted him, and he relaxed enough to keep going. (10) By the time they finished the scene, the cast was breathing hard but smiling.\n\n(11) After a short break, their drama teacher, Ms. Alvarez, clapped her hands for attention. (12) \"I know you’re tired,\" she said, \"but this is the last full practice before the show.\" (13) She pointed to the backdrop. (14) \"Maya, Leo, I need you two to fix that while the others rehearse the final scene.\" (15) Maya hesitated, thinking about how much she still needed to practice her lines. (16) Then she remembered how nervous Leo had been earlier. (17) \"We can do it,\" she told him quietly. (18) Together they lifted the backdrop, adjusted the supports, and taped the loose corners. (19) As they worked, Leo began joking about how the audience would never know how close everything had come to falling apart. (20) When Ms. Alvarez called for the final run-through, Maya stepped back, looked at the straightened backdrop, and felt a new confidence about the play and about herself.",
+    "questions": [
+      {
+        "id": 1,
+        "type": "mc",
+        "question": "Which sentence best shows the main problem Maya is worried about at the beginning of the story?",
+        "choices": [
+          { "id": "a", "text": "(1) Maya stared at the crooked cardboard backdrop and wondered how their school play would ever be ready in time." },
+          { "id": "b", "text": "(4) \"We’re never going to remember all these lines,\" he muttered." },
+          { "id": "c", "text": "(8) As the scene began, Maya forgot about the messy backdrop and focused on her character’s words." },
+          { "id": "d", "text": "(19) As they worked, Leo began joking about how the audience would never know how close everything had come to falling apart." }
+        ],
+        "answer": ["a"]
+      },
+      {
+        "id": 2,
+        "type": "mc",
+        "question": "How do Maya’s actions in sentences (6) through (9) help develop the plot of the story?",
+        "choices": [
+          { "id": "a", "text": "They cause the cast to decide to cancel the play." },
+          { "id": "b", "text": "They show that Maya is willing to take the lead when others feel unsure." },
+          { "id": "c", "text": "They convince Ms. Alvarez to change the script at the last minute." },
+          { "id": "d", "text": "They cause Leo to stop participating in the rehearsal altogether." }
+        ],
+        "answer": ["b"]
+      },
+      {
+        "id": 3,
+        "type": "mc",
+        "question": "Read these sentences from the story.\n\n(15) Maya hesitated, thinking about how much she still needed to practice her lines.\n(16) Then she remembered how nervous Leo had been earlier.\n\nWhat can the reader infer about Maya based on these sentences?",
+        "choices": [
+          { "id": "a", "text": "She cares more about the backdrop than about her performance." },
+          { "id": "b", "text": "She is willing to help a friend even when she has her own worries." },
+          { "id": "c", "text": "She believes Leo should fix the backdrop by himself." },
+          { "id": "d", "text": "She has decided that the play is not important to her anymore." }
+        ],
+        "answer": ["b"]
+      },
+      {
+        "id": 4,
+        "type": "mc",
+        "question": "Which sentence best represents an important theme in the story?",
+        "choices": [
+          { "id": "a", "text": "(2) Opening night was only two days away, and half the props were still covered in wet paint." },
+          { "id": "b", "text": "(7) The rest of the cast groaned, but they shuffled into their places." },
+          { "id": "c", "text": "(17) \"We can do it,\" she told him quietly." },
+          { "id": "d", "text": "(20) When Ms. Alvarez called for the final run-through, Maya stepped back, looked at the straightened backdrop, and felt a new confidence about the play and about herself." }
+        ],
+        "answer": ["d"]
+      },
+      {
+        "id": 5,
+        "type": "mc",
+        "question": "Read the following incomplete summary of the story.\n\n1. Maya and her classmates are rehearsing for a school play that is not yet ready.\n2. Maya helps lead a difficult rehearsal even though the cast is tired.\n3. Ms. Alvarez asks Maya and Leo to fix the crooked backdrop.\n4. ____________________________________________\n\nWhich idea best completes the summary?",
+        "choices": [
+          { "id": "a", "text": "Maya decides she no longer wants to be in the play and leaves the stage." },
+          { "id": "b", "text": "Maya and Leo repair the backdrop, and Maya feels more confident about the play." },
+          { "id": "c", "text": "Ms. Alvarez replaces Maya with another student who knows the lines better." },
+          { "id": "d", "text": "The cast chooses to perform a different play that is easier to rehearse." }
+        ],
+        "answer": ["b"]
+      },
+      {
+        "id": 6,
+        "type": "mc",
+        "question": "What do sentences (3) and (4) mainly reveal about Leo?",
+        "choices": [
+          { "id": "a", "text": "He is confident that the play will be a success." },
+          { "id": "b", "text": "He is frustrated and unsure about remembering his lines." },
+          { "id": "c", "text": "He prefers working on props instead of acting onstage." },
+          { "id": "d", "text": "He wants to change the story of the play completely." }
+        ],
+        "answer": ["b"]
+      },
+      {
+        "id": 7,
+        "type": "mc",
+        "question": "How does the setting of the story contribute to the conflict?",
+        "choices": [
+          { "id": "a", "text": "The crowded auditorium makes it difficult for the audience to see the stage." },
+          { "id": "b", "text": "The messy stage and unfinished props add pressure as opening night approaches." },
+          { "id": "c", "text": "The outdoor location causes the rehearsal to be interrupted by bad weather." },
+          { "id": "d", "text": "The small classroom prevents the cast from practicing their movements." }
+        ],
+        "answer": ["b"]
+      },
+      {
+        "id": 8,
+        "type": "mc",
+        "question": "What can the reader conclude about how Maya has changed by the end of the story?",
+        "choices": [
+          { "id": "a", "text": "She no longer worries about doing well in the play." },
+          { "id": "b", "text": "She has become more confident in her ability to handle challenges." },
+          { "id": "c", "text": "She decides that she prefers working backstage instead of acting." },
+          { "id": "d", "text": "She believes that the play will fail no matter what she does." }
+        ],
+        "answer": ["b"]
+      },
+      {
+        "id": 9,
+        "type": "mc",
+        "question": "Which sentence best supports the idea that Maya is a supportive friend?",
+        "choices": [
+          { "id": "a", "text": "(5) Maya felt the same way, but she straightened her shoulders and walked to the center of the stage." },
+          { "id": "b", "text": "(9) When Leo missed a line, she gently prompted him, and he relaxed enough to keep going." },
+          { "id": "c", "text": "(12) \"I know you’re tired,\" she said, \"but this is the last full practice before the show.\"" },
+          { "id": "d", "text": "(19) As they worked, Leo began joking about how the audience would never know how close everything had come to falling apart." }
+        ],
+        "answer": ["b"]
+      },
+      {
+        "id": 10,
+        "type": "mc",
+        "question": "In sentence (19), Leo jokes about the audience not knowing how close everything had come to falling apart. What does this detail mainly show?",
+        "choices": [
+          { "id": "a", "text": "Leo no longer cares whether the play is successful." },
+          { "id": "b", "text": "Leo is trying to hide his disappointment about the play being canceled." },
+          { "id": "c", "text": "Leo is beginning to feel more relaxed about the problems they faced." },
+          { "id": "d", "text": "Leo wants to change the play into a comedy instead of a drama." }
+        ],
+        "answer": ["c"]
+      },
+      {
+        "id": 11,
+        "type": "mc",
+        "question": "How do sentences (11) and (12) help move the plot forward?",
+        "choices": [
+          { "id": "a", "text": "They introduce a new character who will replace Maya in the play." },
+          { "id": "b", "text": "They show that Ms. Alvarez is planning to cancel the performance." },
+          { "id": "c", "text": "They explain why the cast decides to change the setting of the play." },
+          { "id": "d", "text": "They create urgency by reminding the cast that this is their final chance to practice." }
+        ],
+        "answer": ["d"]
+      },
+      {
+        "id": 12,
+        "type": "open-ended",
+        "question": "Explain how Maya’s attitude changes from the beginning to the end of the story. Use evidence from the text to support your answer.",
+        "answer": [
+          "A complete answer should explain that Maya begins the story worried and unsure about whether the play will be ready, as shown when she stares at the crooked backdrop and wonders how it will be ready in time. By the end of the story, she feels more confident about the play and about herself, shown when she helps Leo fix the backdrop and then looks at their work with new confidence. Strong responses may also mention that she takes the lead during rehearsal and chooses to support Leo even when she is nervous, showing her growth in responsibility and self-belief."
+        ]
+      }
+    ],
+    "answerKey": {
+      "1": ["a"],
+      "2": ["b"],
+      "3": ["b"],
+      "4": ["d"],
+      "5": ["b"],
+      "6": ["b"],
+      "7": ["b"],
+      "8": ["b"],
+      "9": ["b"],
+      "10": ["c"],
+      "11": ["d"],
+      "12": [
+        "Maya starts out worried and unsure but becomes more confident and responsible by the end, as shown by her leading rehearsal, helping Leo, fixing the backdrop, and feeling new confidence about the play and herself."
+      ]
+    }
+  }
+]

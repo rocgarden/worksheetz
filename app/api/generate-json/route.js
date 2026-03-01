@@ -117,7 +117,7 @@ console.log("Body received:", body);
   if (type === "reading") {
     examplePdfPath =
       genre === "fiction"
-        ? path.resolve(process.cwd(), "pdfExamples/processed/readingExample_nonfiction.txt")
+        ? path.resolve(process.cwd(), "pdfExamples/processed/readingExample_fiction.txt")
         : path.resolve(process.cwd(), "pdfExamples/processed/readingExample_nonfiction.txt");
   }
   console.log("Resolved path:", examplePdfPath);
