@@ -112,8 +112,14 @@ console.log("Body received:", body);
   const concept = payload.concept ?? "";
   //verify generator and example paths
   const generatorFn = generatorMap[type];
-  const examplePdfPath = examplePdfMap[type];
+  let examplePdfPath = examplePdfMap[type];
 
+  if (type === "reading") {
+    examplePdfPath =
+      genre === "fiction"
+        ? path.resolve(process.cwd(), "pdfExamples/processed/readingExample_nonfiction.txt")
+        : path.resolve(process.cwd(), "pdfExamples/processed/readingExample_nonfiction.txt");
+  }
   console.log("Resolved path:", examplePdfPath);
   console.log("Exists:", fs.existsSync(examplePdfPath));
 

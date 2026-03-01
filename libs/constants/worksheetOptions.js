@@ -15,7 +15,7 @@ export const CONCEPTS = {
     "Custom...",
   ],
   reading: [
-    "Main Idea",
+    "Central Idea",
     "Supporting Details",
     "Inference",
     "Author's Purpose",

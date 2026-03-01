@@ -11,12 +11,33 @@ import toast from "react-hot-toast";
 import { saveWorksheetSchema } from "@/libs/zodSchemas";
 import AnswerKeyReview from "./AnswerKeyReview";
 
+function ensureReadingPassageShape(worksheet, type) {
+  if (type !== "reading") return worksheet;
+
+  const next = { ...(worksheet || {}) };
+  const ip = { ...(next.independent_practice || {}) };
+
+  if (!ip.passage) {
+    ip.passage = {
+      title: "",
+      subtitle: "",
+      paragraph1: typeof ip.story === "string" ? ip.story : "",
+      paragraph2: "",
+    };
+  }
+
+  next.independent_practice = ip;
+  return next;
+}
+
 export default function WorksheetEditor({ fileName, initialData, type }) {
   const searchParams = useSearchParams();
   const canDownload = searchParams.get("canDownload") === "true";
   const [loadingPdf, setLoadingPdf] = useState(false);
   const [loadingForm, setLoadingForm] = useState(false);
-  const [worksheet, setWorksheet] = useState(initialData || {});
+const [worksheet, setWorksheet] = useState(() =>
+  ensureReadingPassageShape(initialData || {}, type)
+); 
   const [savedFileName, setSavedFileName] = useState(false);
   const [pdfCreated, setPdfCreated] = useState(false);
   const [formCreated, setFormCreated] = useState(false);
@@ -31,6 +52,11 @@ export default function WorksheetEditor({ fileName, initialData, type }) {
     disabled: isLocked,
     className: "w-full border border-gray-700 text-gray-700 rounded p-2",
   };
+
+  useEffect(() => {
+  if (!initialData) return;
+  setWorksheet(ensureReadingPassageShape(initialData, type));
+}, [initialData, type]);
 
   const sanitizeText = (input) => {
     if (!input) return "";
@@ -523,22 +549,112 @@ export default function WorksheetEditor({ fileName, initialData, type }) {
                 )
               }
             />
-            <label className="block font-medium text-gray-700 mb-1">
-              Story
-            </label>
-            <textarea
-              rows={4}
-              {...inputProps}
-              className="w-full border border-gray-700 text-gray-700 rounded p-2 mb-4"
-              value={worksheet.independent_practice.story}
-              onChange={(e) =>
-                handleNestedChange(
-                  "independent_practice",
-                  "story",
-                  e.target.value
-                )
-              }
-            />
+           {type === "reading" ? (
+  <>
+    <label className="block font-medium text-gray-700 mb-1">Title</label>
+    <input
+      {...inputProps}
+      className="w-full border border-gray-700 text-gray-700 rounded p-2 mb-4"
+      value={worksheet.independent_practice?.passage?.title || ""}
+      onChange={(e) => {
+        const next = e.target.value;
+        setWorksheet((prev) => {
+          const copy = structuredClone(prev);
+          copy.independent_practice ||= {};
+          copy.independent_practice.passage ||= {
+            title: "",
+            subtitle: "",
+            paragraph1: "",
+            paragraph2: "",
+          };
+          copy.independent_practice.passage.title = next;
+          return copy;
+        });
+      }}
+    />
+
+    <label className="block font-medium text-gray-700 mb-1">Subtitle</label>
+    <input
+      {...inputProps}
+      className="w-full border border-gray-700 text-gray-700 rounded p-2 mb-4"
+      value={worksheet.independent_practice?.passage?.subtitle || ""}
+      onChange={(e) => {
+        const next = e.target.value;
+        setWorksheet((prev) => {
+          const copy = structuredClone(prev);
+          copy.independent_practice ||= {};
+          copy.independent_practice.passage ||= {
+            title: "",
+            subtitle: "",
+            paragraph1: "",
+            paragraph2: "",
+          };
+          copy.independent_practice.passage.subtitle = next;
+          return copy;
+        });
+      }}
+    />
+
+    <label className="block font-medium text-gray-700 mb-1">Paragraph 1</label>
+    <textarea
+      rows={6}
+      {...inputProps}
+      className="w-full border border-gray-700 text-gray-700 rounded p-2 mb-4"
+      value={worksheet.independent_practice?.passage?.paragraph1 || ""}
+      onChange={(e) => {
+        const next = e.target.value;
+        setWorksheet((prev) => {
+          const copy = structuredClone(prev);
+          copy.independent_practice ||= {};
+          copy.independent_practice.passage ||= {
+            title: "",
+            subtitle: "",
+            paragraph1: "",
+            paragraph2: "",
+          };
+          copy.independent_practice.passage.paragraph1 = next;
+          return copy;
+        });
+      }}
+    />
+
+    <label className="block font-medium text-gray-700 mb-1">Paragraph 2</label>
+    <textarea
+      rows={6}
+      {...inputProps}
+      className="w-full border border-gray-700 text-gray-700 rounded p-2 mb-4"
+      value={worksheet.independent_practice?.passage?.paragraph2 || ""}
+      onChange={(e) => {
+        const next = e.target.value;
+        setWorksheet((prev) => {
+          const copy = structuredClone(prev);
+          copy.independent_practice ||= {};
+          copy.independent_practice.passage ||= {
+            title: "",
+            subtitle: "",
+            paragraph1: "",
+            paragraph2: "",
+          };
+          copy.independent_practice.passage.paragraph2 = next;
+          return copy;
+        });
+      }}
+    />
+  </>
+) : (
+  <>
+    <label className="block font-medium text-gray-700 mb-1">Story</label>
+    <textarea
+      rows={4}
+      {...inputProps}
+      className="w-full border border-gray-700 text-gray-700 rounded p-2 mb-4"
+      value={worksheet.independent_practice.story}
+      onChange={(e) =>
+        handleNestedChange("independent_practice", "story", e.target.value)
+      }
+    />
+  </>
+)}
             {/* Questions */}
             {worksheet.independent_practice.questions.map((q, idx) => (
               <div

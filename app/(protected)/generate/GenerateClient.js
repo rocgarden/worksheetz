@@ -182,12 +182,13 @@ const cleanConcept = sanitizeInput(finalConcept);
 
 // ✅ build the exact object that matches each schema
 const input =
-  type === "staarReading"
+  type === "staarReading" || type === "reading"
     ? {
         topic: cleanTopic.slice(0, 200),
+        concept: cleanConcept.slice(0, 200),
         gradeLevel,
         count: 1,
-        type: "staarReading",
+        type,
         genre,
       }
     : {
@@ -195,6 +196,7 @@ const input =
         concept: cleanConcept.slice(0, 200),
         gradeLevel,
         count: count || 1,
+        type
       };
 
 // ✅ validate
@@ -219,9 +221,7 @@ if (schema) {
         headers: {
           "Content-Type": "application/json",
         },
-      body: JSON.stringify(
-      type === "staarReading" ? input : { ...input, type } // keep type for server routing
-      ),
+        body: JSON.stringify(input),
         signal: controller.signal,
       });
 
@@ -365,6 +365,7 @@ if (schema) {
               setTopic("");
               setSelectedConcept("");
               setCustomConcept("");
+              setGenre("nonfiction");
             }}
             className="w-full p-3 text-gray-700 rounded-md border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:outline-none"
           >
@@ -374,24 +375,24 @@ if (schema) {
             <option value="staarReading">STAAR Reading</option>
           </select>
         </div>
-        {type === "staarReading" && (
-  <div className="mt-4">
-    <label className="block text-sm font-medium text-gray-700 mb-1">
-      Genre
-    </label>
+        {(type === "staarReading" || type === "reading") && (
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Genre
+            </label>
 
-    <select
-      value={genre}
-      onChange={(e) => setGenre(e.target.value)}
-      className="w-full border border-gray-300 rounded-md p-2 text-sm"
-    >
-      <option value="nonfiction">Nonfiction</option>
-      <option value="fiction">Fiction</option>
-      {/* Later you can add: */}
-      {/* <option value="drama">Drama</option> */}
-    </select>
-  </div>
-)}
+            <select
+              value={genre}
+              onChange={(e) => setGenre(e.target.value)}
+              className="w-full border border-gray-300 rounded-md p-2 text-sm"
+            >
+              <option value="nonfiction">Nonfiction</option>
+              <option value="fiction">Fiction</option>
+              {/* Later you can add: */}
+              {/* <option value="drama">Drama</option> */}
+            </select>
+          </div>
+        )}
 
 
         {/* Topic (Content/Theme) - Suggestions First */}

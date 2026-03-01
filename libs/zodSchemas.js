@@ -21,6 +21,7 @@ export const readingGeneratorSchema = z.object({
   concept: conceptSchema,
   gradeLevel: gradeSchema,
   count: z.number().int().positive(),
+  genre: z.enum(["nonfiction", "fiction"]).default("nonfiction"),
 });
 
 // ✏️ Grammar-specific generator

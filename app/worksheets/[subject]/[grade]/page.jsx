@@ -9,7 +9,7 @@ const subjectData = {
     benefits: [
       'Fiction and non-fiction passages',
       'Aligned to state standards',
-      'Multiple difficulty levels',
+      'Multiple concepts',
       'Instant PDF download'
     ]
   },
@@ -40,7 +40,7 @@ const subjectData = {
       'TEKS-aligned content',
       'Test format familiarity',
       'Multiple question types',
-      'Built-in answer keys'
+      'STAAR Aligned SCR practice'
     ]
   }
 };
@@ -60,7 +60,7 @@ const gradeData = {
 function getPopularConcepts(subject, grade) {
   const concepts = {
     'reading-comprehension': {
-      'k-2': ['Main Idea', 'Story Sequence', 'Character Traits', 'Picture Clues', 'Rhyming Words', 'Beginning Sounds'],
+      'k-2': ['Central Idea', 'Story Sequence', 'Character Traits', 'Picture Clues', 'Rhyming Words', 'Beginning Sounds'],
       '3-5': ['Theme', 'Point of View', 'Making Inferences', 'Text Evidence', 'Compare & Contrast', 'Cause & Effect'],
       '6-8': ["Author's Purpose", 'Figurative Language', 'Text Structure', 'Argument Analysis', 'Multiple Perspectives', 'Literary Devices']
     },
@@ -75,7 +75,7 @@ function getPopularConcepts(subject, grade) {
       '6-8': ['World History', 'Civics & Government', 'Economics', 'Geography', 'Primary Sources', 'Current Events']
     },
     'staar-reading': {
-      'k-2': ['Story Elements', 'Main Idea', 'Retelling', 'Author\'s Purpose', 'Text Features', 'Vocabulary'],
+      'k-2': ['Story Elements', 'Central Idea', 'Retelling', 'Author\'s Purpose', 'Text Features', 'Vocabulary'],
       '3-5': ['STAAR Format Practice', 'Multiple Choice Strategies', 'Short Answer Responses', 'Genre Recognition', 'Test-Taking Tips', 'Paired Passages'],
       '6-8': ['Literary Analysis', 'Informational Text', 'Poetry Interpretation', 'Extended Response', 'Cross-Text Synthesis', 'Evidence Selection']
     }

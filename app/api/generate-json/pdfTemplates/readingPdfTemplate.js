@@ -1,4 +1,4 @@
-import fs from "fs";
+//api/generate-json/pdfTemplates/readingPdfTemplate
 import PDFDocument from "pdfkit";
 import { PassThrough } from "stream";
 import path from "path";
