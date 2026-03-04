@@ -65,6 +65,13 @@ Effective Date: October 20, 2025
 
 Your privacy matters to us. This Privacy Policy explains what data we collect, how we use it, and how it’s protected.
 
+Definitions
+- “Service” refers to Worksheetz AI and all related features.
+- “Personal Data” means information that identifies an individual, such as name or email.
+- “Usage Data” means anonymized information collected automatically, such as device type or browser.
+- “You” refers to the teacher or adult user accessing the Service.
+
+
 1. Information We Collect
 
 When you use Worksheetz AI, we may collect:
@@ -192,7 +199,38 @@ Data Sharing
 Data Deletion
 You may request deletion of your account and associated data at any time by contacting us at hello@worksheetzai.com. Upon deletion, any stored Google account information will be permanently removed.
 
-11. Contact Us
+11. Children’s Internet Protection Act (CIPA)
+Worksheetz AI complies with the Children’s Internet Protection Act by ensuring that no harmful or inappropriate content is accessible through the platform. 
+Worksheetz AI does not provide access to social networking, messaging, or user-generated content. The service is intended solely for educators, and no student accounts or student data are collected, stored, or processed.
+
+12.FERPA Alignment and No Student Data
+Worksheetz AI is designed for teacher use only. Students do not create accounts and do not interact with the Service. We do not collect, store, or process any student personal information, student identifiers, student work, or student behavioral data. Because no student data is collected, Worksheetz AI is inherently low‑risk and aligned with FERPA expectations.
+
+13.Children’s Online Privacy Protection Act (COPPA)
+Worksheetz AI is not directed to children under the age of 13. We do not knowingly collect personal information from children. If we become aware that a child has provided personal information, we will delete it promptly.
+
+14.Legal Basis for Processing
+We process personal data based on:
+- Your consent when creating an account
+- The need to provide and maintain the Service
+- Compliance with legal obligations
+- Legitimate interests such as improving performance and preventing fraud
+
+15.Your Data Protection Rights
+You have the right to:
+- Access your personal data
+- Request correction of inaccurate data
+- Request deletion of your data
+- Request restriction of processing
+- Withdraw consent at any time
+
+16. Data Transfers
+Your information may be processed and stored in the United States. By using the Service, you consent to the transfer of your information to U.S.-based service providers that follow industry-standard protections.
+
+17. Security Practices
+We use encryption in transit (HTTPS), encryption at rest (where supported by our providers), access controls, and monitoring to protect your data. Only authorized personnel may access user information, and only when necessary to operate the Service.
+
+Contact Us
 
 For privacy-related requests or questions, email:
 📧 hello@worksheetzai.com`}
