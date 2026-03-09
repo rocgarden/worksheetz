@@ -154,6 +154,7 @@ const totalAllowed = planLimit + totalBonusGranted;
   let pdfBuffer;
   try {
     pdfBuffer = await renderPdf(type, worksheet.content);
+
   } catch (err) {
     console.error("❌ PDF rendering failed:", err);
     return NextResponse.json(
