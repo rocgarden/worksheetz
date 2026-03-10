@@ -3,7 +3,7 @@ const config = {
   appName: "Worksheetz AI",
   // REQUIRED: a short description of your app for SEO tags (can be overwritten)
   appDescription:
-    "An AI-powered tool that helps educators instantly generate customized worksheets by subject, grade level, and topic.",
+    "Worksheetz AI helps K–12 teachers create standards‑aligned worksheets for reading, grammar, math, and social studies. Classroom‑safe, no student data, and built for school districts.",
   // REQUIRED (no https://, not trialing slash at the end, just the naked domain)
   domainName: "worksheetzai.com",
   crisp: {
