@@ -1,3 +1,5 @@
+//app/api/generate-json/pdfTemplates/staarReadingTemplate.js
+
 import PDFDocument from "pdfkit";
 import { PassThrough } from "stream";
 import path from "path";
@@ -138,15 +140,15 @@ export async function staarReadingPdfTemplate(data) {
 
     doc.moveDown(0.5);
 
-    doc
-      .font("Regular")
-      .fontSize(11)
-      .text(
-        `Grade ${safeStr(gradeLevel)} 
+    // doc
+    //   .font("Regular")
+    //   .fontSize(11)
+    //   .text(
+    //     `Grade ${safeStr(gradeLevel)} 
      
-        `,
-        { align: "center" }
-      );
+    //     `,
+    //     { align: "center" }
+    //   );
         //  • ${safeStr(genre) || "Nonfiction"} • Topic:
         //   ${safeStr(topic) || "—"}
 

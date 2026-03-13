@@ -322,7 +322,7 @@ if (schema) {
   useEffect(() => {
   if (type === "staarReading") {
     // Force 3–5
-    if (!["3", "4", "5"].includes(String(gradeLevel))) {
+    if (!["3", "4", "5", "6", "7", "8"].includes(String(gradeLevel))) {
       setGradeLevel("4");
     }
     setCount(1); // STAAR is always 1 set (8 MC + 1 SCR)

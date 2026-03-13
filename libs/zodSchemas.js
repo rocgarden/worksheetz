@@ -225,7 +225,7 @@ export const staarReadingWorksheetSchema = z.object({
 
 export const staarReadingGenerateRequestSchema = z.object({
   topic: z.string().min(2).max(200),
-  gradeLevel: z.enum(["3", "4", "5", "6", "7,", "8"]),
+  gradeLevel: z.enum(["3", "4", "5", "6", "7", "8"]),
   count: z.number().int().min(1).max(1).default(1), // keep 1 for STAAR
   type: z.literal("staarReading"),
   genre: z.enum(["nonfiction", "fiction"]).default("nonfiction")
