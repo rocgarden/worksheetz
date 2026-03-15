@@ -3,11 +3,12 @@ import { generatePdfFromHtml } from "@/utils/puppeteerPdf";
 
 // import { grammarPdfTemplate } from "@/app/api/generate-json/pdfTemplates/grammarPdfTemplate";
 // import { readingPdfTemplate } from "@/app/api/generate-json/pdfTemplates/readingPdfTemplate";
-import { socialStudiesPdfTemplate } from "@/app/api/generate-json/pdfTemplates/socialStudiesTemplate";
-import { staarReadingPdfTemplate } from "@/app/api/generate-json/pdfTemplates/staarReadingTemplate";
-import { readingTemplate } from "@/app/api/generate-json/pdf-templates/readingTemplate";
-import { grammarTemplate } from "@/app/api/generate-json/pdf-templates/grammarTemplate";
-
+// import { socialStudiesPdfTemplate } from "@/app/api/generate-json/pdfTemplates/socialStudiesTemplate";
+// import { staarReadingPdfTemplate } from "@/app/api/generate-json/pdfTemplates/staarReadingTemplate";
+import { staarReadingTemplate } from "@/app/api/generate-json/pdfTemplates/staarReading/template";
+import { socialStudiesTemplate } from "@/app/api/generate-json/pdfTemplates/socialStudies/template";
+import { readingTemplate } from "@/app/api/generate-json/pdfTemplates/reading/template";
+import { grammarTemplate } from "@/app/api/generate-json/pdfTemplates/grammar/template";
 export async function renderPdf(type, data) {
     let html;
 
@@ -15,8 +16,8 @@ export async function renderPdf(type, data) {
   if (type === "reading") html = readingTemplate({ worksheet: data });
   else if (type === "grammar") html = grammarTemplate(data);
   // if (type === "reading") return readingPdfTemplate(data);
-  else if (type === "socialStudies") return socialStudiesPdfTemplate(data);
-  else if (type === "staarReading" ) return staarReadingPdfTemplate(data);
+  else if (type === "socialStudies") html = socialStudiesTemplate(data);
+  else if (type === "staarReading" ) html = staarReadingTemplate(data);
 
   else if (type === "reading") html = readingTemplate({ worksheet: data });
 

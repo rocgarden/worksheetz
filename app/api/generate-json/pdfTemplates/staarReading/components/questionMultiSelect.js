@@ -1,0 +1,24 @@
+// app/api/generate-json/pdfTemplates/staarReading/components/questionMultiSelect.js
+
+import { escapeHtml, safeArray, safeStr } from "../../utils/normalizeData.js";
+import { teksLabel } from "../../shared/teksLabel.js";
+
+export function renderQuestionMultiSelect(question, index) {
+  const n = index + 1;
+
+  return `
+    <div class="worksheet-section avoid-break">
+      <div class="question-text">${n}. ${escapeHtml(safeStr(question.question))} (Select TWO answers.)</div>
+      ${teksLabel(question.teks)}
+      ${safeArray(question.choices)
+        .map(
+          (choice) => `
+          <div class="choice-text">
+            ${escapeHtml(safeStr(choice.id).toUpperCase())}) ${escapeHtml(safeStr(choice.text))}
+          </div>
+        `
+        )
+        .join("")}
+    </div>
+  `;
+}

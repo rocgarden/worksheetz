@@ -40,9 +40,9 @@ Each worksheet must include the following five components:
 
 #### 2. Interactive Concept Reinforcement Activity
 Choose ONE of the following formats to reinforce the concept:
-- "fill-in-the-blank" : Fill-in-the-blank with word bank with exactly 5 words and 5 sentences
+- "fill-in-the-blank" : Fill-in-the-blank with word bank with exactly 5 words in shuffled order and 5 sentences 
 - "cloze-paragraph"  : Cloze paragraph with exactly 5 sentences
-- "timeline_ordering" : Timeline_ordering with exactly 5 events
+- "timeline_ordering" : Timeline_ordering with exactly 5 events in shuffled order
 - "question" : Question: Reflection question
 
 Each activity must include:
