@@ -162,6 +162,39 @@ const worksheetCss = `
     font-size: 11px;
     color: #6b7280;
   }
+  
+  .staar-passage-text {
+  margin-top: 10px;
+  margin-bottom: 18px;
+}
+
+.staar-passage-paragraph {
+  font-size: 14px;
+  line-height: 1.8;
+  text-align: justify;
+  margin-bottom: 14px;
+}
+
+.staar-line-ref {
+  margin-top: 14px;
+  padding-top: 8px;
+  border-top: 1px solid #d1d5db;
+}
+
+.staar-line-ref-title {
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: #4b5563;
+}
+
+.staar-line-ref-item {
+  font-size: 11px;
+  line-height: 1.5;
+  color: #6b7280;
+  margin-bottom: 2px;
+}
+
 `;
 
 const printCss = `

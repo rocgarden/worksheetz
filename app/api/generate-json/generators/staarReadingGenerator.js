@@ -1,7 +1,7 @@
 //app/api/generate-json/generators/staarReadingGenerator
 import OpenAI from "openai";
 import fs from "fs/promises";
-import { TEKS_READING_MAP } from "@/libs/constants/teksReadingMap"; // you already added this
+import { TEKS_READING_MAP } from "@/libs/constants/teksReadingMap"; 
 //import { staarReadingGenerateResponseSchema} from "@/libs/zodSchemas/staarReadingGeneratorSchema";
 import { staarReadingGenerateResponseSchema } from "@/libs/zodSchemas";
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -106,18 +106,21 @@ export async function generateStaarReadingJson({
   const teks = buildTeksOptions(gradeLevel);
 
   const prompt = `
-You generate STAAR-aligned reading comprehension practice for Texas grades 3-5.
+You generate STAAR-aligned reading comprehension practice for Texas grades 3-8.
 
 GOAL:
 Create ONE (1) STAAR-style practice set with:
-- a short passage
+- a rigorous passage
 - 8 objective questions (mixed item types)
 - 1 SCR (short constructed response)
 
 Constraints:
 - gradeLevel: "${gradeLevel}"
-- genre: "${genre}" (must be exactly "nonfiction" OR "fiction")
-- Passage length: 200–350 words max (keep it short but maintain STAAR-like rigor)
+- genre: "${genre}"
+- Passage length:
+  - Grade 3-4: 300–420 words
+  - Grade 5-6: 420–550 words
+  - Grade 7-8: 500–700 words
 - Use a fresh topic tied to: "${topic}"
 - Output must be VALID JSON only (no markdown)
 - Output schema: an ARRAY of 1 worksheet object
@@ -125,14 +128,15 @@ Constraints:
 PASSAGE REQUIREMENTS:
 If genre = "nonfiction":
 - informational tone
-- clear central idea with supporting details
-- include at least 2 paragraphs
+- include enough detail, examples, and explanation to support rigorous inference and evidence questions
+- paragraph lengths should feel similar to STAAR practice passages, not like a short warm-up
+
 
 If genre = "fiction":
 - realistic fiction tone (no fantasy for now)
-- clear characters + setting + problem + resolution
+- clear character, setting, conflict, and resolution
 - include dialogue sparingly (1–3 short lines max)
-- include at least 2 paragraphs
+- 2–3 paragraphs
 - scr should follow structure of STAAR like questioning such as plot elements or text structure
 
 Question requirements:
@@ -162,8 +166,10 @@ IMPORTANT ANSWER SHAPES (MUST FOLLOW EXACTLY):
 
 Passage:
 - Provide { title, text, lines[] }.
-- lines[] should be the passage split into numbered-style lines or sentences so evidence selection works.
-
+- "text" must be normal paragraph prose with paragraph breaks.
+- "lines[]" must contain numbered line segments for evidence questions.
+- lines[] should break the passage into short readable chunks, about 8–15 words each, not one entire sentence per line.
+- Keep line numbering sequential: "(1) ...", "(2) ...", "(3) ..."
 Return JSON in this exact shape:
 
 [

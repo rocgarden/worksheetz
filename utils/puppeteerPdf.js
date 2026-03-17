@@ -32,16 +32,35 @@
 //   return pdfBuffer;
 // }
 // utils/puppeteerPdf.js
+// utils/puppeteerPdf.js
 import puppeteer from "puppeteer-core";
 import chromium from "@sparticuz/chromium";
 
+function isVercel() {
+  return !!process.env.VERCEL;
+}
+
+async function getLaunchOptions() {
+  if (isVercel()) {
+    return {
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
+    };
+  }
+
+  // local development
+  return {
+    headless: true,
+    executablePath:
+      process.env.PUPPETEER_EXECUTABLE_PATH ||
+      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+  };
+}
+
 export async function generatePdfFromHtml(html) {
-  const browser = await puppeteer.launch({
-    args: chromium.args,
-    defaultViewport: chromium.defaultViewport,
-    executablePath: await chromium.executablePath(),
-    headless: chromium.headless,
-  });
+  const browser = await puppeteer.launch(await getLaunchOptions());
 
   try {
     const page = await browser.newPage();
