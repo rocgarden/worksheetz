@@ -33,7 +33,7 @@
 // }
 // utils/puppeteerPdf.js
 import puppeteer from "puppeteer-core";
-import chromium from "@sparticuz/chromium-min";
+import chromium from "@sparticuz/chromium";
 
 export async function generatePdfFromHtml(html) {
   const browser = await puppeteer.launch({

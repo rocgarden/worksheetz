@@ -1,5 +1,5 @@
 const nextConfig = {
-  serverExternalPackages: ["pdfkit", "jsdom", "pdfjs-dist", "puppeteer-core", "@sparticuz/chromium-min"], // ← Add canvas and jsdom
+  serverExternalPackages: ["pdfkit", "jsdom", "pdfjs-dist", "puppeteer-core", "@sparticuz/chromium"], // ← Add canvas and jsdom
 
   reactStrictMode: true,
   // Disable ESLint during build (fix those warnings later)
