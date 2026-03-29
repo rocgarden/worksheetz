@@ -61,7 +61,7 @@ const Hero = ({ isAuthenticated = false }) => {
                 text="Get Worksheetz Ai"
               />
               <p className="text-sm text-base-content mt-2 opacity-70">
-                Free to start. Affordable to upgrade. Built for educators.
+               WorksheetzAi | Free to start. Affordable to upgrade. Built for educators.
               </p>
             </>
           ) : (
@@ -75,7 +75,7 @@ const Hero = ({ isAuthenticated = false }) => {
         <Image
           //src="https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3540&q=80"
           src="/images/hero1.png"
-          alt="Product Demo"
+          alt="Worksheetz AI (WorksheetzAI) is a powerful AI worksheet generator that helps teachers and parents create custom worksheets in seconds. "
           className="w-full rounded"
           priority={true}
           width={500}

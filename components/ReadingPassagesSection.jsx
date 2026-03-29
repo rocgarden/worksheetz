@@ -58,7 +58,7 @@ export default function ReadingPassagesSection() {
                 {/* Replace this with your actual passage image */}
                 <Image
                 src= "/samples/staarReadingPreview.png"
-                alt="STAAR reading sample"
+                alt="WorksheetzAi STAAR reading sample"
                 width={260}
                 height={380}
                 className=" w-full object-cover  "

@@ -3,8 +3,6 @@ import Image from "next/image";
 import config from "@/config";
 import logo from "@/app/icon1.png";
 
-// Add the Footer to the bottom of your landing page and more.
-// The support link is connected to the config.js file. If there's no config.resend.supportEmail, the link won't be displayed.
 
 const Footer = () => {
   return (
@@ -27,7 +25,7 @@ const Footer = () => {
               />
               <Image
                 src="/images/name.svg"
-                alt="Worksheetz AI name"
+                alt="Worksheetz AI"
                 width={220}
                 height={74}
                 className="h-6 w-auto align-middle bg-white"
@@ -39,7 +37,7 @@ const Footer = () => {
 
             <p className="mt-3 text-sm text-white">{config.appDescription}</p>
             <p className="mt-3 text-sm text-white">
-              Copyright © {new Date().getFullYear()} - All rights reserved
+             WorksheetzAI | Copyright © {new Date().getFullYear()} - All rights reserved
             </p>
 
             <a
