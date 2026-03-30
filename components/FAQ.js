@@ -6,6 +6,17 @@ import { useRef, useState } from "react";
 // <FAQ> component is a list of <Item> component
 
 const faqList = [
+    {
+    question: "What is WorksheetzAI?",
+    answer: (
+      <div className="space-y-2 leading-relaxed">
+        <p>
+          WorksheetzAI is an online ai-powered tool that helps K–12 educators create standards‑aligned worksheets for reading, grammar, math, and social studies. 
+          It is classroom‑safe that doesn't use any student data, and safely built for school districts.
+        </p>
+      </div>
+    ),
+  },
   {
     question: "What do I get exactly?",
     answer: (
