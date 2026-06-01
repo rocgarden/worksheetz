@@ -191,6 +191,27 @@ export default async function DashboardPage({ searchParams }) {
         )}
         <div className="mt-10">
           <NoSubLibrarySection />
+          {/* V2 Interactive Practice */}
+<div className="mt-6 p-6 rounded-2xl border-2 border-purple-200 bg-purple-50">
+  <div className="flex items-center gap-2 mb-2">
+    <span className="bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded-full">
+      FREE BETA
+    </span>
+  </div>
+  <h2 className="text-lg font-bold text-purple-900">
+    Interactive Student Practice
+  </h2>
+  <p className="text-sm text-purple-700 mt-1 mb-4">
+    Adaptive ELA practice for grades 6–8. 
+    Assign sessions, track progress, and view skill gaps.
+  </p>
+  <Link
+    href="/classroom"
+    className="inline-block bg-purple-700 text-white font-semibold px-5 py-2 rounded-full hover:bg-purple-800 transition"
+  >
+    Go to My Classrooms →
+  </Link>
+</div>
         </div>
       </section>
       {isAdmin && (

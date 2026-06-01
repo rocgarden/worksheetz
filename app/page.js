@@ -10,7 +10,7 @@ import { renderFAQSchema } from "@/libs/seo";
 import { faqSchemaItems } from "@/data/faq-schema";
 import ReadingPassagesSection from "@/components/ReadingPassagesSection";
 import SubjectCard from "@/components/SubjectCard";
-
+import InteractivePracticeBeta from "@/components/InteractivePracticeBeta";
 export default async function Page() {
   const supabase = await createClient();
   let hasActiveSubscription = false;
@@ -80,7 +80,7 @@ export default async function Page() {
         <SamplePdfCarousel />
         <CTA isAuthenticated={!!user} />
         <ReadingPassagesSection/>
-
+        <InteractivePracticeBeta />
         <section className="py-16">
           <h2 className="text-3xl font-bold text-center mb-12">
             Browse Worksheets by Subject

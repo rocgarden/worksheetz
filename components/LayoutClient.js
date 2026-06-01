@@ -11,6 +11,15 @@ import { Tooltip } from "react-tooltip";
 import config from "@/config";
 import { useRouter } from "next/navigation";
 
+ 
+// Shared helper at top of ClientLayout component
+const isPublicV2Route = () => 
+  ["/join", "/session"].some(route => 
+    window.location.pathname.startsWith(route)
+  );
+
+
+
 // Crisp customer chat support:
 // This component is separated from ClientLayout because it needs to be wrapped with <SessionProvider> to use useSession() hook
 const CrispChat = () => {
@@ -101,6 +110,42 @@ const CrispChat = () => {
 const ClientLayout = ({ children }) => {
   const router = useRouter();
   const supabase = createClient();
+  
+  const publicV2Routes = ["/join", "/session"];
+  useEffect(() => {
+  const { data: listener } = supabase.auth.onAuthStateChange(
+    (event, session) => {
+        const isPublicRoute = publicV2Routes.some(route =>
+          window.location.pathname.startsWith(route)
+        );
+        if (isPublicRoute) return;
+      if (event === "SIGNED_OUT" || !session) {
+       // if (process.env.NEXT_PUBLIC_V2_ENABLED === "true") return; // ← skip during v2 dev
+        if (window.opener) {
+          window.close();
+        } else {
+          router.replace("/");
+        }
+      }
+    }
+  );
+  return () => listener?.subscription.unsubscribe();
+}, [supabase, router]);
+
+const logout = async () => {
+  const isPublicRoute = publicV2Routes.some(route =>
+    window.location.pathname.startsWith(route)
+  );
+    if (isPublicRoute) return;
+
+  //if (process.env.NEXT_PUBLIC_V2_ENABLED === "true") return; // ← skip during v2 dev
+  await supabase.auth.signOut();
+  router.replace("/");
+};
+
+  
+  
+  
   // 🔄 Always refresh Supabase session after coming back from Stripe Checkout
   useEffect(() => {
     let isCancelled = false;
@@ -149,6 +194,7 @@ const ClientLayout = ({ children }) => {
     const { data: listener } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (event === "SIGNED_OUT" || !session) {
+          if (isPublicV2Route()) return; // ← add this 
           // If this is a secondary tab (has opener), close it
           if (window.opener) {
             window.close();
@@ -169,6 +215,7 @@ const ClientLayout = ({ children }) => {
     let idleTimer;
 
     const logout = async () => {
+       if (isPublicV2Route()) return; // ← add this 
       console.log("⏳ Idle timeout — signing out user");
       await supabase.auth.signOut();
       router.replace("/");
