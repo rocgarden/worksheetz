@@ -8,7 +8,7 @@ export function welcomeTemplate({ planName, userName }) {
         <!-- Logo -->
         <tr>
           <td align="center" style="padding-bottom:25px;">
-            <img src="https://worksheetzai.com/logo.png" alt="Worksheetz AI" width="80" style="display:block;">
+            <img src="https://worksheetzai.com/logo.png" alt="Teks Portfolio " width="80" style="display:block;">
           </td>
         </tr>
 
@@ -23,7 +23,7 @@ export function welcomeTemplate({ planName, userName }) {
         <tr>
           <td style="font-size:16px;color:#555;line-height:1.6;padding-bottom:20px;">
             Hi {{USER_NAME}},<br><br>
-            Welcome to <strong>Worksheetz AI</strong> — we’re excited to have you on board!
+            Welcome to <strong>Teks Portfolio</strong> — we’re excited to have you on board!
             Your <strong>{{PLAN_NAME}}</strong> plan is now active and ready to use.
           </td>
         </tr>
@@ -71,7 +71,7 @@ export function welcomeTemplate({ planName, userName }) {
         <tr>
           <td style="font-size:13px;color:#999;text-align:center;padding-top:35px;line-height:1.6;">
             Need help? Send us an email.<br>
-            ©️ ${new Date().getFullYear()} Worksheetz AI – All rights reserved.
+            ©️ ${new Date().getFullYear()} Teks Portfolio – All rights reserved.
           </td>
         </tr>
 

@@ -1,3 +1,10 @@
+//components/UsageStats.jsx
+import {
+  Sparkles,
+  Download,
+  Gift,
+} from "lucide-react";
+
 export default function UsageStats({
   generationCount,
   downloadCount,
@@ -5,54 +12,114 @@ export default function UsageStats({
   pdfBonus,
   planGenerations,
   planPdfs,
-  cancelDate,
 }) {
+  const generationPercent =
+    (generationCount / Math.max(planGenerations, 1)) * 100;
+
+  const downloadPercent =
+    (downloadCount / Math.max(planPdfs, 1)) * 100;
+
   return (
-    <div className="bg-white shadow-md rounded-lg p-6 border border-gray-200">
-      <h2 className="text-xl font-semibold mb-4">
-        {" "}
-        📋 Your Plan Usage This Month
-      </h2>
-      <ul className="space-y-2 font-medium">
-        <li>
-          <p>
-            ⚡️ Generations used: {generationCount} /{" "}
-            {/* {planGenerations + generationBonus} */}
-            {planGenerations}
-            {/* {generationBonus > 0 && (
-              <span className="ml-2 text-green-500">
-                (+{generationBonus} bonus)
-              </span>
-            )} */}
+    <div className="overflow-hidden rounded-[1.75rem] border border-purple-200 bg-white">
+      {/* Header */}
+      <div
+        className="
+          flex items-center gap-3
+          px-6 py-4
+          bg-gradient-to-r
+          from-purple-900
+          via-purple-800
+          to-purple-700
+        "
+      >
+        <div className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
+          <Sparkles className="w-5 h-5 text-white" />
+        </div>
+
+        <div>
+          <p className="text-xs uppercase tracking-widest text-purple-200">
+            Monthly Activity
           </p>
-        </li>
-        <li>
-          <p>
-            ⬇️ PDF downloads: {downloadCount} / {planPdfs}
-            {/* {pdfBonus > 0 && (
-              <span className="ml-2 text-green-500">(+{pdfBonus} bonus)</span>
-            )} */}
-          </p>{" "}
-        </li>
-        <ul className="space-y-2">
+
+          <h2 className="text-lg font-bold text-white">
+            Usage Stats
+          </h2>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="p-6 space-y-6">
+
+        {/* Worksheet Generations */}
+        <div>
+          <div className="flex justify-between items-center mb-2">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-purple-700" />
+              <span className="font-semibold">
+                Worksheet Generations
+              </span>
+            </div>
+
+            <span className="text-sm text-base-content/60">
+              {generationCount} / {planGenerations}
+            </span>
+          </div>
+
+          <div className="h-3 rounded-full bg-purple-100 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-purple-600 to-purple-400"
+              style={{
+                width: `${Math.min(generationPercent, 100)}%`,
+              }}
+            />
+          </div>
+
           {generationBonus > 0 && (
-            <li className="flex items-center text-green-600">
-              <span className="text-lg">⚡ Generation Bonus:</span>
-              <span className="ml-2 font-semibold">+{generationBonus}</span>
-            </li>
+            <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1 text-green-700 text-sm">
+              <Gift className="w-4 h-4" />
+              +{generationBonus} bonus generations
+            </div>
           )}
+        </div>
+
+        {/* PDF Downloads */}
+        <div>
+          <div className="flex justify-between items-center mb-2">
+            <div className="flex items-center gap-2">
+              <Download className="w-5 h-5 text-purple-700" />
+              <span className="font-semibold">
+                PDF Downloads
+              </span>
+            </div>
+
+            <span className="text-sm text-base-content/60">
+              {downloadCount} / {planPdfs}
+            </span>
+          </div>
+
+          <div className="h-3 rounded-full bg-purple-100 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-yellow-400 to-yellow-300"
+              style={{
+                width: `${Math.min(downloadPercent, 100)}%`,
+              }}
+            />
+          </div>
+
           {pdfBonus > 0 && (
-            <li className="flex items-center text-green-600">
-              <span className="text-lg">📄 Downloads Bonus:</span>
-              <span className="ml-2 font-semibold">+{pdfBonus}</span>
-            </li>
+            <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1 text-green-700 text-sm">
+              <Gift className="w-4 h-4" />
+              +{pdfBonus} bonus downloads
+            </div>
           )}
-        </ul>
-      </ul>
-      {/* <p className="text-yellow-600 text-sm mt-2">
-        ⚠️ Your subscription will end on{" "}
-        {new Date(cancelDate).toLocaleDateString()}.
-      </p> */}
+        </div>
+
+        <div className="pt-2 border-t border-purple-100">
+          <p className="text-sm text-base-content/60">
+            Usage resets monthly based on your current plan.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

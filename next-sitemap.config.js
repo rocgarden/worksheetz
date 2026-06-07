@@ -1,7 +1,7 @@
 // next-sitemap.config.js
 // next-sitemap.config.js
 module.exports = {
-  siteUrl: process.env.NEXT_PUBLIC_APP_URL || "https://www.worksheetzai.com",
+  siteUrl: process.env.NEXT_PUBLIC_APP_URL || "https://www.teksportfolio.com",
   generateRobotsTxt: true,
   exclude: [
     "/twitter-image.*",

@@ -6,7 +6,7 @@ export default function BillingDetailsForm({ profile }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="border border-gray-200 rounded-lg">
+    <div className=" rounded-lg">
       {/* Header */}
       <button
         type="button"

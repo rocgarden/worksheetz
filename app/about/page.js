@@ -1,8 +1,8 @@
 import Link from "next/link";
 export const metadata = {
-  title: "About WorksheetzAI - AI-Powered Worksheets for Teachers",
+  title: "About Teks Portfolio - AI-Powered Worksheets for Teachers",
   description:
-    "Learn about WorksheetzAI and how we're helping teachers create engaging, customized worksheets in seconds using AI technology.",
+    "Learn about Teks Portfolio and how we're helping teachers create engaging, adaptive practice in seconds using AI technology.",
 };
 
 export default function AboutPage() {
@@ -11,11 +11,11 @@ export default function AboutPage() {
       {/* Header */}
       <section className="max-w-4xl mx-auto px-6 py-16">
         <h1 className="text-4xl md:text-5xl font-bold text-purple-900 mb-6">
-          About WorksheetzAI
+          About Teks Portfolio
         </h1>
         <p className="text-xl text-gray-600 leading-relaxed">
           We're on a mission to save teachers time and help students learn
-          better with AI-powered, customized educational worksheets.
+          better with AI-powered, customized educational materials.
         </p>
       </section>
 
@@ -24,20 +24,20 @@ export default function AboutPage() {
         <h2 className="text-3xl font-bold text-purple-900 mb-6">Our Story</h2>
         <div className="prose prose-lg max-w-none text-gray-700 space-y-4">
           <p>
-            WorksheetzAI was born from a simple observation: teachers spend
+            Teks Portfolio was born from a simple observation: teachers spend
             countless hours creating worksheets, often late into the night, when
             they could be spending that time with their families or taking care
             of themselves.
           </p>
           <p>
-            We built WorksheetzAI to give teachers their time back. Using
+            We built Teks Portfolio to give teachers their time back. Using
             advanced AI technology, we can generate high-quality,
             grade-appropriate worksheets in seconds—worksheets that would
             normally take 30-60 minutes to create from scratch.
           </p>
           <p>
             Whether you need reading comprehension exercises, grammar practice,
-            or social studies worksheets, WorksheetzAI creates engaging,
+            or social studies worksheets, Teks Portfolio creates engaging,
             educational content tailored to your specific needs and grade level.
           </p>
         </div>
@@ -134,7 +134,7 @@ export default function AboutPage() {
             <p>
               <strong className="text-gray-900">Continuously Improving:</strong>{" "}
               We're always refining our AI prompts and adding new capabilities
-              based on teacher feedback. When you use WorksheetzAI, you're
+              based on teacher feedback. When you use Teks Portfolio, you're
               getting worksheets that get better every month.
             </p>
           </div>
@@ -304,7 +304,7 @@ export default function AboutPage() {
           Who We Serve
         </h2>
         <div className="bg-purple-50 p-8 rounded-lg border border-blue-100">
-          <p className="text-gray-700 mb-4">WorksheetzAI is designed for:</p>
+          <p className="text-gray-700 mb-4">Teks Portfolio is designed for:</p>
           <ul className="space-y-3 text-gray-700">
             <li className="flex items-start">
               <span className="text-blue-600 mr-2">✓</span>
@@ -389,7 +389,7 @@ export default function AboutPage() {
         <div className="bg-gradient-to-br from-purple-800 to-pink-100 opacity-80 rounded-2xl p-12 text-center text-white">
           <h2 className="text-3xl font-bold mb-4">Ready to Save Time?</h2>
           <p className="text-xl mb-8 text-purple-100">
-            Join teachers who are already using WorksheetzAI to create better
+            Join teachers who are already using Teks Portfolio to create better
             worksheets in less time.
           </p>
           <Link

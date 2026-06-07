@@ -18,7 +18,7 @@ export default function ReadingPassagesSection() {
             </h2>
 
             <p className="mt-4 text-lg text-slate-600 leading-relaxed">
-              Worksheetz AI generates engaging reading passages and comprehension
+              Teks Portfolio generates engaging reading passages and comprehension
               question pdf's modeled after STAAR testing formats. Perfect for warm‑ups,
               small‑group instruction, intervention, or test prep.
             </p>
@@ -58,7 +58,7 @@ export default function ReadingPassagesSection() {
                 {/* Replace this with your actual passage image */}
                 <Image
                 src= "/samples/staarReadingPreview.png"
-                alt="WorksheetzAi STAAR reading sample"
+                alt="Teks Portfolio STAAR reading sample"
                 width={260}
                 height={380}
                 className=" w-full object-cover  "

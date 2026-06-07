@@ -1,26 +1,76 @@
 // components/ProfileCard.js
+import { UserCircle2 } from "lucide-react";
+
 export default function ProfileCard({ profile, planInfo }) {
   const displayName = profile.billing_name || profile.name || "—";
   return (
-    <div className="bg-white shadow-md rounded-lg p-6 border border-gray-200">
-      <h2 className="text-xl font-semibold mb-2">👤 Profile</h2>
-      <p>
-        <strong>Name:</strong> {displayName}
-      </p>
-      <p>
-        <strong>Email:</strong> {profile.email}
-      </p>
-      <p>{/* <strong>Plan:</strong> {profile.plan || "Free"} */}</p>
-      <p>
-        <strong>Access:</strong> {profile.has_access ? "✅ Yes" : "❌ No"}
-      </p>
-      <p>
-        <strong>Plan:</strong> {planInfo}
-      </p>
-      <p>
-        <strong>Joined:</strong>{" "}
+    <div className="overflow-hidden rounded-[1.75rem] border border-purple-200 bg-white">
+ 
+      {/* Header */}
+      <div
+        className="
+          flex items-center gap-3
+          px-6 py-4
+          bg-gradient-to-r
+          from-purple-900
+          via-purple-800
+          to-purple-700
+        "
+      >    
+        <div className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
+          <UserCircle2 className="w-6 h-6 text-white" />
+        </div>
+         <div>
+          <p className="text-xs uppercase tracking-widest text-purple-200">
+            Teacher Account
+          </p>
+
+          <h2 className="text-lg font-bold text-white">
+            Profile
+          </h2>
+        </div>
+      </div>
+
+    <div className="p-8">
+          <p className="text-xs uppercase text-base-content/50">
+            Name
+          </p>
+
+          <p className="font-semibold">
+            {displayName}
+          </p>
+
+        <div>
+          <p className="text-xs uppercase text-base-content/50">
+            Plan
+          </p>
+
+          <p className="font-semibold">
+            {planInfo}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-xs uppercase text-base-content/50">
+            Email
+          </p>
+
+          <p className="font-semibold"> 
+            {profile.email}
+          </p>
+        </div>
+    
+    
+
+
+         <p className="text-xs uppercase text-base-content/50">
+            Joined
+          </p>
+          <p className="font-semibold"> 
         {new Date(profile.created_at).toLocaleDateString()}
       </p>
+
+    </div>
       {profile.cancel_at_period_end && profile.current_period_end && (
         <p className="text-yellow-600 text-sm mt-2">
           ⚠️ Your subscription will end on{" "}

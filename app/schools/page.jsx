@@ -39,32 +39,32 @@ const SchoolsPage = () => {
 {`
 Trusted by Teachers. Built for Classrooms. Safe for Schools.
 
-Worksheetz AI is designed specifically for K–12 educators who need high‑quality, customizable worksheets that align with TEKS and classroom standards. We do not collect student data, and our platform is built to meet the safety and privacy expectations of school districts nationwide.
+Teks Portfolio is designed specifically for K–12 educators who need high‑quality, customizable worksheets that align with TEKS and classroom standards. We do not collect student data, and our platform is built to meet the safety and privacy expectations of school districts nationwide.
 
 ---
 
-Why Schools Trust Worksheetz AI
+Why Schools Trust Teks Portfolio
 
 Purpose‑Built for Education
-Worksheetz AI is an instructional tool for teachers—not a student‑facing app, social platform, or open AI playground. Every feature is designed to support lesson planning, differentiation, and standards‑aligned practice.
+Teks Portfolio is an instructional tool for teachers—not a student‑facing app, social platform, or open AI playground. Every feature is designed to support lesson planning, differentiation, and standards‑aligned practice.
 
 No Student Accounts or Student Data
 Teachers generate materials. Students never log in.
-Worksheetz AI does not collect, store, or process:
+Teks Portfolio does not collect, store, or process:
 - Student names
 - Student emails
 - Student identifiers
 - Student work
 - Student behavioral or usage data
 
-This makes Worksheetz AI inherently low‑risk and FERPA‑friendly.
+This makes Teks Portfolio inherently low‑risk and FERPA‑friendly.
 
 CIPA‑Aligned and Classroom‑Safe
-Worksheetz AI contains no chatrooms, messaging, games, ads, or unsafe content.
+Teks Portfolio contains no chatrooms, messaging, games, ads, or unsafe content.
 All generated materials are academic, age‑appropriate, and aligned to state standards.
 
 Clear Educational Categorization
-To support district filtering systems (Lightspeed, Securly, iBoss, Fortinet, ContentKeeper, GoGuardian), Worksheetz AI is categorized as:
+To support district filtering systems (Lightspeed, Securly, iBoss, Fortinet, ContentKeeper, GoGuardian), Teks Portfolio is categorized as:
 - Education / Instructional Tools
 - Teacher Resources
 - Curriculum Support
@@ -72,10 +72,10 @@ To support district filtering systems (Lightspeed, Securly, iBoss, Fortinet, Con
 ---
 
 CIPA Compliance Statement
-Worksheetz AI does not provide access to harmful, obscene, or inappropriate material.
+Teks Portfolio does not provide access to harmful, obscene, or inappropriate material.
 The platform contains no chatrooms, social features, or user-generated content.
 All materials generated are academic and age-appropriate.
-Worksheetz AI is designed for teacher use only and does not collect or store student information.
+Teks Portfolio is designed for teacher use only and does not collect or store student information.
 `}
         </pre>
       </div>

@@ -40,7 +40,7 @@ export const getSEOTags = ({
           url: `https://${config.domainName}/share.png`,
           width: 1200,
           height: 630,
-          alt: "Worksheetz AI - Custom Worksheets Powered by AI",
+          alt: "Teks Portfolio - Custom Worksheets Powered by AI",
         },
       ],
       locale: "en_US",
@@ -91,7 +91,7 @@ export const renderSchemaTags = () => {
           url: `https://${config.domainName}/`,
           author: {
             "@type": "Person",
-            name: "Worksheetz Ai",
+            name: "Teks Portfolio",
           },
           datePublished: "2023-08-01",
           applicationCategory: "EducationalApplication",

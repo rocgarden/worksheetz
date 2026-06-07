@@ -20,7 +20,7 @@ export function baseTemplate({ title = "Worksheet", body = "" }) {
       </main>
 
       <footer class="worksheet-footer">
-        © Worksheetz AI — Generated for classroom use
+        © Teks Portfolio — Generated for classroom use
       </footer>
     </body>
   </html>

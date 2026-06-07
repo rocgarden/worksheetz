@@ -66,7 +66,7 @@ Effective Date: October 20, 2025
 Your privacy matters to us. This Privacy Policy explains what data we collect, how we use it, and how it’s protected.
 
 Definitions
-- “Service” refers to Worksheetz AI and all related features.
+- “Service” refers to Teks Portfolio and all related features.
 - “Personal Data” means information that identifies an individual, such as name or email.
 - “Usage Data” means anonymized information collected automatically, such as device type or browser.
 - “You” refers to the teacher or adult user accessing the Service.
@@ -74,7 +74,7 @@ Definitions
 
 1. Information We Collect
 
-When you use Worksheetz AI, we may collect:
+When you use Teks Portfolio, we may collect:
 
 Account Information: name, email address, date joined.
 
@@ -183,7 +183,7 @@ These permissions correspond to the following Google OAuth scopes:
 Data Usage
 We use this Google user data solely to:
 - Authenticate you and allow secure sign-in to your account
-- Create and manage your user account within Worksheetz AI
+- Create and manage your user account within Teks Portfolio
 - Display basic account information (such as your name or profile image) within the application
 
 We do not use Google user data for advertising, marketing, or profiling purposes.
@@ -200,14 +200,14 @@ Data Deletion
 You may request deletion of your account and associated data at any time by contacting us at hello@worksheetzai.com. Upon deletion, any stored Google account information will be permanently removed.
 
 11. Children’s Internet Protection Act (CIPA)
-Worksheetz AI complies with the Children’s Internet Protection Act by ensuring that no harmful or inappropriate content is accessible through the platform. 
-Worksheetz AI does not provide access to social networking, messaging, or user-generated content. The service is intended solely for educators, and no student accounts or student data are collected, stored, or processed.
+Teks Portfolio complies with the Children’s Internet Protection Act by ensuring that no harmful or inappropriate content is accessible through the platform. 
+Teks Portfolio does not provide access to social networking, messaging, or user-generated content. The service is intended solely for educators, and no student accounts or student data are collected, stored, or processed.
 
 12.FERPA Alignment and No Student Data
-Worksheetz AI is designed for teacher use only. Students do not create accounts and do not interact with the Service. We do not collect, store, or process any student personal information, student identifiers, student work, or student behavioral data. Because no student data is collected, Worksheetz AI is inherently low‑risk and aligned with FERPA expectations.
+Teks Portfolio is designed for teacher use only. Students do not create accounts and do not interact with the Service. We do not collect, store, or process any student personal information, student identifiers, student work, or student behavioral data. Because no student data is collected, Teks Portfolio is inherently low‑risk and aligned with FERPA expectations.
 
 13.Children’s Online Privacy Protection Act (COPPA)
-Worksheetz AI is not directed to children under the age of 13. We do not knowingly collect personal information from children. If we become aware that a child has provided personal information, we will delete it promptly.
+Teks Portfolio is not directed to children under the age of 13. We do not knowingly collect personal information from children. If we become aware that a child has provided personal information, we will delete it promptly.
 
 14.Legal Basis for Processing
 We process personal data based on:

@@ -1,11 +1,11 @@
 const config = {
   // REQUIRED
-  appName: "Worksheetz AI",
+  appName: "TEKS Portfolio",
   // REQUIRED: a short description of your app for SEO tags (can be overwritten)
   appDescription:
-    "Worksheetz AI helps K–12 teachers create standards‑aligned worksheets for reading, grammar, math, and social studies. Classroom‑safe, no student data, and built for school districts.",
+    "TEKS Portfolio helps K–12 teachers create standards‑aligned worksheets for reading, grammar, math, and social studies. Classroom‑safe, no student data, and built for school districts.",
   // REQUIRED (no https://, not trialing slash at the end, just the naked domain)
-  domainName: "worksheetzai.com",
+  domainName: "teksportfolio.com",
   crisp: {
     // Crisp website ID. IF YOU DON'T USE CRISP: just remove this => Then add a support email in this config file (resend.supportEmail) otherwise customer support won't work.
     id: "",
@@ -87,10 +87,10 @@ const config = {
   },
   resend: {
     // REQUIRED — Email 'From' field to be used when sending magic login links
-    fromNoReply: `Worksheetz Ai <support@support.worksheetzai.com>`,
+    fromNoReply: `Teks Portfolio <support@support.worksheetzai.com>`,
     // `ShipFast <noreply@resend.shipfa.st>`,
     // REQUIRED — Email 'From' field to be used when sending other emails, like abandoned carts, updates etc..
-    fromAdmin: `Worksheetz Ai <support@support.worksheetzai.com>`,
+    fromAdmin: `Teks Portfolio <support@support.worksheetzai.com>`,
     // Email shown to customer if need support. Leave empty if not needed => if empty, set up Crisp above, otherwise you won't be able to offer customer support."
     supportEmail: "hello@worksheetzai.com",
     replyTo: "hello@worksheetzai.com", // ← Add this

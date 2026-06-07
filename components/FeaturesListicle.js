@@ -1,3 +1,4 @@
+//components/FeaturesListicle.js
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -8,6 +9,65 @@ import { useState, useEffect, useRef } from "react";
 // - svg: icon of the feature
 const features = [
   {
+    name: "Teacher Dashboard",
+    description: (
+      <>
+        <ul className="space-y-2">
+          {[
+            "Manage classroom practice from one teacher dashboard.",
+            "View student activity and support skill-based remediation.",
+            "Built to grow into student progress tracking across BOY, MOY, and EOY.",
+          ].map((item) => (
+            <li key={item} className="flex items-center gap-3">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="w-[18px] h-[18px] inline shrink-0 opacity-80"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
+                  clipRule="evenodd"
+                />
+              </svg>
+
+              {item}
+            </li>
+          ))}
+          {/* <li className="flex items-center gap-3 text-accent font-medium">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="w-[18px] h-[18px] inline shrink-0"
+            >
+              <path
+                fillRule="evenodd"
+                d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
+                clipRule="evenodd"
+              />
+            </svg>
+            Time saved: 2 hours
+          </li> */}
+        </ul>
+      </>
+    ),
+    svg: (
+      
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        strokeWidth={1.5}
+        stroke="currentColor"
+        fill="none"
+        className="w-8 h-8"
+      >
+        <path d="M12 16v-4m0 4l-2-2m2 2l2-2m6-6v10a2 2 0 01-2 2H8a2 2 0 01-2-2V6a2 2 0 012-2h6l4 4z" />
+      </svg>
+    ),
+  },
+    {
     name: "Worksheet Generator",
     description: (
       <>
@@ -69,14 +129,14 @@ const features = [
     ),
   },
   {
-    name: "PDF Downloads",
+    name: "TEKS and STAAR Standards-Aligned",
     description: (
       <>
         <ul className="space-y-2">
           {[
-            "Download polished, ready-to-use PDFs of your generated worksheets for offline use.",
-            "No copy-paste or formatting needed — just click and share.",
-            "Ideal for homework, handouts, or digital assignments.",
+            "Built around TEKS skills and STAAR-style practice expectations.",
+            "Supports classroom practice, remediation, review, and test preparation.",
+            "Ideal for skill-building and structured classroom instruction.",
           ].map((item) => (
             <li key={item} className="flex items-center gap-3">
               <svg
@@ -108,65 +168,7 @@ const features = [
                 clipRule="evenodd"
               />
             </svg>
-            Time saved: 2 hours
-          </li> */}
-        </ul>
-      </>
-    ),
-    svg: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        strokeWidth={1.5}
-        stroke="currentColor"
-        fill="none"
-        className="w-8 h-8"
-      >
-        <path d="M12 16v-4m0 4l-2-2m2 2l2-2m6-6v10a2 2 0 01-2 2H8a2 2 0 01-2-2V6a2 2 0 012-2h6l4 4z" />
-      </svg>
-    ),
-  },
-  {
-    name: "AI Models",
-    description: (
-      <>
-        <ul className="space-y-2">
-          {[
-            "Specialized models tuned for educational content.",
-            "Generate consistent, structured responses every time.",
-            "Built to support real teaching goals — not just generic AI output.",
-          ].map((item) => (
-            <li key={item} className="flex items-center gap-3">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                className="w-[18px] h-[18px] inline shrink-0 opacity-80"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
-                  clipRule="evenodd"
-                />
-              </svg>
-
-              {item}
-            </li>
-          ))}
-          {/* <li className="flex items-center gap-3 text-accent font-medium">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="w-[18px] h-[18px] inline shrink-0"
-            >
-              <path
-                fillRule="evenodd"
-                d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
-                clipRule="evenodd"
-              />
-            </svg>
-            Time saved: 3 hours
+            Time saved: 6 hours
           </li> */}
         </ul>
       </>
@@ -183,12 +185,12 @@ const features = [
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
-          d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"
+          d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v16.5c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9zm3.75 11.625a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
         />
       </svg>
     ),
   },
-  {
+   {
     name: "Free Tier",
     description: (
       <>
@@ -196,8 +198,8 @@ const features = [
           {[
             "Get started with no paid subscription required.",
             "Includes monthly worksheet generations and downloads.",
-            "Perfect for testing the platform or light classroom use.",
-            "Easy upgrade to our affordable plans.",
+            "Start with online practice, then generate printable materials when needed.",
+            "Interactive student practice is free during beta.",
           ].map((item) => (
             <li key={item} className="flex items-center gap-3">
               <svg
@@ -251,61 +253,15 @@ const features = [
       </svg>
     ),
   },
-  {
-    name: "Secure Payments",
+    {
+    name: "Adaptive Practice Engine",
     description: (
       <>
         <ul className="space-y-2">
           {[
-            "All payments are securely processed through Stripe.",
-            "Your financial data is encrypted and never stored on our servers.",
-            "Trusted by millions of businesses worldwide.",
-          ].map((item) => (
-            <li key={item} className="flex items-center gap-3">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                className="w-[18px] h-[18px] inline shrink-0 opacity-80"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              {item}
-            </li>
-          ))}
-        </ul>
-      </>
-    ),
-    svg: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        strokeWidth={1.5}
-        stroke="currentColor"
-        className="w-8 h-8"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"
-        />
-      </svg>
-    ),
-  },
-  {
-    name: "Standards-Aligned",
-    description: (
-      <>
-        <ul className="space-y-2">
-          {[
-            "All prompts are designed with standardized-style and STAAR like formatting and academic rigor.",
-            "Built-in guided and independent sections support gradual release of responsibility.",
-            "Ideal for test prep, skill-building, and structured classroom instruction.",
+            "Adjusts difficulty based on student responses",
+            "Supports DOK progression and TEKS mastery",
+            "Helps teachers target remediation faster",
           ].map((item) => (
             <li key={item} className="flex items-center gap-3">
               <svg
@@ -337,7 +293,7 @@ const features = [
                 clipRule="evenodd"
               />
             </svg>
-            Time saved: 6 hours
+            Time saved: 3 hours
           </li> */}
         </ul>
       </>
@@ -354,7 +310,7 @@ const features = [
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
-          d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v16.5c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9zm3.75 11.625a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
+          d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"
         />
       </svg>
     ),
@@ -474,21 +430,21 @@ const FeaturesListicle = () => {
   return (
     <section className="py-24" id="features">
       <div className="max-w-3xl mx-auto">
-        <div className="bg-base-100 max-md:px-8 max-w-3xl">
+        <div className="bg-base-100 max-md:px-8 text-center max-w-3xl">
           {/* <p className="text-accent font-medium text-sm font-mono mb-3">
             const launch_time = &quot;Today&quot;;
           </p> */}
-          <h2 className="font-extrabold text-3xl lg:text-5xl tracking-tight mb-8">
-            AI-generated worksheets, already classroom-ready.
-          </h2>
-          <div className="text-base-content/80 leading-relaxed mb-8 lg:text-lg">
-            Stop wasting time formatting AI responses. Our templates are built
-            for real classrooms — just generate, download, and assign. Whether
-            you&apos;re teaching grammar, reading, or social studies, your
-            materials are ready in minutes. Every template follows standardized
-            formatting and rigor, with guided and independent sections to
-            support real learning.
-          </div>
+          <p className="text-primary  font-semibold mb-3">
+  Student Growth Platform
+</p>
+        <h2 className="font-extrabold text-3xl lg:text-5xl tracking-tight mb-8">
+  Track and improve TEKS skills from BOY to EOY
+</h2>
+         <div className="text-base-content/80 leading-relaxed mb-8 lg:text-lg">
+  Give students interactive practice, generate printable worksheets when needed,
+  and support remediation from one teacher dashboard. Built first for TEKS and
+  STAAR, with room to expand across more subjects, grades, and standards.
+</div>
         </div>
       </div>
 
@@ -534,7 +490,7 @@ const FeaturesListicle = () => {
                 {features.find((f) => f.name === featureSelected)["name"]}
               </h3>
 
-              {features.find((f) => f.name === featureSelected)["description"]}
+              {features.find((f) => f.name === featureSelected) ["description"]}
             </div>
           </div>
         </div>

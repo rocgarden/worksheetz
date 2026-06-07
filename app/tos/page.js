@@ -61,7 +61,7 @@ const TOS = () => {
 
 Effective Date: October 20, 2025
 
-Welcome to Worksheetz AI (“we,” “us,” or “our”).
+Welcome to Teks Portfolio (“we,” “us,” or “our”).
 By using our website and services (the “Service”), you agree to these Terms of Service.
 If you do not agree, please do not use the Service.
 

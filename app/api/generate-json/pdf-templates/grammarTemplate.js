@@ -119,7 +119,7 @@ export function grammarTemplate(data) {
   </div>
   <!-- FOOTER -->
     <footer>
-      © Worksheetz AI — Generated for classroom use
+      ©Teks Portfolio— Generated for classroom use
     </footer>
 
   <!-- MAIN CONTENT -->

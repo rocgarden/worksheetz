@@ -4,35 +4,33 @@ import ButtonSignin from "./ButtonSignin";
 const CTA = ({ isAuthenticated = false }) => {
   return (
     // <section className="bg-gradient-to-b from-purple-800 via-purple-700 to-purple-900 text-white py-16 px-6">
-    <section className="bg-white text-gray-900 py-36 px-6">
+<section className="bg-white py-28 px-6 border-t border-base-300">
       {" "}
-      <div className="max-w-4xl mx-auto text-center">
+      <div className="max-w-3xl mx-auto text-center">
         {" "}
-        <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-6">
-          {" "}
-          Create custom, high-quality worksheets in{" "}
-          <span className="bg-purple-700 px-1 text-white rounded-sm">
-            {" "}
-            minutes{" "}
-          </span>{" "}
-          {/* ?{" "} */}
-        </h2>{" "}
-        <div className="flex justify-center mb-6">
+       
+    <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
+      Create targeted practice in{" "}
+                <span className="text-primary"> minutes</span>,
+      not hours.
+    </h2>
+{" "}
+        {/* <div className="flex justify-center mb-6">
           {" "}
           <span className="text-4xl">⏱️</span>{" "}
-        </div>
-        <p className="text-lg md:text-xl max-w-2xl mx-auto mb-10">
-          Generate ready-to-use, high‑quality worksheets by subject using Worksheetz AI.
-          Save time, stay organized, and give your students the best learning
-          experience.
-        </p>
+        </div> */}
+            <p className="mt-6 text-lg text-base-content/70 max-w-2xl mx-auto">
+      Upload results, identify skill gaps, group students by need,
+      and generate TEKS-aligned practice instantly.
+    </p>
+
         <div className="mt-8">
           {!isAuthenticated ? (
             <ButtonSignin
               redirectTo={`/dashboard`}
               //redirectTo={`/checkout?priceId=${config.stripe.plans[0].priceId}`}
-              extraStyle="btn-primary"
-              text="Get Worksheetz Ai"
+              extraStyle="btn btn-primary btn-lg"
+              text="Start Free"
             />
           ) : (
             <p className="text-sm text-base-content/70 text-center"></p>

@@ -882,7 +882,7 @@ export default function SessionClient({ sessionId }) {
           marginBottom: "24px",
         }}>
          <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: "22px", letterSpacing: "0.06em", color: "#4c1d95" }}>
-          WorksheetzAI
+          Teks Portfolio
         </span>
         {studentName && (
           <span style={{ fontSize: "14px", color: "#7c3aed", fontWeight: "700" }}>

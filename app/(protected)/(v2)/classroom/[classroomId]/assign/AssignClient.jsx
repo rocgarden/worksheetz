@@ -302,7 +302,7 @@ export default function AssignClient({
                   <p className="text-yellow-900 text-sm leading-relaxed">
                     Share this code with your student. They go to{" "}
                     <span className="font-bold text-purple-800">
-                      worksheetzai.com/join
+                      teksportfolio.com/join
                     </span>{" "}
                     and enter this code to start practicing.
                   </p>

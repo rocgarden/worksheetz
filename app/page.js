@@ -1,4 +1,5 @@
 import { createClient } from "@/libs/supabase/server";
+import { BookOpen, NotebookPen, BookCheck, Globe } from "lucide-react";
 import Hero from "@/components/Hero";
 import Pricing from "@/components/Pricing";
 import Problem from "@/components/Problem";
@@ -72,42 +73,67 @@ export default async function Page() {
         <Hero isAuthenticated={!!user} />
         <Problem />
         <FeaturesListicle />
+        <InteractivePracticeBeta />
+        <SamplePdfCarousel />
+        {/* <ReadingPassagesSection/> */}
+<section className="bg-base-100 py-20 px-6">
+  <div className="max-w-6xl mx-auto text-center">
+    <p className="text-primary font-semibold mb-3">
+      Browse by Subject
+    </p>
+
+    <h2 className="text-3xl md:text-4xl font-extrabold text-base-content mb-4">
+      Explore TEKS-aligned practice by subject
+    </h2>
+
+    <p className="text-base-content/70 max-w-2xl mx-auto mb-12">
+      Start with classroom-ready reading, grammar, social studies, and
+      STAAR-style practice. More subjects and grade levels will continue to
+      expand.
+    </p>
+
+    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <SubjectCard
+        title="Reading Comprehension"
+        description="Practice passages, text evidence, inference, and comprehension skills."
+        href="/worksheets/reading-comprehension/grade-3"
+        icon={BookOpen}
+        label="Reading"
+      />
+
+      <SubjectCard
+        title="Grammar"
+        description="Editing, sentence structure, punctuation, and language conventions."
+        href="/worksheets/grammar/grade-4"
+        icon={NotebookPen}
+        label="ELA"
+      />
+
+      <SubjectCard
+        title="Social Studies"
+        description="History, civics, geography, and standards-based content practice."
+        href="/worksheets/social-studies/grade-5"
+        icon={Globe}
+        label="Social Studies"
+      />
+
+      <SubjectCard
+        title="STAAR Reading"
+        description="STAAR-style reading review with skill-focused practice materials."
+        href="/worksheets/staar-reading/grade-3"
+        icon={BookCheck}
+        label="STAAR"
+      />
+    </div>
+  </div>
+</section>
         <Pricing
           isAuthenticated={!!user}
           hasActiveSubscription={hasActiveSubscription}
         />
         <FAQ />
-        <SamplePdfCarousel />
         <CTA isAuthenticated={!!user} />
-        <ReadingPassagesSection/>
-        <InteractivePracticeBeta />
-        <section className="py-16">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            Browse Worksheets by Subject
-          </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto px-6">
-            <SubjectCard 
-              title="Reading Comprehension"
-              href="/worksheets/reading-comprehension/grade-3"
-              icon="📖"
-            />
-            <SubjectCard 
-              title="Grammar"
-              href="/worksheets/grammar/grade-4"
-              icon="✏️"
-            />
-            <SubjectCard 
-              title="Social Studies"
-              href="/worksheets/social-studies/grade-5"
-              icon="🌎"
-            />
-            <SubjectCard 
-              title="STAAR Reading"
-              href="/worksheets/staar-reading/grade-3"
-              icon="📝"
-            />
-          </div>
-        </section>
+       
       </main>
     </>
   );

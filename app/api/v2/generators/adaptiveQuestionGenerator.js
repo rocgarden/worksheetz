@@ -2,7 +2,7 @@
  * adaptiveQuestionGenerator.js
  * /app/api/v2/generators/adaptiveQuestionGenerator.js
  *
- * Master adaptive question generator for WorksheetzAI v2.
+ * Master adaptive question generator for Teks Portfolio v2.
 // Scope (initial): ELA, Grades 6-8
 // question_types: multiple_choice | hot_text | constructed_response | multi_select | inline_choice 
  *

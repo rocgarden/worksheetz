@@ -1,3 +1,4 @@
+//components/Header.js
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -94,26 +95,33 @@ const Header = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-30 bg-base-200/95 backdrop-blur-md shadow-sm border-b border-base-300">
-      <nav className="container flex items-center justify-between px-9 py-4 mx-auto">
-        {/* Logo */}
-        <Link
-          className="flex items-center gap-2 shrink-0"
-          href="/"
-          title={`${config.appName} homepage`}
-        >
-          <Image
-            src={logo}
-            alt={`${config.appName} logo`}
-            width={40}
-            height={40}
-            className="rounded-md"
-            priority
-          />
-          <span className="text-lg font-extrabold text-black/70 tracking-tight">
-            {config.appName}
-          </span>
-        </Link>
+<header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md shadow-sm border-b border-purple-100">      
+<nav className="container flex items-center justify-between px-6 md:px-9 py-3 mx-auto">
+          {/* Logo */}
+      <Link
+        className="flex items-center gap-3 shrink-0"
+        href="/"
+        title="TEKS Portfolio homepage"
+      >
+        <Image
+          src={logo}
+          alt="TEKS Portfolio logo"
+          width={44}
+          height={44}
+          className="w-11 h-11 object-contain"
+          priority
+        />
+
+        <div className="leading-tight">
+          <div className="text-lg font-black text-purple-950 tracking-tight">
+            TEKS Portfolio
+          </div>
+
+          <div className="text-[10px] font-semibold text-purple-600 tracking-wide">
+            Practice • Growth
+          </div>
+        </div>
+      </Link>
 
         {/* Desktop navigation */}
         <div className="hidden lg:flex lg:items-center justify-between px-6 lg:gap-30">

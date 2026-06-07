@@ -33,28 +33,6 @@ function normalizeData(data) {
   return data;
 }
 
-// function drawFooter(doc) {
-//   const footerY = doc.page.height - doc.page.margins.bottom + 5;
-
-//   doc.save(); // ← save current cursor & graphics state
-
-//   doc
-//     .font("Italic")
-//     .fontSize(8)
-//     .fillColor("#888888")
-//     .text(
-//       "Worksheetz AI • worksheetzai.com",
-//       doc.page.margins.left,
-//       footerY,
-//       {
-//         width: doc.page.width - doc.page.margins.left - doc.page.margins.right,
-//         align: "center",
-//       }
-//     );
-
-//   doc.restore(); // ← restore cursor so PDFKit doesn’t think we’re at the bottom
-// }
-
 function drawLines(doc, lines = 4) {
   const boxX = doc.page.margins.left;
   const boxWidth =

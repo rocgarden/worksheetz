@@ -223,7 +223,7 @@ export default function ClassAssignPanel({
                   `${result.expires_in_hours} hours`}
               </strong>
               . Students go to{" "}
-              <span className="font-bold text-purple-800">worksheetzai.com/join</span> and
+              <span className="font-bold text-purple-800">teksportfolio.com/join</span> and
               enter their code.
             </p>
           </div>

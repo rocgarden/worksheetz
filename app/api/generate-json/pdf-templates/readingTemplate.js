@@ -96,7 +96,7 @@ h2, h3 { page-break-after: avoid; }
 <body class="font-sans text-gray-900">
 
   <footer>
-    © Worksheetz AI — Generated for classroom use
+    © Teks Portfolio — Generated for classroom use
   </footer>
 
   <!-- MAIN CONTENT -->

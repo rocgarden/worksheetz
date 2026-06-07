@@ -6,7 +6,7 @@
 import JoinClient from "./JoinClient";
 
 export const metadata = {
-  title: "Join Practice Session — WorksheetzAI",
+  title: "Join Practice Session — Teks Portfolio",
   description: "Enter your join code to start your adaptive practice session.",
 };
 

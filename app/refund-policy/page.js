@@ -40,7 +40,7 @@ const RefundPolicy = () => {
 
 Effective Date: October 20, 2025
 
-We want you to feel confident using Worksheetz AI. If you’re not satisfied with your purchase, we offer a full refund within 7 days of your initial subscription payment — no questions asked.
+We want you to feel confident using Teks Portfolio. If you’re not satisfied with your purchase, we offer a full refund within 7 days of your initial subscription payment — no questions asked.
 
 After 7 days, refunds are only granted in the following situations:
 

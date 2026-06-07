@@ -101,7 +101,7 @@ export async function generateMetadata({ params }) {
   if (!subject || !grade) return {};
 
   return {
-    title: `${subject.title} Worksheets for ${grade.display} | WorksheetzAI`,
+    title: `${subject.title} Worksheets for ${grade.display} | Teks Portfolio`,
     description: `Free AI-powered ${subject.title.toLowerCase()} worksheets for ${grade.display}. ${subject.description}. Generate unlimited practice materials in seconds.`,
   };
 }

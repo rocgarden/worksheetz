@@ -6,82 +6,78 @@ import { useRef, useState } from "react";
 // <FAQ> component is a list of <Item> component
 
 const faqList = [
-    {
-    question: "What is WorksheetzAI?",
+  {
+    question: "What is this platform for?",
     answer: (
-      <div className="space-y-2 leading-relaxed">
-        <p>
-          WorksheetzAI is an online ai-powered tool that helps K–12 educators create standards‑aligned worksheets for reading, grammar, math, and social studies. 
-          It is classroom‑safe that doesn't use any student data, and safely built for school districts.
-        </p>
-      </div>
+      <p>
+        It helps teachers create TEKS-aligned practice, remediation materials,
+        and printable worksheet resources. The platform currently supports
+        interactive reading practice, teacher classroom tools, and AI-generated
+        worksheets.
+      </p>
     ),
   },
   {
-    question: "What do I get exactly?",
+    question: "Is interactive practice free?",
+    answer: (
+      <p>
+        Yes. Interactive student practice is currently free during beta. Teachers
+        can use it to assign online reading practice and support TEKS-based skill
+        review.
+      </p>
+    ),
+  },
+  {
+    question: "Are worksheets free or paid?",
     answer: (
       <div className="space-y-2 leading-relaxed">
         <p>
-          You get access to AI-powered tools that help you generate customized
-          quizzes and worksheets for your classroom. Depending on your plan, you
-          can also download PDFs, regenerate content for variation, and access
-          priority support.
+          Worksheet generation includes limited free usage. Paid plans unlock
+          more worksheet generations and PDF downloads.
         </p>
         <ul className="list-disc list-inside">
-          <li>
-            Starter Plan: 2 worksheet generations + 1 PDF download per month
-          </li>
-          <li>
-            Pro Plan: 10 worksheet generations + 5 PDF downloads per month
-          </li>
+          <li>Free plan: limited worksheet generation/download access</li>
+          <li>Pro plan: more monthly generations and PDF downloads</li>
         </ul>
       </div>
     ),
   },
   {
-    question: "Can I get a refund?",
+    question: "What grades and subjects are supported?",
     answer: (
       <p>
-        Yes! You can request a refund within 7 days of your purchase. Just reach
-        out to our support team by email and we’ll take care of it.
+        The platform is starting with TEKS and STAAR-focused support, especially
+        for grades 6–8 reading. It is being built to expand across more grades,
+        subjects, and eventually standards beyond Texas.
       </p>
     ),
   },
   {
-    question: "How do I upgrade my plan?",
+    question: "Does this support STAAR-style practice?",
     answer: (
       <p>
-        You can upgrade anytime by visiting your account dashboard and selecting
-        the Pro plan. Billing is handled securely through Stripe.
+        Yes. The platform is designed around TEKS-aligned practice and
+        STAAR-style preparation, including online practice and printable
+        remediation materials.
       </p>
     ),
   },
   {
-    question: "What happens if I reach my monthly limit?",
+    question: "Do I need a credit card to start?",
     answer: (
       <p>
-        Once you reach your monthly limit for worksheet generations or PDF
-        downloads, you’ll need to wait until your usage resets next month or
-        upgrade to a higher plan for more access.
+        No. Teachers can start with free access. A paid plan is only needed when
+        you want more worksheet generations or PDF downloads.
       </p>
     ),
   },
   {
-    question: "Do unused credits roll over?",
+    question: "Is student data required?",
     answer: (
       <p>
-        No, unused worksheet generations or PDF downloads do not roll over to
-        the next month. Each billing cycle resets your usage.
-      </p>
-    ),
-  },
-  {
-    question: "Is the Starter plan really free?",
-    answer: (
-      <p>
-        Yes, the Starter plan is free to use and includes limited access to
-        worksheet generation and downloads. It’s perfect for small projects or
-        trying out the platform.
+        No student data is required to generate worksheets. Interactive practice
+        and classroom tools should only collect the information needed to support
+        teacher-managed practice and progress tracking.
       </p>
     ),
   },
@@ -89,20 +85,19 @@ const faqList = [
     question: "Can I cancel anytime?",
     answer: (
       <p>
-        Absolutely. You can cancel your subscription at any time through your
-        account dashboard. Your access will remain active until the end of your
-        billing cycle.
+        Yes. Paid subscriptions can be managed through your account dashboard,
+        and billing is handled securely through Stripe.
       </p>
     ),
   },
   {
-    question: "I have another question",
+    question: "What happens if I reach my worksheet limit?",
     answer: (
-      <div className="space-y-2 leading-relaxed">
-        <p>
-          No problem! Just reach out to us by email and we’ll be happy to help.
-        </p>
-      </div>
+      <p>
+        You can continue using available free tools, but additional worksheet
+        generations or PDF downloads may require waiting until your monthly reset
+        or upgrading your plan.
+      </p>
     ),
   },
 ];
@@ -114,7 +109,7 @@ const Item = ({ item }) => {
   return (
     <li>
       <button
-        className="relative flex gap-2 items-center w-full py-5 text-base font-semibold text-left border-t md:text-lg border-base-content/10"
+        className="relative flex gap-2 items-center w-full py-5 text-base font-semibold text-left border-b border-base-content/10 hover:text-primary transition-colors"        
         onClick={(e) => {
           e.preventDefault();
           setIsOpen(!isOpen);
@@ -154,7 +149,7 @@ const Item = ({ item }) => {
 
       <div
         ref={accordion}
-        className={`transition-all duration-300 ease-in-out opacity-80 overflow-hidden`}
+        className={`transition-[max-height,opacity] duration-300 ease-out opacity-80 overflow-hidden`}
         style={
           isOpen
             ? { maxHeight: accordion?.current?.scrollHeight, opacity: 1 }
@@ -169,17 +164,28 @@ const Item = ({ item }) => {
 
 const FAQ = () => {
   return (
-    <section className="bg-base-200" id="faq">
-      <div className="py-24 px-8 max-w-7xl mx-auto flex flex-col md:flex-row gap-12">
+    <section className="bg-base-200 relative overflow-hidden" id="faq">
+<div className="absolute inset-0 pointer-events-none">
+  
+      </div>
+
+      <div className="relative z-10 py-24 px-8 max-w-7xl mx-auto flex flex-col md:flex-row gap-12">
         <div className="flex flex-col text-left basis-1/2">
-          <p className="inline-block font-semibold text-primary mb-4">FAQ</p>
-          <p className="sm:text-4xl text-3xl font-extrabold text-base-content">
-            Frequently Asked Questions
+          <p className="inline-block font-semibold text-primary mb-4">
+            Questions teachers ask
+          </p>
+
+          <h2 className="sm:text-4xl text-3xl font-extrabold text-base-content">
+            Frequently asked questions from teachers
+          </h2>
+
+          <p className="text-base-content/70 mt-4 max-w-md leading-relaxed">
+            Learn what is free, what is paid, and how the platform supports
+            TEKS-aligned practice, worksheets, and remediation.
           </p>
         </div>
 
-        <ul className="basis-1/2">
-          {faqList.map((item, i) => (
+        <ul className="basis-1/2 bg-base-100 rounded-3xl shadow-xl border border-base-content/5 px-6 py-2 md:px-8">          {faqList.map((item, i) => (
             <Item key={i} item={item} />
           ))}
         </ul>
