@@ -67,6 +67,8 @@ export const createCustomerPortal = async ({ customerId, returnUrl }) => {
     // ✅ ADD THIS: Validate returnUrl
     const allowedDomains = [
       process.env.NEXT_PUBLIC_APP_URL,
+      "https://teksportfolio.com",
+    "https://www.teksportfolio.com",
       "http://localhost:3000",
       "https://localhost:3000",
     ].filter(Boolean);

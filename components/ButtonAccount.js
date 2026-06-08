@@ -39,10 +39,30 @@ const ButtonAccount = ({ text = "Account" }) => {
     setIsLoading(true);
 
     try {
-      const { url } = await apiClient.post("/stripe/create-portal", {
+     // const { url } = await apiClient.post("/stripe/create-portal", {
         //returnUrl: window.location.href,
-        returnUrl: window.location.origin + "/dashboard", // ← Return to dashboard, not current page
-      });
+       // returnUrl: window.location.origin + "/dashboard", // ← Return to dashboard, not current page
+    const res = await fetch("/api/stripe/create-portal", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    returnUrl: `${window.location.origin}/dashboard`,
+  }),
+});
+
+const data = await res.json();
+
+if (!res.ok) {
+  console.error("Billing portal error:", data);
+  alert(data.error || "Could not open billing portal.");
+  return;
+}
+
+//window.location.href = data.url;
+      }
+    //);
 
       //window.location.href = url;
       //window.location.replace(url); // ← Use replace instead of href
