@@ -39,10 +39,11 @@ const ButtonAccount = ({ text = "Account" }) => {
     setIsLoading(true);
 
     try {
-     // const { url } = await apiClient.post("/stripe/create-portal", {
-        //returnUrl: window.location.href,
-       // returnUrl: window.location.origin + "/dashboard", // ← Return to dashboard, not current page
-    const res = await fetch("/api/stripe/create-portal", {
+      // const { url } = await apiClient.post("/stripe/create-portal", {
+      //   //returnUrl: window.location.href,
+      //   returnUrl: window.location.origin + "/dashboard", // ← Return to dashboard, not current page
+      // });
+const res = await fetch("/api/stripe/create-portal", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
@@ -61,12 +62,9 @@ if (!res.ok) {
 }
 
 //window.location.href = data.url;
-      }
-    //);
-
       //window.location.href = url;
       //window.location.replace(url); // ← Use replace instead of href
-      window.open(url, "_blank"); // ← This prevents it from entering history!
+      //window.open(url, "_blank"); // ← This prevents it from entering history!
     } catch (e) {
       console.error(e);
     }
