@@ -60,6 +60,7 @@ if (!res.ok) {
   alert(data.error || "Could not open billing portal.");
   return;
 }
+    window.location.assign(data.url);
 
 //window.location.href = data.url;
       //window.location.href = url;
@@ -67,9 +68,11 @@ if (!res.ok) {
       //window.open(url, "_blank"); // ← This prevents it from entering history!
     } catch (e) {
       console.error(e);
-    }
-
+      alert("Could not open billing portal.");
+    }finally {
     setIsLoading(false);
+  }
+
   };
 
   return (
