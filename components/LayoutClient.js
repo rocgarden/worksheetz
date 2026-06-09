@@ -215,7 +215,7 @@ const logout = async () => {
     let idleTimer;
 
     const logout = async () => {
-       if (isPublicV2Route()) return; // ← add this 
+       if (isPublicV2Route()) return; 
       console.log("⏳ Idle timeout — signing out user");
       await supabase.auth.signOut();
       router.replace("/");

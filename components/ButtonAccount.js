@@ -65,7 +65,7 @@ if (!res.ok) {
 //window.location.href = data.url;
       //window.location.href = url;
       //window.location.replace(url); // ← Use replace instead of href
-      //window.open(url, "_blank"); // ← This prevents it from entering history!
+    window.open(data.url, "_blank",); // ← This prevents it from entering history!
     } catch (e) {
       console.error(e);
       alert("Could not open billing portal.");

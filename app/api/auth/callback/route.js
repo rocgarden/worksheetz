@@ -15,6 +15,16 @@ export async function GET(req) {
   if (code) {
     const supabase = await createClient();
     await supabase.auth.exchangeCodeForSession(code);
+    // ← added this block for free beta interactive use
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    await supabase
+      .from("profiles")
+      .update({ classroom_plan: true })
+      .eq("id", user.id)
+      .is("classroom_plan", false); // only update if not already set — avoids unnecessary writes
+  }
+
   }
   // ✅ Prefer redirectTo query param, fallback to dashboard
   let redirectUrl = redirectTo
