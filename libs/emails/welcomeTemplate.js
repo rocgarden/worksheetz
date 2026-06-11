@@ -8,7 +8,7 @@ export function welcomeTemplate({ planName, userName }) {
         <!-- Logo -->
         <tr>
           <td align="center" style="padding-bottom:25px;">
-            <img src="https://worksheetzai.com/logo.png" alt="Teks Portfolio " width="80" style="display:block;">
+            <img src="https://teksportfolio.com/logo.png" alt="Teks Portfolio " width="80" style="display:block;">
           </td>
         </tr>
 
@@ -39,7 +39,7 @@ export function welcomeTemplate({ planName, userName }) {
         <!-- CTA Button -->
         <tr>
           <td align="center" style="padding-bottom:30px;">
-            <a href="https://worksheetzai.com/dashboard"
+            <a href="https://teksportfolio.com/dashboard"
               style="
                 background:#7c3aed;
                 color:#fff;

@@ -87,16 +87,15 @@ const config = {
   },
   resend: {
     // REQUIRED — Email 'From' field to be used when sending magic login links
-    fromNoReply: `Teks Portfolio <support@support.worksheetzai.com>`,
-    // `ShipFast <noreply@resend.shipfa.st>`,
+    fromNoReply: `Teks Portfolio <support@support.teksportfolio.com>`,
     // REQUIRED — Email 'From' field to be used when sending other emails, like abandoned carts, updates etc..
-    fromAdmin: `Teks Portfolio <support@support.worksheetzai.com>`,
+    fromAdmin: `Teks Portfolio <support@support.teksportfolio.com>`,
     // Email shown to customer if need support. Leave empty if not needed => if empty, set up Crisp above, otherwise you won't be able to offer customer support."
-    supportEmail: "hello@worksheetzai.com",
-    replyTo: "hello@worksheetzai.com", // ← Add this
+    supportEmail: "hello@teksportfolio.com",
+    replyTo: "hello@teksportfolio.com", 
   },
   email: {
-    replyTo: "hello@worksheetzai.com",
+    replyTo: "hello@teksportfolio.com",
   },
   colors: {
     // REQUIRED — The DaisyUI theme to use (added to the main layout.js). Leave blank for default (light & dark mode).

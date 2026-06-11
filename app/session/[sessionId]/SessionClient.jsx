@@ -3,6 +3,7 @@
 // Branch: v2/student-success-platform
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 
 // ─── MultipleChoice ───────────────────────────────────────────────────────────
 
@@ -597,7 +598,13 @@ function FeedbackBanner({ isCorrect, explanation, onContinue }) {
         margin: "0 0 6px 0",
         fontFamily: "'Nunito', sans-serif",
       }}>
-        {isCorrect ? "✓ Correct! Great job!" : "✗ Not quite — keep going!"}
+    <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+      {isCorrect
+        ? <CheckCircle2 size={22} color="#4ade80" strokeWidth={2.5} />
+        : <XCircle size={22} color="#f87171" strokeWidth={2.5} />
+      }
+      {isCorrect ? "Correct! Great job!" : "Not quite — keep going!"}
+    </span>
       </p>
       {explanation && (
         <p style={{
@@ -975,18 +982,18 @@ export default function SessionClient({ sessionId }) {
               <div key={question.attempt_id}>
                 {/* Step 2: AI is scoring — show neutral indicator */}
                 {scoring && !feedback && (
-                     <div style={{
-                      borderRadius: "16px", padding: "24px 22px",
-                      background: "#f5f3ff", border: "2px solid #c4b5fd",
-                      marginBottom: "20px", display: "flex", alignItems: "center", gap: "14px",
-                      animation: "fadeSlideIn 0.3s ease",
-                    }}>
-                    <div style={{ fontSize: "28px", animation: "pulse 1s ease infinite" }}>🤔</div>
+                      <div style={{
+                        borderRadius: "16px", padding: "24px 22px",
+                        background: "#f5f3ff", border: "2px solid #c4b5fd",
+                        marginBottom: "20px", display: "flex", alignItems: "center", gap: "14px",
+                        animation: "fadeSlideIn 0.3s ease",
+                      }}>
+                    <Loader2 size={28} color="#4c1d95" style={{ animation: "spin 1s linear infinite", flexShrink: 0 }} />
                     <div>
-                       <p style={{ fontSize: "16px", fontWeight: "800", color: "#4c1d95", margin: "0 0 3px 0", fontFamily: "'Nunito', sans-serif" }}>
+                      <p style={{ fontSize: "16px", fontWeight: "800", color: "#4c1d95", margin: "0 0 3px 0", fontFamily: "'Nunito', sans-serif" }}>
                         Checking your answer...
                       </p>
-                                          <p style={{ fontSize: "13px", color: "#a78bfa", margin: 0, fontFamily: "'Nunito', sans-serif" }}>
+                      <p style={{ fontSize: "13px", color: "#a78bfa", margin: 0, fontFamily: "'Nunito', sans-serif" }}>
                         This might take a moment
                       </p>
                     </div>

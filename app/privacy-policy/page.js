@@ -197,7 +197,7 @@ Data Sharing
 - Google user data is not shared with third parties except as necessary to operate the Service (such as secure hosting or database providers), or if required by law.
 
 Data Deletion
-You may request deletion of your account and associated data at any time by contacting us at hello@worksheetzai.com. Upon deletion, any stored Google account information will be permanently removed.
+You may request deletion of your account and associated data at any time by contacting us at hello@teksportfolio.com. Upon deletion, any stored Google account information will be permanently removed.
 
 11. Children’s Internet Protection Act (CIPA)
 Teks Portfolio complies with the Children’s Internet Protection Act by ensuring that no harmful or inappropriate content is accessible through the platform. 
@@ -233,7 +233,7 @@ We use encryption in transit (HTTPS), encryption at rest (where supported by our
 Contact Us
 
 For privacy-related requests or questions, email:
-📧 hello@worksheetzai.com`}
+📧 hello@teksportfolio.com`}
         </pre>
       </div>
     </main>

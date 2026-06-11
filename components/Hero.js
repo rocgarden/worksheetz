@@ -48,7 +48,7 @@ import ButtonSignin from "@/components/ButtonSignin";
 //           text="Get Worksheet Ai"
 //         /> */}
 //         {/* <Link href="/signin" className="btn btn-primary rounded-full btn-wide">
-//           Get Worksheetz Ai
+//           Get TEKS Portfolio
 //         </Link> */}
 //         <div className="mt-8">
 //           {/* 👇 Show Checkout if not authenticated */}
@@ -58,7 +58,7 @@ import ButtonSignin from "@/components/ButtonSignin";
 //                 redirectTo={`/dashboard`}
 //                 //redirectTo={`/checkout?priceId=${config.stripe.plans[0].priceId}`}
 //                 extraStyle="btn-primary"
-//                 text="Get Worksheetz Ai"
+//                 text="Get TEKS Portfolio "
 //               />
 //               <p className="text-sm text-base-content mt-2 opacity-70">
 //                Teks Portfolio | Free to start. Affordable to upgrade. Built for educators.
@@ -75,7 +75,7 @@ import ButtonSignin from "@/components/ButtonSignin";
 //         <Image
 //           //src="https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3540&q=80"
 //           src="/images/hero1.png"
-//           alt="Worksheetz AI (WorksheetzAI) is a powerful AI worksheet generator that helps teachers and parents create custom worksheets in seconds. "
+//           alt="TEKS Portfolio is a powerful AI worksheet generator that helps teachers and parents create custom worksheets in seconds. "
 //           className="w-full rounded"
 //           priority={true}
 //           width={500}
@@ -158,14 +158,14 @@ const Hero = ({ isAuthenticated = false }) => {
       </div>
 
       <div className="lg:w-full">
-        <Image
-          src="/images/hero1.png"
-          alt="TEKS-aligned student practice and teacher dashboard preview"
-          className="w-full rounded-2xl shadow-xl"
-          priority={true}
-          width={500}
-          height={500}
-        />
+       <Image
+        src="/images/hero1.webp"
+        alt="TEKS-aligned student practice and teacher dashboard preview"
+        className="w-full rounded-2xl shadow-xl"
+        priority
+        width={1200}
+        height={900}
+      />
       </div>
     </section>
   );

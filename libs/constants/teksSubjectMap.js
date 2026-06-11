@@ -12,7 +12,8 @@
 //
 // Nothing else in the codebase needs to change.
 
-import { TEKS_READING_MAP } from "./teksReadingMap";
+import { TEKS_READING_MAP, TEKS_LABELS } from "./teksReadingMap";
+import { TEKS_SOCIAL_STUDIES_MAP, TEKS_SS_BUCKET_LABELS, TEKS_SS_LABELS } from "./teksSocialStudiesMap";
 
 // ── Placeholder maps for upcoming subjects ────────────────────────────────────
 // Replace each with a real import once the map file exists.
@@ -20,7 +21,6 @@ import { TEKS_READING_MAP } from "./teksReadingMap";
 
 const TEKS_MATH_MAP = {};         // TODO: import from "./teksMathMap"
 const TEKS_SCIENCE_MAP = {};      // TODO: import from "./teksScienceMap"
-const TEKS_SOCIAL_STUDIES_MAP = {}; // TODO: import from "./teksSocialStudiesMap"
 
 // ── Subject → TEKS map ────────────────────────────────────────────────────────
 // Keys must match the values stored in classrooms.subject exactly.
@@ -56,39 +56,51 @@ export const TEKS_BUCKET_LABELS_BY_SUBJECT = {
 
   Math: {},
   Science: {},
-  "Social Studies": {},
+  "Social Studies": TEKS_SS_BUCKET_LABELS,
+};
+
+// Per-code label maps — used to give each individual standard a specific description.
+// Falls back to bucket label when a code isn't listed here.
+const CODE_LABELS_BY_SUBJECT = {
+  ELA: TEKS_LABELS,
+  "Social Studies": TEKS_SS_LABELS,
+  Math: {},
+  Science: {},
 };
 
 // ── Builder ───────────────────────────────────────────────────────────────────
 // Returns a sorted array of { code, label } for the given subject + grade.
-// Returns [] if subject or grade is not yet mapped — safe fallback for the UI.
-
+// Per-code label takes priority over bucket label — each standard gets a
+// unique, readable description instead of the bucket name repeated for A/B/C.
+ 
 export function buildTeksOptions(subject, gradeLevel) {
   if (!subject || !gradeLevel) return [];
-
+ 
   const subjectMap = TEKS_MAP_BY_SUBJECT[subject];
   if (!subjectMap) return [];
-
+ 
   const buckets = subjectMap[`grade${gradeLevel}`];
   if (!buckets) return [];
-
-  const labelMap = TEKS_BUCKET_LABELS_BY_SUBJECT[subject] ?? {};
+ 
+  const bucketLabelMap = TEKS_BUCKET_LABELS_BY_SUBJECT[subject] ?? {};
+  const codeLabelMap = CODE_LABELS_BY_SUBJECT[subject] ?? {};
   const options = [];
   const seen = new Set();
-
+ 
   for (const [bucketKey, codes] of Object.entries(buckets)) {
-    const bucketLabel = labelMap[bucketKey] ?? bucketKey;
+    const bucketLabel = bucketLabelMap[bucketKey] ?? bucketKey;
     for (const code of codes) {
       if (!seen.has(code)) {
         seen.add(code);
-        options.push({ code, label: `${code} — ${bucketLabel}` });
+        // Per-code label wins; bucket label is the fallback
+        const label = codeLabelMap[code] ?? `${code} — ${bucketLabel}`;
+        options.push({ code, label });
       }
     }
   }
-
+ 
   return options.sort((a, b) => a.code.localeCompare(b.code));
 }
-
 function buildTeksAllowed(gradeLevel) {
   const key = `grade${gradeLevel}`;
   const m = TEKS_READING_MAP[key];

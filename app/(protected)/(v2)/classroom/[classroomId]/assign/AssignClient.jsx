@@ -4,7 +4,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { TEKS_READING_MAP, TEKS_LABELS, buildTeksAllowed } from "@/libs/constants/teksReadingMap";
+import { TEKS_READING_MAP, TEKS_LABELS,  } from "@/libs/constants/teksReadingMap";
 import { buildTeksOptions } from "@/libs/constants/teksSubjectMap";
 
 
@@ -58,26 +58,7 @@ import { buildTeksOptions } from "@/libs/constants/teksSubjectMap";
 // Build a flat list of { code, label } for a specific grade level.
 // gradeLevel should be a string like "7" — matches TEKS_READING_MAP key "grade7".
 // Returns [] if the grade isn't in the map (safe fallback).
-function buildTeksOptionsForGrade(gradeLevel) {
-  if (!gradeLevel) return [];
-  const buckets = TEKS_READING_MAP[`grade${gradeLevel}`];
-  if (!buckets) return [];
- 
-  const options = [];
-  const seen = new Set();
- 
-  for (const [bucket, codes] of Object.entries(buckets)) {
-    const bucketLabel = TEKS_BUCKET_LABELS[bucket] ?? bucket;
-    for (const code of codes) {
-      if (!seen.has(code)) {
-        seen.add(code);
-        options.push({ code, label: `${code} — ${bucketLabel}` });
-      }
-    }
-  }
- 
-  return options.sort((a, b) => a.code.localeCompare(b.code));
-}
+
 const QUESTION_TYPES = [
   { value: "multiple_choice", label: "Multiple Choice" },
   { value: "hot_text", label: "Hot Text" },
@@ -98,7 +79,7 @@ export default function AssignClient({
   subject
 }) {
     // Derived at render time — reruns automatically if gradeLevel prop changes
-  const teksCodes = buildTeksAllowed(gradeLevel); // flat array of codes for this grade
+ // const teksCodes = buildTeksAllowed(gradeLevel); // flat array of codes for this grade
   // const teksOptions = teksCodes.map((code) => ({
   // code,
   // label: TEKS_LABELS[code] ?? code, // fallback to raw code if label missing
@@ -613,3 +594,33 @@ function BackgroundAccent() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+// function buildTeksOptionsForGrade(gradeLevel) {
+//   if (!gradeLevel) return [];
+//   const buckets = TEKS_READING_MAP[`grade${gradeLevel}`];
+//   if (!buckets) return [];
+ 
+//   const options = [];
+//   const seen = new Set();
+ 
+//   for (const [bucket, codes] of Object.entries(buckets)) {
+//     const bucketLabel = TEKS_BUCKET_LABELS[bucket] ?? bucket;
+//     for (const code of codes) {
+//       if (!seen.has(code)) {
+//         seen.add(code);
+//         options.push({ code, label: `${code} — ${bucketLabel}` });
+//       }
+//     }
+//   }
+ 
+//   return options.sort((a, b) => a.code.localeCompare(b.code));
+// }

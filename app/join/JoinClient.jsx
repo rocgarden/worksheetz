@@ -126,7 +126,7 @@ export default function JoinClient() {
       {/* Logo / brand */}
       <div className="relative z-10 mb-10 text-center">
         <span className="inline-block text-yellow-400 font-black text-2xl tracking-tight select-none">
-          Worksheetz<span className="text-white">AI</span>
+          TEKS<span className="text-white">{"  "}Portfolio</span>
         </span>
       </div>
 

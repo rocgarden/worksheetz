@@ -33,7 +33,7 @@ import OpenAI from "openai";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const SUPPORTED_SUBJECTS = ["ELA"];
+const SUPPORTED_SUBJECTS = ["ELA", "Social Studies"];
 const SUPPORTED_GRADES = ["6","7","8"];
 const SUPPORTED_TYPES = ["multiple_choice", "hot_text", "constructed_response", "multi_select", "inline_choice"]; 
 
@@ -44,6 +44,13 @@ const DOK_DESCRIPTORS = {
   1: "recall and reproduction — basic fact retrieval, literal comprehension, defining vocabulary in context",
   2: "skills and concepts — inference, author's purpose, text structure, comparing ideas within a text",
   3: "strategic thinking — evaluating author's choices, synthesizing across texts, supporting claims with textual evidence",
+};
+
+// Maps DOK level → human label used in Social Studies prompt engineering
+const SS_DOK_DESCRIPTORS = {
+  1: "recall and reproduction — identify key facts, dates, people, places, and events; define terms from the TEKS standard",
+  2: "skills and concepts — explain cause-and-effect relationships, compare and contrast perspectives, describe geographic or economic patterns",
+  3: "strategic thinking — evaluate historical significance, analyze multiple perspectives on events, draw conclusions from primary or secondary sources, connect events to broader themes",
 };
 
 // ─── Passage Token Builder ────────────────────────────────────────────────────
@@ -228,6 +235,8 @@ async function generateFromAI(params) {
   switch (subject) {
     case "ELA":
       return generateELAQuestion(params);
+    case "Social Studies":
+      return generateSSQuestion(params);
     default:
       throw new Error(`No AI generator implemented for subject: ${subject}`);
   }
@@ -238,7 +247,6 @@ async function generateFromAI(params) {
 /**
  * Generates a single ELA question via OpenAI structured JSON output.
  * Handles: multiple_choice | hot_text
- * Grade: 7 (expandable via teks_standard + grade_level params)
  */
 async function generateELAQuestion({ teks_standard, grade_level, dok_level, question_type, previous_attempts = [] }) {
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -308,6 +316,79 @@ async function generateELAQuestion({ teks_standard, grade_level, dok_level, ques
   throw new Error(`Question generation failed after ${MAX_ATTEMPTS} attempts. Last error: ${lastError?.message}`);
 }
 
+// ─── Social Studies Question Generator ────────────────────────────────────────
+ 
+/**
+ * Generates a single Social Studies question via OpenAI structured JSON output.
+ * Handles all supported question types.
+ * SS questions use short informational passages (100-200 words) for hot_text and
+ * constructed_response; standalone stems for fact-based multiple_choice questions.
+ */
+async function generateSSQuestion({ teks_standard, grade_level, dok_level, question_type, previous_attempts = [] }) {
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+ 
+  const systemPrompt = buildSSSystemPrompt(grade_level);
+  const userPrompt = buildSSUserPrompt({
+    teks_standard,
+    grade_level,
+    dok_level,
+    question_type,
+    previous_attempts,
+  });
+ 
+  const MAX_ATTEMPTS = 3;
+  let lastError;
+ 
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      temperature: attempt === 1 ? 0.7 : attempt === 2 ? 0.3 : 0.1,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+    });
+ 
+    const raw = response.choices[0].message.content;
+ 
+    let question;
+    try {
+      question = JSON.parse(raw);
+    } catch {
+      lastError = new Error("OpenAI returned invalid JSON for SS question generation.");
+      console.warn(`[adaptiveQuestionGenerator] SS JSON parse failed on attempt ${attempt}/${MAX_ATTEMPTS}`);
+      continue;
+    }
+ 
+    try {
+      validateQuestionShape(question, question_type);
+    } catch (validationErr) {
+      lastError = validationErr;
+      console.warn(`[adaptiveQuestionGenerator] SS validation failed on attempt ${attempt}/${MAX_ATTEMPTS}: ${validationErr.message}`);
+      continue;
+    }
+ 
+    // Passed validation — persist and return
+    const questionBankId = await saveToQuestionBank({ question, teks_standard, grade_level, dok_level, question_type, subject: "Social Studies" });
+ 
+    const questionWithId = questionBankId ? { ...question, question_bank_id: questionBankId } : question;
+ 
+    try {
+      await setCachedQuestion(teks_standard, dok_level, grade_level, question_type, questionWithId);
+    } catch (cacheErr) {
+      console.warn("[adaptiveQuestionGenerator] SS Redis write failed (non-fatal):", cacheErr.message);
+    }
+ 
+    if (attempt > 1) {
+      console.log(`[adaptiveQuestionGenerator] SS generation succeeded on attempt ${attempt}/${MAX_ATTEMPTS}`);
+    }
+    return { ...questionWithId, source: "generated" };
+  }
+ 
+  throw new Error(`SS question generation failed after ${MAX_ATTEMPTS} attempts. Last error: ${lastError?.message}`);
+}
+
 // ─── Prompt Builders ──────────────────────────────────────────────────────────
 
 function buildELASystemPrompt() {
@@ -326,6 +407,41 @@ CRITICAL RULES:
 - Hot text questions highlight specific words/phrases/sentences in a passage — student selects the correct one(s).
 - Multi-select questions have exactly 5 options. Exactly 2 or 3 are correct. Student must select ALL correct answers.
 - Inline choice questions embed a dropdown inside the sentence stem using {{blank}}. Provide 4 short options. One is correct.`
+}
+
+/**
+ * System prompt for Social Studies questions.
+ * Grade-aware: maps grade level to the correct course name and content scope.
+ */
+function buildSSSystemPrompt(grade_level) {
+  const courseByGrade = {
+    "6": "World Cultures and Geography (Grade 6)",
+    "7": "Texas History (Grade 7)",
+    "8": "United States History to Reconstruction (Grade 8)",
+  };
+  const courseName = courseByGrade[String(grade_level)] ?? `Grade ${grade_level} Social Studies`;
+ 
+  return `You are an expert Texas Social Studies curriculum specialist and assessment writer with deep knowledge of TEKS standards, STAAR format, and the incoming Student Success Tool assessment framework for grades 6-8.
+ 
+Your current assignment is writing questions for: ${courseName}
+ 
+Your role is to generate high-quality, classroom-ready Social Studies assessment questions aligned to specific TEKS standards and Depth of Knowledge (DOK) levels.
+ 
+CRITICAL RULES:
+- Every question must be directly and explicitly aligned to the given TEKS standard and course content.
+- DOK level must be authentically reflected in cognitive demand — not just vocabulary.
+- For DOK 1: Test recall of specific facts, dates, key people, or place names.
+- For DOK 2: Require the student to explain cause-and-effect, compare perspectives, or interpret a source.
+- For DOK 3: Require evaluation of historical significance, analysis of multiple perspectives, or drawing conclusions from evidence.
+- Passages (when used) must be original informational text, 100-200 words, historically accurate, and grade-appropriate.
+- Standalone stems (no passage) are appropriate for DOK 1 fact-based multiple_choice questions.
+- Multiple choice questions must have exactly 4 options. Only one is correct.
+- Hot text questions require a passage — student selects the historically significant phrase or sentence.
+- Multi-select questions have exactly 5 options. Exactly 2 or 3 are correct. Student must select ALL correct answers.
+- Inline choice questions embed a dropdown using {{blank}} — test vocabulary or key concept knowledge.
+- Constructed response requires a passage and asks student to write 2-4 sentences supported by historical evidence.
+- Never reuse the same stem or passage structure from previous_attempts provided.
+- Return ONLY valid JSON. No markdown, no explanation, no preamble.`;
 }
 
 function buildAnswerFields(question_type) {
@@ -396,6 +512,43 @@ Return a single JSON object with this exact shape:
   ${buildAnswerFields(question_type, dok_level)},
   "explanation": "<why the correct answer is correct, referencing TEKS skill and DOK reasoning>",
     ${question_type === "constructed_response" ? `"scoring_rubric": { "0": "...", "1": "...", "2": "..." },` : ""}  "next_question_logic": {
+    "if_correct": { "dok_level": ${Math.min(dok_level + 1, 3)}, "action": "${dok_level < 3 ? "increase_difficulty" : "maintain_mastery"}" },
+    "if_incorrect": { "dok_level": ${Math.max(dok_level - 1, 1)}, "action": "${dok_level > 1 ? "decrease_difficulty" : "retry_with_scaffold"}" }
+  }
+}`;
+}
+
+/**
+ * User prompt builder for Social Studies questions.
+ * Same JSON output shape as ELA — only the subject context and DOK descriptors differ.
+ */
+function buildSSUserPrompt({ teks_standard, grade_level, dok_level, question_type, previous_attempts }) {
+  const dokDesc = SS_DOK_DESCRIPTORS[dok_level];
+ 
+  const avoidNote =
+    previous_attempts.length > 0
+      ? `\n\nIMPORTANT — Vary from these previous attempts in this session:\n${JSON.stringify(previous_attempts.map((a) => a.stem), null, 2)}`
+      : "";
+ 
+  const typeInstructions = buildTypeInstructions(question_type);
+ 
+  return `Generate one Grade ${grade_level} Social Studies question.
+ 
+TEKS Standard: ${teks_standard}
+DOK Level: ${dok_level} — ${dokDesc}
+Question Type: ${question_type}
+${typeInstructions}${avoidNote}
+ 
+Return a single JSON object with this exact shape:
+{
+  "teks_standard": "${teks_standard}",
+  "dok_level": ${dok_level},
+  "question_type": "${question_type}",
+  "passage": "<string — original 100-200 word informational passage; required for hot_text and constructed_response; optional for multiple_choice at DOK 2-3; omit for standalone fact-recall stems>",
+  "stem": "<the question prompt shown to the student>",
+  ${buildAnswerFields(question_type, dok_level)},
+  "explanation": "<why the correct answer is correct, referencing the TEKS standard and DOK reasoning>",
+  ${question_type === "constructed_response" ? `"scoring_rubric": { "0": "...", "1": "...", "2": "..." },` : ""}  "next_question_logic": {
     "if_correct": { "dok_level": ${Math.min(dok_level + 1, 3)}, "action": "${dok_level < 3 ? "increase_difficulty" : "maintain_mastery"}" },
     "if_incorrect": { "dok_level": ${Math.max(dok_level - 1, 1)}, "action": "${dok_level > 1 ? "decrease_difficulty" : "retry_with_scaffold"}" }
   }

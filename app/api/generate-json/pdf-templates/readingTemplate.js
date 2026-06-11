@@ -329,22 +329,3 @@ h2, h3 { page-break-after: avoid; }
 </html>
 `;
 }
-
-
-
-
-
-
-
-
-
-  // body::before {
-    // content: "Worksheetz AI";
-    // position: fixed;
-    // top: 40%;
-    // left: 15%;
-    // font-size: 80px;
-    // color: rgba(0,0,0,0.04);
-    // transform: rotate(-30deg);
-    // z-index: 0;
-    // }

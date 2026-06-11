@@ -62,7 +62,7 @@ Lack of usage
 
 Dissatisfaction with AI‑generated content (results may vary and should be reviewed for accuracy)
 
-To request a refund, contact us at hello@worksheetzai.com and we’ll respond within 24–48 hours.
+To request a refund, contact us at hello@teksportfolio.com and we’ll respond within 24–48 hours.
 
 Last updated: October 20, 2025`}
         </pre>

@@ -171,7 +171,7 @@ Continued use of the Service after updates constitutes acceptance of the revised
 12. Contact
 
 For any questions, contact:
-📧 hello@worksheetzai.com`}
+📧 hello@teksportfolio.com`}
         </pre>
       </div>
     </main>
