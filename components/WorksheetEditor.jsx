@@ -146,7 +146,7 @@ const [worksheet, setWorksheet] = useState(() =>
       .safeParse({
         //userId: "placeholder", // If userId is required, pass it from props or get from session
         fileName,
-        sanitizedWorksheet,
+        worksheet: sanitizedWorksheet,
         topic,
         gradeLevel,
         type,
