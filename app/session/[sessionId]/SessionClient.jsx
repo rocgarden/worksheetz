@@ -40,8 +40,10 @@ function MultipleChoice({ options, selected, onSelect, disabled }) {
               transition: "all 0.18s ease",
               fontFamily: "'Nunito', sans-serif",
               boxShadow: isSelected ? "0 0 0 3px rgba(124,58,237,0.1)" : "0 1px 3px rgba(0,0,0,0.06)",
-            }}
-          >
+              touchAction: "manipulation",
+              WebkitTapHighlightColor: "transparent",           
+             }}
+            >
             <span
               style={{
                 minWidth: "32px",
@@ -110,8 +112,10 @@ function MultiSelect({ options, selected, onSelect, disabled }) {
               transition: "all 0.18s ease",
               fontFamily: "'Nunito', sans-serif",
               boxShadow: isSelected ? "0 0 0 3px rgba(124,58,237,0.1)" : "0 1px 3px rgba(0,0,0,0.06)",
-            }}
-          >
+              touchAction: "manipulation",
+              WebkitTapHighlightColor: "transparent",
+              }}
+            >
             <span
               style={{
                 minWidth: "32px",
@@ -273,20 +277,26 @@ if (isSentenceMode) {
                   key={i}
                   onClick={() => !disabled && onSelect(idx)}
                   style={{
-                    display: "inline",
-                    cursor: disabled ? "default" : "pointer",
-                    borderRadius: "3px",
-                    padding: "1px 2px",
-                    background: isSelected ? "#7c3aed" : "transparent",
-                    color: isSelected ? "#ffffff" : "#4c1d95",
-                    fontWeight: isSelected ? "700" : "600",
-                    textDecorationLine: isSelected ? "none" : "underline",
-                    textDecorationStyle: "solid",
-                    textDecorationColor: isSelected ? "transparent" : "#7c3aed",
-                    textDecorationThickness: "2px",
-                    textUnderlineOffset: "3px",
-                    transition: "all 0.15s ease",
-                  }}
+                  display: "inline",
+                  // display: "inline-block",
+                  cursor: disabled ? "default" : "pointer",
+                  borderRadius: "4px",
+                  padding: "4px 3px",
+                  // verticalAlign: "baseline",
+                  background: isSelected ? "#7c3aed" : "transparent",
+                  color: isSelected ? "#ffffff" : "#4c1d95",
+                  fontWeight: isSelected ? "700" : "600",
+                  textDecorationLine: isSelected ? "none" : "underline",
+                  textDecorationStyle: "solid",
+                  textDecorationColor: isSelected ? "transparent" : "#7c3aed",
+                  textDecorationThickness: "2px",
+                  textUnderlineOffset: "3px",
+                  transition: "all 0.15s ease",
+                  touchAction: "manipulation",
+                  WebkitTapHighlightColor: "transparent",
+                  userSelect: "none",
+                  WebkitUserSelect: "none",
+                }}
                 >
                   {token.text}
                 </span>
@@ -302,21 +312,27 @@ if (isSentenceMode) {
                 <span
                   key={token.id}
                   onClick={() => !disabled && onSelect(token.targetIdx)}
-                  style={{
-                    display: "inline",
-                    cursor: disabled ? "default" : "pointer",
-                    borderRadius: "3px",
-                    padding: "1px 2px",
-                    background: isSelected ? "#7c3aed" : "transparent",
-                    color: isSelected ? "#ffffff" : "#4c1d95",
-                    fontWeight: isSelected ? "700" : "600",
-                    textDecorationLine: isSelected ? "none" : "underline",
-                    textDecorationStyle: "solid",
-                    textDecorationColor: isSelected ? "transparent" : "#7c3aed",
-                    textDecorationThickness: "2px",
-                    textUnderlineOffset: "3px",
-                    transition: "all 0.15s ease",
-                  }}
+                 style={{
+                  display: "inline",
+                  // display: "inline-block",
+                  cursor: disabled ? "default" : "pointer",
+                  borderRadius: "4px",
+                  padding: "4px 3px",
+                  // verticalAlign: "baseline",
+                  background: isSelected ? "#7c3aed" : "transparent",
+                  color: isSelected ? "#ffffff" : "#4c1d95",
+                  fontWeight: isSelected ? "700" : "600",
+                  textDecorationLine: isSelected ? "none" : "underline",
+                  textDecorationStyle: "solid",
+                  textDecorationColor: isSelected ? "transparent" : "#7c3aed",
+                  textDecorationThickness: "2px",
+                  textUnderlineOffset: "3px",
+                  transition: "all 0.15s ease",
+                  touchAction: "manipulation",
+                  WebkitTapHighlightColor: "transparent",
+                  userSelect: "none",
+                  WebkitUserSelect: "none",
+                }}
                 >
                   {token.text}{token.isSentence ? " " : ""}
                 </span>
@@ -573,6 +589,7 @@ function ConstructedResponse({ value, onChange, disabled }) {
           outline: "none",
           fontFamily: "'Nunito', sans-serif",
           boxSizing: "border-box",
+          touchAction: "pan-y",
         }}
       />
     </div>

@@ -14,13 +14,13 @@
 
 import { TEKS_READING_MAP, TEKS_LABELS } from "./teksReadingMap";
 import { TEKS_SOCIAL_STUDIES_MAP, TEKS_SS_BUCKET_LABELS, TEKS_SS_LABELS } from "./teksSocialStudiesMap";
+import { TEKS_SCIENCE_MAP, TEKS_SCIENCE_BUCKET_LABELS, TEKS_SCIENCE_LABELS } from "./teksScienceMap";
 
 // ── Placeholder maps for upcoming subjects ────────────────────────────────────
 // Replace each with a real import once the map file exists.
 // Shape must match teksReadingMap: { gradeN: { bucketKey: ["X.YZ"] } }
 
 const TEKS_MATH_MAP = {};         // TODO: import from "./teksMathMap"
-const TEKS_SCIENCE_MAP = {};      // TODO: import from "./teksScienceMap"
 
 // ── Subject → TEKS map ────────────────────────────────────────────────────────
 // Keys must match the values stored in classrooms.subject exactly.
@@ -55,7 +55,7 @@ export const TEKS_BUCKET_LABELS_BY_SUBJECT = {
   // },
 
   Math: {},
-  Science: {},
+  Science: TEKS_SCIENCE_BUCKET_LABELS,
   "Social Studies": TEKS_SS_BUCKET_LABELS,
 };
 
@@ -65,7 +65,7 @@ const CODE_LABELS_BY_SUBJECT = {
   ELA: TEKS_LABELS,
   "Social Studies": TEKS_SS_LABELS,
   Math: {},
-  Science: {},
+  Science: TEKS_SCIENCE_LABELS,
 };
 
 // ── Builder ───────────────────────────────────────────────────────────────────

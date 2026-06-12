@@ -30,10 +30,11 @@ import { createV2ServiceClient } from "@/libs/supabase/server-v2";
 
 import { getCachedQuestion, setCachedQuestion } from "@/libs/redis-cache";
 import OpenAI from "openai";
+import { generateScienceQuestion } from "./science";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const SUPPORTED_SUBJECTS = ["ELA", "Social Studies"];
+const SUPPORTED_SUBJECTS = ["ELA", "Social Studies", "Science"];
 const SUPPORTED_GRADES = ["6","7","8"];
 const SUPPORTED_TYPES = ["multiple_choice", "hot_text", "constructed_response", "multi_select", "inline_choice"]; 
 
@@ -237,6 +238,8 @@ async function generateFromAI(params) {
       return generateELAQuestion(params);
     case "Social Studies":
       return generateSSQuestion(params);
+    case "Science":
+      return generateScienceQuestion(params);
     default:
       throw new Error(`No AI generator implemented for subject: ${subject}`);
   }
