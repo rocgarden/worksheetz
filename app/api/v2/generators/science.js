@@ -21,7 +21,7 @@
  */
 
 import OpenAI from "openai";
-import { saveToQuestionBank, validateQuestionShape, buildAnswerFields, buildPassageTokens, buildTypeInstructions } from "./shared";
+import { saveToQuestionBank, validateQuestionShape, buildAnswerFields, buildTypeInstructions } from "./shared";
 import { setCachedQuestion } from "@/libs/redis-cache";
 
 // ── Science DOK Descriptors ────────────────────────────────────────────────────
@@ -31,6 +31,18 @@ const SCIENCE_DOK_DESCRIPTORS = {
   2: "skills and concepts — explain cause-and-effect in scientific systems, apply formulas (d=rt, F=ma, density), compare and contrast organisms or processes, interpret described data tables or graphs",
   3: "strategic thinking — analyze experimental design and identify variables, evaluate evidence to support or refute a claim, draw conclusions from described data, connect scientific concepts to real-world scenarios",
 };
+
+// ── Blank Injector ─────────────────────────────────────────────────────────────
+function injectBlank(stem, correctAnswer) {
+  const escaped = correctAnswer.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(`\\b${escaped}\\b`, "i");
+  const injected = stem.replace(regex, "{{blank}}");
+  if (injected.includes("{{blank}}")) return injected;
+  // Fallback: no word boundary match (e.g. answer contains punctuation)
+  const fallback = stem.replace(correctAnswer, "{{blank}}");
+  if (fallback.includes("{{blank}}")) return fallback;
+  throw new Error(`inline_choice: could not inject {{blank}} — correct_answer "${correctAnswer}" not found in stem: "${stem}"`);
+}
 
 // ── System Prompt ──────────────────────────────────────────────────────────────
 
@@ -144,6 +156,16 @@ const MAX_ATTEMPTS = question_type === "hot_text" ? 4 : 3;
       lastError = new Error("OpenAI returned invalid JSON for Science question generation.");
       console.warn(`[scienceGenerator] JSON parse failed on attempt ${attempt}/${MAX_ATTEMPTS}`);
       continue;
+    }
+
+     if (question_type === "inline_choice" && question?.correct_answer && question?.stem) {
+      try {
+        question.stem = injectBlank(question.stem, question.correct_answer);
+      } catch (injectErr) {
+        lastError = injectErr;
+        console.warn(`[scienceGenerator] inline_choice blank injection failed on attempt ${attempt}/${MAX_ATTEMPTS}: ${injectErr.message}`);
+        continue;
+      }
     }
 
     try {

@@ -284,16 +284,17 @@ TYPE INSTRUCTIONS (multi_select):
 - correct_answer must be a JSON array of the correct option ids, e.g. ["A","C"] or ["B","C","E"].
 - Sort the correct_answer array alphabetically.`;
 
-    case "inline_choice":
-      return `
+case "inline_choice":
+  return `
 TYPE INSTRUCTIONS (inline_choice):
-- The stem IS the sentence containing the blank, using {{blank}} as the placeholder.
-- Do NOT write a separate stem — the full sentence with {{blank}} is the question.
-- Example stem: "The object accelerates because the net force acting on it is {{blank}}."
-- Provide exactly 4 short answer_options as plain strings (not objects), e.g. ["unbalanced","balanced","zero","constant"].
-- correct_answer is the single correct string from answer_options.
-- A short passage (100-150 words) is recommended to give context for the blank.
-- The blank must test vocabulary, key concept, or scientific term knowledge tied to the TEKS standard.`;
+- Write a short passage (100-150 words) as normal prose — complete sentences, no placeholders.
+- Write a stem as a COMPLETE sentence with the correct answer word/phrase included naturally.
+  Example: "The author uses imagery to create a sense of urgency in the passage."
+  Example: "This principle is known as Newton's First Law."
+- The correct_answer must be the exact word or short phrase from the stem that tests the TEKS concept.
+- Provide exactly 4 short answer_options as plain strings including the correct_answer plus 3 plausible distractors.
+- correct_answer must exactly match one of the answer_options strings.
+- Do NOT use any placeholder like {{blank}} — write the stem as a real sentence.`;
 
     default:
       return "";
