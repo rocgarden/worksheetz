@@ -41,3 +41,6 @@ public/sitemap-0.xml.env
 
 /TODO.next 2
 .next 2/
+
+# Supabase local CLI state
+supabase/.temp/
