@@ -1,28 +1,14 @@
 // /app/(protected)/admin/passage-bank/published/[passageBankId]/page.js
 
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
-import { createClient } from "@/libs/supabase/server";
-import config from "@/config";
 import PassageBankPublishedDetail from "@/components/admin/passage-bank/PassageBankPublishedDetail";
-
+import { requirePassageBankAdminPage } from "@/libs/v2/passageBank/requirePassageBankAdminPage";
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 export const revalidate = 0;
 
-function getAdminEmails() {
-  return new Set(
-    [
-      process.env.ADMIN_EMAIL || "",
-      process.env.ADMIN_EMAILS || "",
-    ]
-      .join(",")
-      .split(",")
-      .map((email) => email.trim().toLowerCase())
-      .filter(Boolean),
-  );
-}
 
 function isValidUuid(value) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
@@ -33,6 +19,7 @@ function isValidUuid(value) {
 export default async function PublishedPassageBankDetailPage({
   params,
 }) {
+  await requirePassageBankAdminPage();
   const resolvedParams = await params;
   const passageBankId =
     resolvedParams?.passageBankId;
@@ -40,29 +27,6 @@ export default async function PublishedPassageBankDetailPage({
   if (
     !passageBankId ||
     !isValidUuid(passageBankId)
-  ) {
-    notFound();
-  }
-
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    redirect(config.auth.loginUrl);
-  }
-
-  const userEmail =
-    typeof user.email === "string"
-      ? user.email.trim().toLowerCase()
-      : "";
-
-  if (
-    !userEmail ||
-    !getAdminEmails().has(userEmail)
   ) {
     notFound();
   }

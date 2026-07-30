@@ -1,51 +1,17 @@
 // /app/(protected)/admin/passage-bank/generate/page.js
 
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
-
-import { createClient } from "@/libs/supabase/server";
-import config from "@/config";
+import { requirePassageBankAdminPage } from "@/libs/v2/passageBank/requirePassageBankAdminPage";
 import PassageBankGenerateForm from "@/components/admin/passage-bank/PassageBankGenerateForm";
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 export const revalidate = 0;
 
-function getAdminEmails() {
-  return new Set(
-    [
-      process.env.ADMIN_EMAIL || "",
-      process.env.ADMIN_EMAILS || "",
-    ]
-      .join(",")
-      .split(",")
-      .map((email) => email.trim().toLowerCase())
-      .filter(Boolean),
-  );
-}
+
 
 export default async function GeneratePassageBankDraftPage() {
-  const supabase = await createClient();
+await requirePassageBankAdminPage();
 
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    redirect(config.auth.loginUrl);
-  }
-
-  const userEmail =
-    typeof user.email === "string"
-      ? user.email.trim().toLowerCase()
-      : "";
-
-  if (
-    !userEmail ||
-    !getAdminEmails().has(userEmail)
-  ) {
-    notFound();
-  }
 
   return (
     <main

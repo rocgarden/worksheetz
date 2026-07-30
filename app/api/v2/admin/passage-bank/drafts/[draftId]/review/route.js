@@ -20,9 +20,8 @@
 
 import { NextResponse } from "next/server";
 
-import { createClient } from "@/libs/supabase/server";
 import { createV2ServiceClient } from "@/libs/supabase/server-v2";
-
+import { requirePassageBankAdmin } from "@/libs/v2/passageBank/requirePassageBankAdmin";
 export const dynamic = "force-dynamic";
 
 const ACTION_CONFIG = Object.freeze({
@@ -96,48 +95,6 @@ function isUuid(value) {
   );
 }
 
-/**
- * Supports:
- *
- * ADMIN_EMAIL=rgarcia646@gmail.com
- *
- * or:
- *
- * ADMIN_EMAILS=rgarcia646@gmail.com,admin2@example.com
- *
- * @returns {Set<string>}
- */
-function getAdminEmails() {
-  const values = [
-    process.env.ADMIN_EMAIL || "",
-    process.env.ADMIN_EMAILS || "",
-  ];
-
-  return new Set(
-    values
-      .join(",")
-      .split(",")
-      .map((email) => email.trim().toLowerCase())
-      .filter(Boolean),
-  );
-}
-
-/**
- * @param {object|null} user
- * @returns {boolean}
- */
-function isAuthorizedAdmin(user) {
-  const email =
-    normalizeOptionalString(
-      user?.email,
-    )?.toLowerCase();
-
-  if (!email) {
-    return false;
-  }
-
-  return getAdminEmails().has(email);
-}
 
 /**
  * Maps expected workflow/database errors to an HTTP status.
@@ -200,40 +157,16 @@ export async function POST(
      * 1. Authenticate and authorize admin
      * ----------------------------------------------------------
      */
+    const adminAuth =
+  await requirePassageBankAdmin();
 
-    const supabase =
-      await createClient();
-
-    const {
-      data: { user },
-      error: authError,
-    } =
-      await supabase.auth.getUser();
-
-    if (
-      authError ||
-      !user
-    ) {
-      return NextResponse.json(
-        {
-          error: "Unauthorized.",
-        },
-        {
-          status: 401,
-        },
-      );
+    if (!adminAuth.success) {
+      return adminAuth.response;
     }
 
-    if (!isAuthorizedAdmin(user)) {
-      return NextResponse.json(
-        {
-          error: "Forbidden.",
-        },
-        {
-          status: 403,
-        },
-      );
-    }
+    const { user } = adminAuth;
+
+ 
 
     /*
      * ----------------------------------------------------------

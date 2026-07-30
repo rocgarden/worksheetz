@@ -1,27 +1,12 @@
 // /app/(protected)/admin/passage-bank/drafts/[draftId]/page.js
 
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
-
-import { createClient } from "@/libs/supabase/server";
-import config from "@/config";
+import { notFound } from "next/navigation";
+import { requirePassageBankAdminPage } from "@/libs/v2/passageBank/requirePassageBankAdminPage";
 import PassageBankDraftDetail from "@/components/admin/passage-bank/PassageBankDraftDetail";
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 export const revalidate = 0;
-
-function getAdminEmails() {
-  return new Set(
-    [
-      process.env.ADMIN_EMAIL || "",
-      process.env.ADMIN_EMAILS || "",
-    ]
-      .join(",")
-      .split(",")
-      .map((email) => email.trim().toLowerCase())
-      .filter(Boolean),
-  );
-}
 
 function isUuid(value) {
   return (
@@ -35,6 +20,8 @@ function isUuid(value) {
 export default async function PassageBankDraftPage({
   params,
 }) {
+  await requirePassageBankAdminPage();
+
   const {
     draftId,
   } = await params;
@@ -43,28 +30,6 @@ export default async function PassageBankDraftPage({
     notFound();
   }
 
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    redirect(config.auth.loginUrl);
-  }
-
-  const userEmail =
-    typeof user.email === "string"
-      ? user.email.trim().toLowerCase()
-      : "";
-
-  if (
-    !userEmail ||
-    !getAdminEmails().has(userEmail)
-  ) {
-    notFound();
-  }
 
   return (
     <main

@@ -16,7 +16,7 @@
 
 import { NextResponse } from "next/server";
 
-import { createClient } from "@/libs/supabase/server";
+import { requirePassageBankAdmin } from "@/libs/v2/passageBank/requirePassageBankAdmin";
 import { createV2ServiceClient } from "@/libs/supabase/server-v2";
 
 export const dynamic = "force-dynamic";
@@ -45,33 +45,6 @@ function isUuid(value) {
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
       value,
     )
-  );
-}
-
-function getAdminEmails() {
-  return new Set(
-    [
-      process.env.ADMIN_EMAIL || "",
-      process.env.ADMIN_EMAILS || "",
-    ]
-      .join(",")
-      .split(",")
-      .map((email) =>
-        email.trim().toLowerCase(),
-      )
-      .filter(Boolean),
-  );
-}
-
-function isAuthorizedAdmin(user) {
-  const email =
-    normalizeOptionalString(
-      user?.email,
-    )?.toLowerCase();
-
-  return Boolean(
-    email &&
-    getAdminEmails().has(email),
   );
 }
 
@@ -117,41 +90,14 @@ export async function POST(
      * 1. Authenticate and authorize the admin
      * ----------------------------------------------------------
      */
+    const adminAuth =
+      await requirePassageBankAdmin();
 
-    const supabase =
-      await createClient();
-
-    const {
-      data: { user },
-      error: authError,
-    } =
-      await supabase.auth.getUser();
-
-    if (
-      authError ||
-      !user
-    ) {
-      return NextResponse.json(
-        {
-          error: "Unauthorized.",
-        },
-        {
-          status: 401,
-        },
-      );
+    if (!adminAuth.success) {
+      return adminAuth.response;
     }
 
-    if (!isAuthorizedAdmin(user)) {
-      return NextResponse.json(
-        {
-          error: "Forbidden.",
-        },
-        {
-          status: 403,
-        },
-      );
-    }
-
+    const { user } = adminAuth;
     /*
      * ----------------------------------------------------------
      * 2. Validate passageBankId

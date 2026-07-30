@@ -3,44 +3,16 @@
 // Server-protected admin landing page for passage-bank management.
 
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
-import { createClient } from "@/libs/supabase/server";
-import config from "@/config";
 import PassageBankManager from "@/components/admin/passage-bank/PassageBankManager";
-
+import { requirePassageBankAdminPage } from "@/libs/v2/passageBank/requirePassageBankAdminPage";
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 export const revalidate = 0;
 
-function getAdminEmails() {
-  return new Set(
-    [process.env.ADMIN_EMAIL || "", process.env.ADMIN_EMAILS || ""]
-      .join(",")
-      .split(",")
-      .map((email) => email.trim().toLowerCase())
-      .filter(Boolean),
-  );
-}
-
 export default async function PassageBankAdminPage() {
-  const supabase = await createClient();
+await requirePassageBankAdminPage();
 
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    redirect(config.auth.loginUrl);
-  }
-
-  const userEmail =
-    typeof user.email === "string" ? user.email.trim().toLowerCase() : "";
-
-  if (!userEmail || !getAdminEmails().has(userEmail)) {
-    redirect("/dashboard");
-  }
 
   return (
     <main
@@ -108,18 +80,41 @@ export default async function PassageBankAdminPage() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-3">
-          <div className="rounded-[2rem] border border-base-300 bg-white p-6 shadow-sm">
+          <Link
+            href="/admin/passage-bank/review"
+            className="
+                group
+                rounded-[2rem]
+                border
+                border-yellow-200
+                bg-gradient-to-br
+                from-yellow-50
+                to-white
+                p-6
+                shadow-sm
+                transition
+                hover:-translate-y-0.5
+                hover:border-yellow-300
+                hover:shadow-md
+              "
+          >
             <p className="text-sm font-semibold uppercase tracking-wide text-primary">
-              Drafts
+              Review Queue
             </p>
 
-            <h2 className="mt-2 text-xl font-bold">Review Draft Packages</h2>
+            <div className="mt-2 flex items-start justify-between gap-4">
+              <h2 className="text-xl font-bold">Review Draft Packages</h2>
 
-            <p className="mt-2 text-sm text-base-content/70">
-              Open generated drafts, inspect validation results, and move
-              packages through the review workflow.
+              <span className="shrink-0 text-lg font-bold text-primary transition-transform group-hover:translate-x-1">
+                →
+              </span>
+            </div>
+
+            <p className="mt-2 text-sm leading-6 text-base-content/70">
+              Open drafts awaiting review, inspect returned packages, and manage
+              approved drafts and pending revisions.
             </p>
-          </div>
+          </Link>
 
           <div className="rounded-[2rem] border border-base-300 bg-white p-6 shadow-sm">
             <p className="text-sm font-semibold uppercase tracking-wide text-primary">
@@ -136,17 +131,39 @@ export default async function PassageBankAdminPage() {
             </p>
           </div>
 
-          <div className="rounded-[2rem] border border-base-300 bg-white p-6 shadow-sm">
+          <Link
+            href="/admin/passage-bank/generate"
+            className="
+              group
+              rounded-[2rem]
+              border
+              border-purple-200
+              bg-gradient-to-br
+              from-purple-50
+              to-white
+              p-6
+              shadow-sm
+              transition
+              hover:-translate-y-0.5
+              hover:border-purple-300
+              hover:shadow-md
+            "
+          >
+            {" "}
             <p className="text-sm font-semibold uppercase tracking-wide text-primary">
               Generation
             </p>
+            <div className="mt-2 flex items-start justify-between gap-4">
+              <h2 className="text-xl font-bold">Generate New Draft</h2>
 
-            <h2 className="mt-2 text-xl font-bold">Generate New Draft</h2>
-
+              <span className="shrink-0 text-lg font-bold text-primary transition-transform group-hover:translate-x-1">
+                →
+              </span>
+            </div>
             <p className="mt-2 text-sm text-base-content/70">
               Create a new passage and question-bank draft for human review.
             </p>
-          </div>
+          </Link>
         </div>
 
         <div
@@ -159,7 +176,7 @@ export default async function PassageBankAdminPage() {
             shadow-sm
             md:p-8
                "
-             >
+        >
           <div className="mb-6 flex flex-col gap-2">
             <h2 className="text-2xl font-bold">Passage-bank packages</h2>
 

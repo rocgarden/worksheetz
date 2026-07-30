@@ -13,8 +13,7 @@
 // This endpoint does not update, validate, approve, publish, or delete drafts.
 
 import { NextResponse } from "next/server";
-
-import { createClient } from "@/libs/supabase/server";
+import { requirePassageBankAdmin } from "@/libs/v2/passageBank/requirePassageBankAdmin";
 import { createV2ServiceClient } from "@/libs/supabase/server-v2";
 
 import { resolvePassageBankAuditActors } from "@/libs/v2/passageBank/resolveAuditActors";
@@ -60,49 +59,6 @@ function normalizeOptionalString(value) {
 }
 
 /**
- * Supports:
- *
- * ADMIN_EMAIL=rgarcia646@gmail.com
- *
- * or:
- *
- * ADMIN_EMAILS=rgarcia646@gmail.com,admin2@example.com
- *
- * @returns {Set<string>}
- */
-function getAdminEmails() {
-  const values = [
-    process.env.ADMIN_EMAIL || "",
-    process.env.ADMIN_EMAILS || "",
-  ];
-
-  return new Set(
-    values
-      .join(",")
-      .split(",")
-      .map((email) => email.trim().toLowerCase())
-      .filter(Boolean),
-  );
-}
-
-/**
- * @param {object|null} user
- * @returns {boolean}
- */
-function isAuthorizedAdmin(user) {
-  const email =
-    normalizeOptionalString(
-      user?.email,
-    )?.toLowerCase();
-
-  if (!email) {
-    return false;
-  }
-
-  return getAdminEmails().has(email);
-}
-
-/**
  * @param {unknown} value
  * @returns {boolean}
  */
@@ -128,41 +84,14 @@ export async function GET(
      * 1. Authenticate and authorize admin
      * ----------------------------------------------------------
      */
+    const adminAuth =
+  await requirePassageBankAdmin();
 
-    const supabase =
-      await createClient();
+if (!adminAuth.success) {
+  return adminAuth.response;
+}
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (
-      authError ||
-      !user
-    ) {
-      return NextResponse.json(
-        {
-          error: "Unauthorized.",
-        },
-        {
-          status: 401,
-        },
-      );
-    }
-
-    if (
-      !isAuthorizedAdmin(user)
-    ) {
-      return NextResponse.json(
-        {
-          error: "Forbidden.",
-        },
-        {
-          status: 403,
-        },
-      );
-    }
+const { user } = adminAuth;
 
     /*
      * ----------------------------------------------------------
@@ -540,41 +469,14 @@ export async function PATCH(
      * 1. Authenticate and authorize admin
      * ----------------------------------------------------------
      */
+    const adminAuth =
+  await requirePassageBankAdmin();
 
-    const supabase =
-      await createClient();
+if (!adminAuth.success) {
+  return adminAuth.response;
+}
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (
-      authError ||
-      !user
-    ) {
-      return NextResponse.json(
-        {
-          error: "Unauthorized.",
-        },
-        {
-          status: 401,
-        },
-      );
-    }
-
-    if (
-      !isAuthorizedAdmin(user)
-    ) {
-      return NextResponse.json(
-        {
-          error: "Forbidden.",
-        },
-        {
-          status: 403,
-        },
-      );
-    }
+const { user } = adminAuth;
 
     /*
      * ----------------------------------------------------------
@@ -818,10 +720,53 @@ export async function PATCH(
      */
 
     const updatedDraftPackage = {
-      passage,
-      questions,
-    };
+  passage,
+  questions,
+};
 
+const sharedPassage =
+  typeof updatedDraftPackage?.passage?.passage ===
+  "string"
+    ? updatedDraftPackage.passage.passage
+    : "";
+
+const synchronizedQuestions =
+  updatedDraftPackage.questions.map(
+    (question) => {
+      if (
+        !question?.question_json ||
+        typeof question.question_json !==
+          "object" ||
+        Array.isArray(
+          question.question_json,
+        )
+      ) {
+        return question;
+      }
+
+      if (
+        !Object.prototype.hasOwnProperty.call(
+          question.question_json,
+          "passage",
+        )
+      ) {
+        return question;
+      }
+
+      return {
+        ...question,
+        question_json: {
+          ...question.question_json,
+          passage: sharedPassage,
+        },
+      };
+    },
+  );
+
+const synchronizedDraftPackage = {
+  ...updatedDraftPackage,
+  questions: synchronizedQuestions,
+};
     /*
      * Any content change invalidates the previous structural-validation
      * snapshot. The dedicated validation endpoint will replace this stale
@@ -919,7 +864,7 @@ export async function PATCH(
           ),
 
         draft_json:
-          updatedDraftPackage,
+          synchronizedDraftPackage,
 
         validation_json:
           staleValidation,
@@ -1029,7 +974,7 @@ export async function PATCH(
           updatedDraft.title,
 
         question_count:
-          questions.length,
+          synchronizedQuestions.length,
 
         structurally_valid:
           false,

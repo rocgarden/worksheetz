@@ -14,8 +14,7 @@
 //
 
 import { NextResponse } from "next/server";
-
-import { createClient } from "@/libs/supabase/server";
+import { requirePassageBankAdmin } from "@/libs/v2/passageBank/requirePassageBankAdmin";
 import { createV2ServiceClient } from "@/libs/supabase/server-v2";
 
 import { validatePassageQuestionBankPackage } from "@/libs/adaptive/questionBank/validatePassageQuestionBankPackage";
@@ -55,43 +54,6 @@ function normalizeOptionalString(value) {
  */
 function normalizeRequiredString(value) {
   return typeof value === "string" ? value.trim() : "";
-}
-
-/**
- * Returns the configured administrator email addresses.
- *
- * ADMIN_EMAILS should be a comma-separated environment variable:
- *
- * ADMIN_EMAILS=rgarcia646@gmail.com,admin2@example.com
- *
- * @returns {Set<string>}
- */
-function getAdminEmails() {
-  return new Set(
-    String(process.env.ADMIN_EMAIL || "")
-      .split(",")
-      .map((email) => email.trim().toLowerCase())
-      .filter(Boolean),
-  );
-}
-
-/**
- * Verifies that the authenticated user is an authorized administrator.
- *
- * Replace this helper later if the application moves administrator roles
- * into profiles, app_metadata, or a dedicated permissions table.
- *
- * @param {object} user
- * @returns {boolean}
- */
-function isAuthorizedAdmin(user) {
-  const email = normalizeOptionalString(user?.email)?.toLowerCase();
-
-  if (!email) {
-    return false;
-  }
-
-  return getAdminEmails().has(email);
 }
 
 /**
@@ -339,42 +301,355 @@ function buildQuestionRows({
   });
 }
 
-/**
- * POST /api/v2/admin/passage-bank
- *
- * Expected request body:
- *
- * {
- *   "passage": {
- *     "subject": "ELA",
- *     "grade_level": "8",
- *     "teks_standard": "8.8C",
- *     "passage_format": "drama",
- *     "content_focus_key": "misunderstanding_deadline_choice",
- *     "content_focus": "...",
- *     "title": "Before the Upload",
- *     "passage": "...",
- *     "skill_tags": ["dramatic_action"],
- *     "difficulty_level": 3,
- *     "is_active": true
- *   },
- *   "questions": [
- *     {
- *       "question_type": "hot_text",
- *       "dok_level": 2,
- *       "skill_focus": "...",
- *       "assessment_move": "...",
- *       "dramatic_function": "reveals_motivation",
- *       "target_scene": "scene_3",
- *       "correct_target_text": "...",
- *       "correct_target_key": "...",
- *       "question_json": {},
- *       "review_status": "approved",
- *       "is_active": true
- *     }
- *   ]
- * }
- */
+export async function GET() {
+  try {
+    /*
+     * ------------------------------------------------------------
+     * 1. Authenticate and authorize the administrator
+     * ------------------------------------------------------------
+     */
+
+    const adminAuth =
+     await requirePassageBankAdmin();
+
+    if (!adminAuth.success) {
+      return adminAuth.response;
+    }
+
+    const serviceSupabase = await createV2ServiceClient();
+
+    /*
+     * ------------------------------------------------------------
+     * 2. Load draft packages
+     * ------------------------------------------------------------
+     */
+
+    const {
+      data: drafts,
+      error: draftsError,
+    } = await serviceSupabase
+      .from("passage_bank_draft_packages")
+      .select(
+        `
+          id,
+          status,
+          subject,
+          grade_level,
+          teks_standard,
+          passage_format,
+          content_focus_key,
+          title,
+          validation_json,
+          created_by,
+          updated_by,
+          reviewed_by,
+          published_passage_bank_id,
+          revision_of_passage_bank_id,
+          revision_root_id,
+          revision_number,
+          created_at,
+          updated_at,
+          reviewed_at,
+          published_at
+        `,
+      )
+      .order("updated_at", {
+        ascending: false,
+      });
+
+    if (draftsError) {
+      console.error(
+        "[admin/passage-bank] Failed to load draft overview data",
+        {
+          error: draftsError.message,
+        },
+      );
+
+      return NextResponse.json(
+        {
+          error: "Unable to load passage-bank drafts.",
+          details: draftsError.message,
+        },
+        {
+          status: 500,
+        },
+      );
+    }
+
+    /*
+     * ------------------------------------------------------------
+     * 3. Load published passage packages
+     * ------------------------------------------------------------
+     */
+
+    const {
+      data: publishedPackages,
+      error: publishedError,
+    } = await serviceSupabase
+      .from("passage_bank")
+     .select(
+        `
+          id,
+          subject,
+          grade_level,
+          teks_standard,
+          passage_format,
+          content_focus_key,
+          title,
+          is_active,
+          revision_root_id,
+          revision_number,
+          replaces_passage_bank_id,
+          superseded_at,
+          created_at,
+          updated_at
+        `,
+      )
+      .order("updated_at", {
+        ascending: false,
+      });
+
+    if (publishedError) {
+      console.error(
+        "[admin/passage-bank] Failed to load published overview data",
+        {
+          error: publishedError.message,
+        },
+      );
+
+      return NextResponse.json(
+        {
+          error: "Unable to load published passage-bank packages.",
+          details: publishedError.message,
+        },
+        {
+          status: 500,
+        },
+      );
+    }
+
+    /*
+     * ------------------------------------------------------------
+     * 4. Load recent audit events
+     * ------------------------------------------------------------
+     */
+
+    const {
+      data: recentEvents,
+      error: eventsError,
+    } = await serviceSupabase
+      .from("passage_bank_review_events")
+      .select(
+        `
+          id,
+          draft_package_id,
+          published_passage_bank_id,
+          action,
+          from_status,
+          to_status,
+          note,
+          validation_snapshot,
+          metadata,
+          performed_by,
+          created_at
+        `,
+      )
+      .order("created_at", {
+        ascending: false,
+      })
+      .limit(20);
+
+    if (eventsError) {
+      console.error(
+        "[admin/passage-bank] Failed to load recent audit events",
+        {
+          error: eventsError.message,
+        },
+      );
+
+      return NextResponse.json(
+        {
+          error: "Unable to load passage-bank audit activity.",
+          details: eventsError.message,
+        },
+        {
+          status: 500,
+        },
+      );
+    }
+
+    /*
+     * ------------------------------------------------------------
+     * 5. Normalize collections
+     * ------------------------------------------------------------
+     */
+
+    const draftRows = Array.isArray(drafts)
+      ? drafts
+      : [];
+
+    const publishedRows = Array.isArray(
+      publishedPackages,
+    )
+      ? publishedPackages
+      : [];
+
+    const auditRows = Array.isArray(recentEvents)
+      ? recentEvents
+      : [];
+
+    /*
+     * ------------------------------------------------------------
+     * 6. Build draft summary metrics
+     * ------------------------------------------------------------
+     */
+
+  const archivedDrafts = draftRows.filter(
+  (draft) => draft.status === "archived",
+);
+
+const currentDrafts = draftRows.filter(
+  (draft) => draft.status !== "archived",
+);
+
+const draftCountsByStatus = draftRows.reduce(
+  (counts, draft) => {
+    const status =
+      normalizeOptionalString(draft.status) ||
+      "draft";
+
+    counts[status] =
+      (counts[status] || 0) + 1;
+
+    return counts;
+  },
+  {},
+);
+
+const needsReview = currentDrafts.filter(
+  (draft) => draft.status === "in_review",
+);
+
+const approvedNotPublished =
+  currentDrafts.filter(
+    (draft) =>
+      draft.status === "approved" &&
+      !draft.published_passage_bank_id,
+  );
+
+const revisionsAwaitingReview =
+  currentDrafts.filter(
+    (draft) =>
+      Boolean(
+        draft.revision_of_passage_bank_id,
+      ) &&
+      ["draft", "in_review"].includes(
+        draft.status,
+      ),
+  );
+
+const returnedForChanges =
+  currentDrafts.filter(
+    (draft) => draft.status === "rejected",
+  );
+
+    /*
+     * ------------------------------------------------------------
+     * 7. Build published summary metrics
+     * ------------------------------------------------------------
+     */
+
+    const activePublished =
+      publishedRows.filter(
+        (row) => row.is_active === true,
+      );
+
+    const inactivePublished =
+      publishedRows.filter(
+        (row) => row.is_active !== true,
+      );
+
+    const supersededPublished =
+     publishedRows.filter(
+      (row) =>
+        Boolean(row.superseded_at),
+    );
+
+    const currentPublished =
+      publishedRows.filter(
+        (row) =>
+          !row.superseded_at,
+      );
+
+    /*
+     * ------------------------------------------------------------
+     * 8. Return overview payload
+     * ------------------------------------------------------------
+     */
+
+    return NextResponse.json({
+      success: true,
+
+      summary: {
+          drafts: {
+          total: draftRows.length,
+          current: currentDrafts.length,
+          archived: archivedDrafts.length,
+          by_status: draftCountsByStatus,
+          needs_review: needsReview.length,
+          approved_not_published:
+            approvedNotPublished.length,
+          revisions_awaiting_review:
+            revisionsAwaitingReview.length,
+          returned_for_changes:
+            returnedForChanges.length,
+        },
+
+        published: {
+          total: publishedRows.length,
+          active: activePublished.length,
+          inactive: inactivePublished.length,
+          current: currentPublished.length,
+          superseded:
+            supersededPublished.length,
+        },
+      },
+
+      review_queue: {
+        needs_review: needsReview,
+        returned_for_changes:
+          returnedForChanges,
+        approved_not_published:
+          approvedNotPublished,
+        revisions_awaiting_review:
+          revisionsAwaitingReview,
+      },
+
+      recent_activity: auditRows,
+    });
+  } catch (error) {
+    console.error(
+      "[admin/passage-bank] Unexpected overview route error",
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : String(error),
+      },
+    );
+
+    return NextResponse.json(
+      {
+        error:
+          "Unable to load passage-bank admin overview.",
+      },
+      {
+        status: 500,
+      },
+    );
+  }
+}
+
 export async function POST(request) {
   try {
     /*
@@ -383,40 +658,22 @@ export async function POST(request) {
      * ------------------------------------------------------------
      */
 
-    const supabase = await createClient();
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        {
-          error: "Unauthorized.",
-        },
-        {
-          status: 401,
-        },
-      );
-    }
-
-    if (!isAuthorizedAdmin(user)) {
-      return NextResponse.json(
-        {
-          error: "Administrator access is required.",
-        },
-        {
-          status: 403,
-        },
-      );
-    }
 
     /*
      * ------------------------------------------------------------
      * 2. Parse the request body
      * ------------------------------------------------------------
      */
+
+    const adminAuth =
+    await requirePassageBankAdmin();
+
+    if (!adminAuth.success) {
+      return adminAuth.response;
+    }
+
+    const { user } = adminAuth;
 
     let body;
 

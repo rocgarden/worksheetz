@@ -19,7 +19,7 @@
 
 import { NextResponse } from "next/server";
 
-import { createClient } from "@/libs/supabase/server";
+import { requirePassageBankAdmin } from "@/libs/v2/passageBank/requirePassageBankAdmin";
 import { createV2ServiceClient } from "@/libs/supabase/server-v2";
 
 export const dynamic = "force-dynamic";
@@ -51,46 +51,6 @@ function normalizeOptionalString(value) {
 }
 
 /**
- * Supports either:
- *
- * ADMIN_EMAIL=rgarcia646@gmail.com
- *
- * or:
- *
- * ADMIN_EMAILS=rgarcia646@gmail.com,admin2@example.com
- *
- * @returns {Set<string>}
- */
-function getAdminEmails() {
-  const values = [
-    process.env.ADMIN_EMAIL || "",
-    process.env.ADMIN_EMAILS || "",
-  ];
-
-  return new Set(
-    values
-      .join(",")
-      .split(",")
-      .map((email) => email.trim().toLowerCase())
-      .filter(Boolean),
-  );
-}
-
-/**
- * @param {object|null} user
- * @returns {boolean}
- */
-function isAuthorizedAdmin(user) {
-  const email = normalizeOptionalString(user?.email)?.toLowerCase();
-
-  if (!email) {
-    return false;
-  }
-
-  return getAdminEmails().has(email);
-}
-
-/**
  * @param {string|null} value
  * @param {number} fallback
  * @returns {number}
@@ -116,35 +76,13 @@ export async function GET(request) {
      * ----------------------------------------------------------
      */
 
-    const supabase = await createClient();
+const adminAuth =
+  await requirePassageBankAdmin();
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        {
-          error: "Unauthorized.",
-        },
-        {
-          status: 401,
-        },
-      );
-    }
-
-    if (!isAuthorizedAdmin(user)) {
-      return NextResponse.json(
-        {
-          error: "Forbidden.",
-        },
-        {
-          status: 403,
-        },
-      );
-    }
-
+if (!adminAuth.success) {
+  return adminAuth.response;
+}
+const { user } = adminAuth;
     /*
      * ----------------------------------------------------------
      * 2. Parse query parameters
