@@ -4,7 +4,6 @@ import Image from "next/image";
 import config from "@/config";
 import logo from "@/app/icon1.png";
 
-
 const Footer = () => {
   return (
     <footer className="border-t border-purple-800/30  bg-purple-950 text-white">
@@ -17,7 +16,7 @@ const Footer = () => {
             >
               <Image
                 src={logo}
-                alt="TEKS Portfolio"
+                alt="Teks Portfolio"
                 priority
                 width={46}
                 height={46}
@@ -26,7 +25,7 @@ const Footer = () => {
 
               <div className="text-left">
                 <div className="font-black text-xl tracking-tight">
-                  TEKS Portfolio
+                  Teks Portfolio
                 </div>
 
                 <div className="text-xs text-purple-200">
@@ -36,10 +35,9 @@ const Footer = () => {
             </Link>
 
             <p className="mt-3 text-sm text-white">{config.appDescription}</p>
-           <p className="mt-6 text-sm text-purple-200">
-              © {new Date().getFullYear()} TEKS Portfolio
+            <p className="mt-6 text-sm text-purple-200">
+              © {new Date().getFullYear()} Teks Portfolio
             </p>
-
           </div>
           <div className="flex-grow flex flex-wrap justify-center -mb-10 md:mt-0 mt-10 text-center">
             <div className="lg:w-1/3 md:w-1/2 w-full px-4 ">
@@ -96,6 +94,9 @@ const Footer = () => {
                 </Link>
                 <Link href="/refund-policy" className="link link-hover">
                   Refund Policy
+                </Link>
+                <Link href="/schools" className="link link-hover">
+                  For Schools
                 </Link>
               </div>
             </div>

@@ -3,14 +3,14 @@ import { getSEOTags } from "@/libs/seo";
 import config from "@/config";
 
 export const metadata = getSEOTags({
-  title: `Privacy Policy | ${config.appName}`,
-  canonicalUrlRelative: "/privacy-policy",
+  title: `Refund Policy | ${config.appName}`,
+  canonicalUrlRelative: "/refund-policy",
 });
 
 const RefundPolicy = () => {
   return (
-    <main className="max-w-xl mx-auto">
-      <div className="p-5">
+    <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="py-10">
         <Link href="/" className="btn btn-ghost">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -26,12 +26,12 @@ const RefundPolicy = () => {
           </svg>{" "}
           Back
         </Link>
-        <h1 className="text-3xl font-extrabold pb-6">
+        <h1 className="text-3xl font-extrabold pt-6 pb-8">
           Refund Policy for {config.appName}
         </h1>
 
         <pre
-          className="leading-relaxed whitespace-pre-wrap"
+          className="leading-relaxed whitespace-pre-wrap text-base"
           style={{ fontFamily: "sans-serif" }}
         >
           {`
@@ -40,7 +40,7 @@ const RefundPolicy = () => {
 
 Effective Date: October 20, 2025
 
-We want you to feel confident using Teks Portfolio. If you’re not satisfied with your purchase, we offer a full refund within 7 days of your initial subscription payment — no questions asked.
+We want you to feel confident using Teks Portfolio. If you're not satisfied with your purchase, we offer a full refund within 7 days of your initial subscription payment — no questions asked.
 
 After 7 days, refunds are only granted in the following situations:
 
@@ -56,13 +56,13 @@ Refunds are not provided for:
 
 Failure to cancel before renewal
 
-Change of mind after the 7‑day window
+Change of mind after the 7‐day window
 
 Lack of usage
 
-Dissatisfaction with AI‑generated content (results may vary and should be reviewed for accuracy)
+Dissatisfaction with generated content (results may vary and should be reviewed for accuracy)
 
-To request a refund, contact us at hello@teksportfolio.com and we’ll respond within 24–48 hours.
+To request a refund, contact us at hello@teksportfolio.com and we'll respond within 24–48 hours.
 
 Last updated: October 20, 2025`}
         </pre>

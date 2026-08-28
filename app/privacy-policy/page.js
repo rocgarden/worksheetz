@@ -2,29 +2,6 @@ import Link from "next/link";
 import { getSEOTags } from "@/libs/seo";
 import config from "@/config";
 
-// CHATGPT PROMPT TO GENERATE YOUR PRIVACY POLICY — replace with your own data 👇
-
-// 1. Go to https://chat.openai.com/
-// 2. Copy paste bellow
-// 3. Replace the data with your own (if needed)
-// 4. Paste the answer from ChatGPT directly in the <pre> tag below
-
-// You are an excellent lawyer.
-
-// I need your help to write a simple privacy policy for my website. Here is some context:
-// - Website: https://shipfa.st
-// - Name: ShipFast
-// - Description: A JavaScript code boilerplate to help entrepreneurs launch their startups faster
-// - User data collected: name, email and payment information
-// - Non-personal data collection: web cookies
-// - Purpose of Data Collection: Order processing
-// - Data sharing: we do not share the data with any other parties
-// - Children's Privacy: we do not collect any data from children
-// - Updates to the Privacy Policy: users will be updated by email
-// - Contact information: marc@shipfa.st
-
-// Please write a simple privacy policy for my site. Add the current date.  Do not add or explain your reasoning. Answer:
-
 export const metadata = getSEOTags({
   title: `Privacy Policy | ${config.appName}`,
   canonicalUrlRelative: "/privacy-policy",
@@ -63,22 +40,24 @@ const PrivacyPolicy = () => {
 
 Effective Date: October 20, 2025
 
-Your privacy matters to us. This Privacy Policy explains what data we collect, how we use it, and how it’s protected.
+Your privacy matters to us. This Privacy Policy explains what data we collect, how we use it, and how it's protected.
 
 Definitions
-- “Service” refers to Teks Portfolio and all related features.
-- “Personal Data” means information that identifies an individual, such as name or email.
-- “Usage Data” means anonymized information collected automatically, such as device type or browser.
-- “You” refers to the teacher or adult user accessing the Service.
+- "Service" refers to Teks Portfolio and all related features, including worksheet generation and adaptive assessment & portfolio tracking.
+- "Personal Data" means information that identifies an individual, such as name or email.
+- "Usage Data" means information collected automatically, such as device type, browser, or activity on the Service.
+- "You" refers to the teacher or adult user accessing the Service.
+- "Student" refers to a minor who participates in an adaptive assessment session at a teacher's direction. Students do not create accounts and are not "Users" of the Service.
 
 
 1. Information We Collect
 
-When you use Teks Portfolio, we may collect:
+Teacher / Account Information
+When you create an account, we may collect:
 
 Account Information: name, email address, date joined.
 
-Usage Data: AI generations, PDF downloads, and session activity.
+Usage Data: generations, PDF downloads, and session activity.
 
 Payment Data: handled by Stripe (we do not store credit card details).
 
@@ -86,15 +65,26 @@ Analytics Data: from Google Analytics and hosting tools (e.g., Vercel).
 
 We may also record general device and browser information for site performance.
 
+Student Information (Adaptive Assessment & Portfolio only)
+If a teacher uses the adaptive assessment and portfolio features, a limited amount of information about students in that teacher's classroom is collected:
+
+- Student first name, entered by the student when joining a session with a teacher-issued join code.
+- A student code, generated automatically by the platform and used in place of the student's name wherever possible in reports and internal records.
+- Assessment responses and performance data (such as which questions were answered correctly and time spent), used to track progress toward Texas standards.
+
+Students do not create accounts, do not set a password, and are not asked for an email address, date of birth, or any other contact or identifying information. Only teachers can view, manage, or delete student records for their own classroom.
+
 2. How We Use Your Information
 
 We use collected information to:
 
 Provide and maintain the Service.
 
-Track user activity and usage limits.
+Track teacher account activity and usage limits.
 
-Generate and deliver requested PDFs or AI content.
+Generate and deliver requested PDFs or adaptive content.
+
+Run adaptive assessment sessions and calculate portfolio/progress results for the teachers who assigned them.
 
 Manage subscriptions, invoices, and billing through Stripe or Zenvoice.
 
@@ -123,11 +113,11 @@ Byedispute – fraud prevention
 
 Hosting and database providers – infrastructure support
 
-We do not sell or trade your personal data.
+We do not sell or trade personal data, including student data. Student information collected through the adaptive assessment feature is shared only with the hosting and database providers necessary to operate the Service, and is not sent to advertising, analytics, or marketing services.
 
 5. Data Retention
 
-We retain your data for as long as your account is active or as needed to:
+We retain teacher account data for as long as the account is active or as needed to:
 
 Provide the Service
 
@@ -137,10 +127,13 @@ Resolve disputes
 
 You can request deletion of your account and associated data at any time by contacting us.
 
+Student data (first name, student code, and assessment results) is retained only as long as the associated teacher account and classroom roster remain active. A teacher can remove an individual student from their roster at any time, which deletes that student's stored records. Deleting a teacher account also deletes all student data associated with that teacher's classrooms.
+
 6. Cookies and Tracking
 
 We use cookies and analytics tools to track anonymous usage and improve the site experience.
 You can disable cookies in your browser, but some features may not function properly.
+Cookies and analytics tools are used on teacher-facing pages only and are not used during student assessment sessions.
 
 7. Your Rights
 
@@ -154,10 +147,10 @@ Withdraw consent for marketing (if any)
 
 Contact us directly for assistance.
 
-8. Children’s Privacy
+8. Age Requirement for Account Holders
 
-Our Service is not intended for children under 18.
-We do not knowingly collect personal data from minors.
+Our Service is intended for use by adult educators. Teacher accounts are not available to individuals under 18.
+We do not knowingly collect personal data from children through the account creation or worksheet generation features of the Service.
 
 9. Updates
 
@@ -180,6 +173,8 @@ These permissions correspond to the following Google OAuth scopes:
 - https://www.googleapis.com/auth/userinfo.email
 - https://www.googleapis.com/auth/userinfo.profile
 
+Google Sign-In is available to teachers only. Students never use Google Sign-In and do not connect a Google account to the Service.
+
 Data Usage
 We use this Google user data solely to:
 - Authenticate you and allow secure sign-in to your account
@@ -199,30 +194,41 @@ Data Sharing
 Data Deletion
 You may request deletion of your account and associated data at any time by contacting us at hello@teksportfolio.com. Upon deletion, any stored Google account information will be permanently removed.
 
-11. Children’s Internet Protection Act (CIPA)
-Teks Portfolio complies with the Children’s Internet Protection Act by ensuring that no harmful or inappropriate content is accessible through the platform. 
-Teks Portfolio does not provide access to social networking, messaging, or user-generated content. The service is intended solely for educators, and no student accounts or student data are collected, stored, or processed.
+11. Children's Internet Protection Act (CIPA)
+Teks Portfolio complies with the Children's Internet Protection Act by ensuring that no harmful or inappropriate content is accessible through the platform.
+Teks Portfolio does not provide access to social networking, messaging, or user-generated content. The worksheet generation feature is intended solely for educators, and no student accounts or student data are collected through it. The adaptive assessment feature collects only the minimal student information described in Section 1 (first name, an auto-generated student code, and assessment results), all under the direction and control of the student's teacher.
 
-12.FERPA Alignment and No Student Data
-Teks Portfolio is designed for teacher use only. Students do not create accounts and do not interact with the Service. We do not collect, store, or process any student personal information, student identifiers, student work, or student behavioral data. Because no student data is collected, Teks Portfolio is inherently low‑risk and aligned with FERPA expectations.
+12. FERPA Alignment
+Teks Portfolio is primarily a teacher-facing tool. Students do not create accounts or log in with credentials at any point.
 
-13.Children’s Online Privacy Protection Act (COPPA)
-Teks Portfolio is not directed to children under the age of 13. We do not knowingly collect personal information from children. If we become aware that a child has provided personal information, we will delete it promptly.
+For the worksheet generation feature, we do not collect, store, or process any student personal information, student identifiers, student work, or student behavioral data.
 
-14.Legal Basis for Processing
+For the adaptive assessment and portfolio feature, a limited amount of student information (first name, an auto-generated student code, and assessment results) is collected at the direction of the student's teacher for educational purposes, consistent with the "school official" exception under FERPA. This data is accessible only to the teacher who created the classroom, is not used for any purpose outside instruction and progress tracking, and is never sold, shared for advertising, or disclosed to third parties beyond the infrastructure providers described in Section 4.
+
+13. Children's Online Privacy Protection Act (COPPA)
+Because middle school students may be under the age of 13, the adaptive assessment feature is designed to collect the minimum information necessary — a first name and an auto-generated student code — and only when a teacher has set up a classroom and issued a join code for that purpose. We do not collect student email addresses, dates of birth, or other contact information.
+
+We rely on the school/teacher's authorization to use the Service for a legitimate educational purpose, consistent with FTC guidance permitting schools and teachers to consent on behalf of parents when a service is used solely for education and not for commercial purposes such as advertising or marketing. Student information collected is used only to run the assessment and generate progress results for the teacher, and is never used for advertising or behavioral profiling.
+
+Teachers and schools may contact us at hello@teksportfolio.com to review, request deletion of, or ask questions about student data collected for their classroom.
+
+14. Legal Basis for Processing
 We process personal data based on:
 - Your consent when creating an account
+- A teacher's authorization to collect limited student data for educational purposes
 - The need to provide and maintain the Service
 - Compliance with legal obligations
 - Legitimate interests such as improving performance and preventing fraud
 
-15.Your Data Protection Rights
+15. Your Data Protection Rights
 You have the right to:
 - Access your personal data
 - Request correction of inaccurate data
 - Request deletion of your data
 - Request restriction of processing
 - Withdraw consent at any time
+
+Teachers may exercise these rights on behalf of students in their classroom by contacting us directly.
 
 16. Data Transfers
 Your information may be processed and stored in the United States. By using the Service, you consent to the transfer of your information to U.S.-based service providers that follow industry-standard protections.
