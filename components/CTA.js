@@ -1,5 +1,6 @@
 import config from "@/config";
 import ButtonSignin from "./ButtonSignin";
+import Link from "next/link";
 
 const CTA = ({ isAuthenticated = false }) => {
   return (
@@ -10,9 +11,8 @@ const CTA = ({ isAuthenticated = false }) => {
         {" "}
        
     <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
-      Create targeted practice in{" "}
-                <span className="text-primary"> minutes</span>,
-      not hours.
+      See every student&apos;s growth,{" "}
+                <span className="text-primary">automatically</span>.
     </h2>
 {" "}
         {/* <div className="flex justify-center mb-6">
@@ -20,8 +20,8 @@ const CTA = ({ isAuthenticated = false }) => {
           <span className="text-4xl">⏱️</span>{" "}
         </div> */}
             <p className="mt-6 text-lg text-base-content/70 max-w-2xl mx-auto">
-      Upload results, identify skill gaps, group students by need,
-      and generate TEKS-aligned practice instantly.
+      Adaptive sessions surface skill gaps and group students for you —
+      then generate TEKS-aligned practice in minutes, not hours.
     </p>
 
         <div className="mt-8">
@@ -33,7 +33,12 @@ const CTA = ({ isAuthenticated = false }) => {
               text="Start Free"
             />
           ) : (
-            <p className="text-sm text-base-content/70 text-center"></p>
+            <Link
+              href="/dashboard"
+              className="btn btn-primary btn-lg"
+            >
+              Go to Dashboard
+            </Link>
           )}
         </div>
       </div>{" "}

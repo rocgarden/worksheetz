@@ -40,7 +40,7 @@ export default function InteractivePracticeBeta({ isAuthenticated = false }) {
   const highlights = [
     {
       label: "Practice Type",
-      value: "ELA Reading Practice",
+      value: "ELA Reading, Grades 6-8",
     },
     {
       label: "Standards Focus",
@@ -52,7 +52,7 @@ export default function InteractivePracticeBeta({ isAuthenticated = false }) {
     },
     {
       label: "Teacher Tools",
-      value: "Classroom dashboard included",
+      value: "Classroom dashboard + portfolio view",
     },
   ];
 
@@ -67,18 +67,19 @@ export default function InteractivePracticeBeta({ isAuthenticated = false }) {
         <div className="relative z-10 grid lg:grid-cols-2 gap-10 items-center p-8 md:p-12">
           <div className="text-center lg:text-left">
             <span className="bg-accent text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
-              Free Beta
+              Free Beta · Grades 6-8
             </span>
 
             <h2 className="text-3xl md:text-4xl font-black mt-4 mb-4">
-              Assign TEKS-aligned interactive reading practice
+              Assign TEKS-aligned adaptive reading practice
             </h2>
 
             <p className="text-purple-100 text-lg leading-relaxed mb-6">
               Students complete online STAAR-style reading practice that adapts
               from DOK 1 recall to DOK 3 strategic thinking based on their
-              responses. Teachers can manage classroom activity from the
-              dashboard. Free during beta — no credit card needed.
+              responses. Every session updates the student's portfolio, so
+              teachers can see growth and skill gaps from one dashboard. Free
+              during beta — no credit card needed.
             </p>
 
             <div className="flex flex-wrap justify-center lg:justify-start gap-3 mb-7">
@@ -105,7 +106,7 @@ export default function InteractivePracticeBeta({ isAuthenticated = false }) {
               <ButtonSignin
                 redirectTo="/classroom"
                 extraStyle="btn bg-yellow-400 hover:bg-yellow-300 text-purple-900 border-none rounded-full btn-wide"
-                text="Try Interactive Practice"
+                text="Try Adaptive Practice"
               />
             )}
           </div>

@@ -101,7 +101,7 @@ const Hero = ({ isAuthenticated = false }) => {
             TEKS-Aligned
           </span>
           <span className="bg-accent text-white text-xs px-3 py-1 rounded-full font-bold">
-            Interactive Practice
+            Adaptive Assessments
           </span>
           <span className="bg-primary text-white text-xs px-3 py-1 rounded-full font-bold">
             Teacher Dashboard
@@ -109,12 +109,13 @@ const Hero = ({ isAuthenticated = false }) => {
         </div>
 
         <h1 className="font-extrabold text-4xl lg:text-6xl tracking-tight">
-          Build TEKS-aligned practice and track student growth
+          See every student&apos;s growth with adaptive, TEKS-aligned assessments
         </h1>
 
         <p className="text-lg opacity-80 leading-relaxed max-w-xl">
-          Create interactive assignments, generate worksheets, and support
-          student growth from BOY to EOY.
+          Track progress from BOY to EOY with adaptive practice sessions,
+          instantly see where each student needs support, and generate
+          worksheets to close the gap — all in one place.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 mt-2">
@@ -123,7 +124,7 @@ const Hero = ({ isAuthenticated = false }) => {
               <ButtonSignin
                 redirectTo="/classroom"
                 extraStyle="btn-primary rounded-full btn-wide"
-                text="Try Interactive Practice"
+                text="Try Adaptive Practice"
               />
 
               <ButtonSignin
@@ -152,15 +153,15 @@ const Hero = ({ isAuthenticated = false }) => {
         </div>
 
         <p className="text-sm text-base-content/60">
-          Free interactive beta • No credit card required • Worksheets available
-          with free and pro plans
+          Free beta for Reading/ELA, Grades 6-8 • No credit card required •
+          Worksheets included with every plan
         </p>
       </div>
 
       <div className="lg:w-full">
        <Image
         src="/images/hero1.webp"
-        alt="TEKS-aligned student practice and teacher dashboard preview"
+        alt="Adaptive, TEKS-aligned student practice and teacher dashboard preview"
         className="w-full rounded-2xl shadow-xl"
         priority
         width={1200}

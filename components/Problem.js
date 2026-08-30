@@ -95,24 +95,24 @@ md:py-20
           <div className="relative z-10 flex flex-col md:flex-row justify-center items-center md:items-start gap-10 md:gap-14">
             <Step
               icon={BarChart3}
-              title="Analyze Results"
-              subtitle="See which TEKS skills need support"
+              title="Skill Gaps, Surfaced Automatically"
+              subtitle="Every session updates each student's TEKS skill profile — no manual sorting"
             />
 
             <div className="hidden md:block w-16 h-px bg-white/30 mt-10" />
 
             <Step
               icon={Users}
-              title="Group Students"
-              subtitle="Organize remediation by skill needs"
+              title="Students Grouped for You"
+              subtitle="See who needs support on the same standard, instantly"
             />
 
             <div className="hidden md:block w-16 h-px bg-white/30 mt-10" />
 
             <Step
               icon={ClipboardCheck}
-              title="Assign Practice"
-              subtitle="Deliver targeted intervention"
+              title="Practice Assigned in a Click"
+              subtitle="Targeted intervention generated and ready to assign"
             />
           </div>
         </div>

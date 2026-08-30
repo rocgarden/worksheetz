@@ -2,7 +2,6 @@
 import config from "@/config";
 import ButtonCheckout from "./ButtonCheckout";
 import ButtonSignin from "@/components/ButtonSignin";
-import { pl } from "zod/v4/locales";
 
 // <Pricing/> displays the pricing plans for your app
 // It's your Stripe config in config.js.stripe.plans[] that will be used to display the plans
@@ -15,7 +14,7 @@ const Pricing = ({ isAuthenticated = false, hasActiveSubscription }) => {
         <div className="flex flex-col text-center w-full mb-20">
           <p className="font-medium text-primary mb-8">Pricing</p>
           <h2 className="font-bold text-3xl lg:text-5xl tracking-tight">
-            Save hours of work create your own quizzes faster!
+            Track student growth and save hours on practice materials
           </h2>
         </div>
 
@@ -102,7 +101,7 @@ const Pricing = ({ isAuthenticated = false, hasActiveSubscription }) => {
                       />
                     ) : hasActiveSubscription ? (
                       <p className="text-sm text-base-content/70 text-center">
-                        You’re already subscribed — visit your dashboard.
+                        You're already subscribed — visit your dashboard.
                       </p>
                     ) : (
                       isAuthenticated &&

@@ -12,18 +12,18 @@ const faqList = [
       <p>
         It helps teachers create TEKS-aligned practice, remediation materials,
         and printable worksheet resources. The platform currently supports
-        interactive reading practice, teacher classroom tools, and AI-generated
-        worksheets.
+        adaptive reading practice, teacher classroom tools, and worksheet
+        generation.
       </p>
     ),
   },
   {
-    question: "Is interactive practice free?",
+    question: "Is adaptive practice free?",
     answer: (
       <p>
-        Yes. Interactive student practice is currently free during beta. Teachers
-        can use it to assign online reading practice and support TEKS-based skill
-        review.
+        Yes. Adaptive practice for Reading/ELA, Grades 6-8 is currently free
+        during beta. Teachers can use it to assign online reading practice and
+        support TEKS-based skill review.
       </p>
     ),
   },
@@ -75,9 +75,16 @@ const faqList = [
     question: "Is student data required?",
     answer: (
       <p>
-        No student data is required to generate worksheets. Interactive practice
-        and classroom tools should only collect the information needed to support
-        teacher-managed practice and progress tracking.
+        Worksheet generation collects no student data at all — students never
+        interact with that part of the platform. For adaptive assessment
+        sessions, a student enters a teacher-provided join code and their
+        first name only; no account, password, or email is required. Each
+        student is also assigned an auto-generated student code, used in
+        place of their name wherever possible. See our{" "}
+        <a href="/privacy-policy" className="link link-hover text-primary">
+          Privacy Policy
+        </a>{" "}
+        for full details.
       </p>
     ),
   },

@@ -1,11 +1,12 @@
 // app/worksheets/[subject]/[grade]/page.jsx
 
 import Link from 'next/link';
+import config from '@/config';
 
 const subjectData = {
   'reading-comprehension': {
     title: 'Reading Comprehension',
-    description: 'Improve reading skills with AI-generated comprehension passages and questions',
+    description: 'Improve reading skills with adaptive, standards-aligned comprehension passages and questions',
     benefits: [
       'Fiction and non-fiction passages',
       'Aligned to state standards',
@@ -102,7 +103,7 @@ export async function generateMetadata({ params }) {
 
   return {
     title: `${subject.title} Worksheets for ${grade.display} | Teks Portfolio`,
-    description: `Free AI-powered ${subject.title.toLowerCase()} worksheets for ${grade.display}. ${subject.description}. Generate unlimited practice materials in seconds.`,
+    description: `${subject.title} worksheets for ${grade.display}. ${subject.description}. Generate standards-aligned practice materials in seconds.`,
   };
 }
 
@@ -131,7 +132,7 @@ export default function SubjectGradePage({ params }) {
             {subject.title} Worksheets for {grade.display}
           </h1>
           <p className="text-xl mb-8">
-            {subject.description}. Generate unlimited worksheets in seconds with AI.
+            {subject.description}. Generate standards-aligned worksheets in seconds.
           </p>
           <div className="flex gap-4">
             <Link
@@ -174,7 +175,7 @@ export default function SubjectGradePage({ params }) {
           <div className="grid md:grid-cols-3 gap-8">
             {[
               { step: 1, title: 'Choose Your Concept', desc: 'Select the specific skill or topic you want to practice' },
-              { step: 2, title: 'AI Generates Content', desc: 'Our AI creates a customized worksheet in seconds' },
+              { step: 2, title: 'We Generate Your Content', desc: 'A customized worksheet is created in seconds, matched to grade level and standard' },
               { step: 3, title: 'Download & Print', desc: 'Get your PDF instantly, ready for your classroom' },
             ].map(({ step, title, desc }) => (
               <div key={step} className="text-center">
@@ -231,7 +232,7 @@ export default function SubjectGradePage({ params }) {
           />
           <FAQItem
             question="How many worksheets can I generate?"
-            answer="Free accounts get one sample download. Pro accounts ($5/month) get additional worksheet generations and downloads."
+            answer={`Free accounts get a sample download. ${config.appName} plans include additional worksheet generations and downloads — see our pricing page for current plan details.`}
           />
         </div>
       </section>
