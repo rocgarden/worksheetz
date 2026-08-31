@@ -13,10 +13,12 @@
 // - call OpenAI
 // - approve or activate content
 
+import { validatePassageQuestionBankRows } from "./validatePassageQuestionBankRow";
+import { calculateStemSimilarity } from "@/libs/questionStemSimilarity";
 import {
-  validatePassageQuestionBankRows,
-} from "./validatePassageQuestionBankRow";
-
+  getElaPassageBankTeksCluster,
+  isAllowedElaPackageQuestionTeks,
+} from "@/libs/constants/elaPassageBankTeksClusters";
 const QUESTION_TYPE_ALIASES = Object.freeze({
   multiple_choice: "multiple_choice",
   multi_select: "multi_select",
@@ -47,11 +49,237 @@ const QUESTION_TYPE_ALIASES = Object.freeze({
  * @returns {boolean}
  */
 function isPlainObject(value) {
-  return (
-    value !== null &&
-    typeof value === "object" &&
-    !Array.isArray(value)
-  );
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+/**
+ * Validates optional structured stimulus metadata.
+ *
+ * Current supported top-level shape:
+ * {
+ *   version: number,
+ *   blocks: Array<object>
+ * }
+ *
+ * stimulus_json remains optional so legacy passages continue
+ * to validate without structured stimulus data.
+ *
+ * @param {unknown} stimulusJson
+ * @param {Array<object>} issues
+ */
+function validateStimulusJson(stimulusJson, issues) {
+  if (stimulusJson === undefined || stimulusJson === null) {
+    return;
+  }
+
+  if (!isPlainObject(stimulusJson)) {
+    addIssue(
+      issues,
+      "passage.stimulus_json",
+      "passage.stimulus_json must be a JSON object when provided.",
+      "invalid_stimulus_json",
+    );
+
+    return;
+  }
+
+  const version = Number(stimulusJson.version ?? 1);
+
+  if (!Number.isInteger(version) || version < 1) {
+    addIssue(
+      issues,
+      "passage.stimulus_json.version",
+      "stimulus_json.version must be a positive integer.",
+      "invalid_stimulus_version",
+    );
+  }
+
+  if (!Array.isArray(stimulusJson.blocks)) {
+    addIssue(
+      issues,
+      "passage.stimulus_json.blocks",
+      "stimulus_json.blocks must be an array.",
+      "invalid_stimulus_blocks",
+    );
+
+    return;
+  }
+
+  if (stimulusJson.blocks.length === 0) {
+    addIssue(
+      issues,
+      "passage.stimulus_json.blocks",
+      "stimulus_json.blocks should contain at least one stimulus block.",
+      "empty_stimulus_blocks",
+      "warning",
+    );
+
+    return;
+  }
+
+  const seenBlockIds = new Set();
+
+  stimulusJson.blocks.forEach((block, index) => {
+    const blockPath = `passage.stimulus_json.blocks[${index}]`;
+
+    if (!isPlainObject(block)) {
+      addIssue(
+        issues,
+        blockPath,
+        "Each stimulus block must be a JSON object.",
+        "invalid_stimulus_block",
+      );
+
+      return;
+    }
+
+    const id = normalizeOptionalString(block.id);
+    const type = normalizeOptionalString(block.type)?.toLowerCase();
+
+    if (!id) {
+      addIssue(
+        issues,
+        `${blockPath}.id`,
+        "Each stimulus block must include an id.",
+        "required",
+      );
+    } else if (seenBlockIds.has(id)) {
+      addIssue(
+        issues,
+        `${blockPath}.id`,
+        `Duplicate stimulus block id "${id}".`,
+        "duplicate_stimulus_block_id",
+      );
+    } else {
+      seenBlockIds.add(id);
+    }
+
+    if (!type) {
+      addIssue(
+        issues,
+        `${blockPath}.type`,
+        "Each stimulus block must include a type.",
+        "required",
+      );
+
+      return;
+    }
+
+    const supportedTypes = new Set([
+      "section",
+      "diagram",
+      "sidebar",
+      "caption",
+      "image",
+      "table",
+      "chart",
+      "map",
+      "timeline",
+      "note",
+    ]);
+
+    if (!supportedTypes.has(type)) {
+      addIssue(
+        issues,
+        `${blockPath}.type`,
+        `Unsupported stimulus block type "${type}".`,
+        "unsupported_stimulus_block_type",
+        "warning",
+      );
+    }
+
+    if (type === "section") {
+      if (!normalizeOptionalString(block.heading)) {
+        addIssue(
+          issues,
+          `${blockPath}.heading`,
+          "Section blocks should include a heading.",
+          "recommended_metadata_missing",
+          "warning",
+        );
+      }
+
+      if (!normalizeOptionalString(block.text)) {
+        addIssue(
+          issues,
+          `${blockPath}.text`,
+          "Section blocks must include text.",
+          "required",
+        );
+      }
+    }
+
+    if (type === "diagram") {
+      if (!normalizeOptionalString(block.title)) {
+        addIssue(
+          issues,
+          `${blockPath}.title`,
+          "Diagram blocks should include a title.",
+          "recommended_metadata_missing",
+          "warning",
+        );
+      }
+
+      if (
+        block.labels !== undefined &&
+        !Array.isArray(block.labels)
+      ) {
+        addIssue(
+          issues,
+          `${blockPath}.labels`,
+          "Diagram labels must be an array when provided.",
+          "invalid_diagram_labels",
+        );
+      }
+
+      if (
+        Array.isArray(block.labels) &&
+        block.labels.length === 0
+      ) {
+        addIssue(
+          issues,
+          `${blockPath}.labels`,
+          "Diagram blocks should include at least one label.",
+          "recommended_metadata_missing",
+          "warning",
+        );
+      }
+
+      if (!normalizeOptionalString(block.alt_text)) {
+        addIssue(
+          issues,
+          `${blockPath}.alt_text`,
+          "Diagram blocks should include alt_text for accessible rendering.",
+          "recommended_metadata_missing",
+          "warning",
+        );
+      }
+    }
+
+    if (type === "sidebar") {
+      if (!normalizeOptionalString(block.title)) {
+        addIssue(
+          issues,
+          `${blockPath}.title`,
+          "Sidebar blocks should include a title.",
+          "recommended_metadata_missing",
+          "warning",
+        );
+      }
+
+      if (
+        block.items !== undefined &&
+        !Array.isArray(block.items)
+      ) {
+        addIssue(
+          issues,
+          `${blockPath}.items`,
+          "Sidebar items must be an array when provided.",
+          "invalid_sidebar_items",
+        );
+      }
+    }
+  });
 }
 
 /**
@@ -84,17 +312,13 @@ function normalizeComparableString(value) {
  * @returns {string|null}
  */
 function normalizeQuestionType(value) {
-  const normalized =
-    normalizeOptionalString(value)?.toLowerCase();
+  const normalized = normalizeOptionalString(value)?.toLowerCase();
 
   if (!normalized) {
     return null;
   }
 
-  return (
-    QUESTION_TYPE_ALIASES[normalized] ||
-    normalized
-  );
+  return QUESTION_TYPE_ALIASES[normalized] || normalized;
 }
 
 /**
@@ -126,9 +350,7 @@ function addIssue(
 function normalizeDokLevel(value) {
   const normalized = Number(value);
 
-  return [1, 2, 3].includes(normalized)
-    ? normalized
-    : null;
+  return [1, 2, 3].includes(normalized) ? normalized : null;
 }
 
 /**
@@ -147,9 +369,7 @@ function getPassageText(passage) {
  * @returns {object|null}
  */
 function getQuestionJson(question) {
-  return isPlainObject(question?.question_json)
-    ? question.question_json
-    : null;
+  return isPlainObject(question?.question_json) ? question.question_json : null;
 }
 
 /**
@@ -159,12 +379,8 @@ function getQuestionJson(question) {
 function getStem(questionJson) {
   return (
     normalizeOptionalString(questionJson?.stem) ||
-    normalizeOptionalString(
-      questionJson?.question,
-    ) ||
-    normalizeOptionalString(
-      questionJson?.prompt,
-    )
+    normalizeOptionalString(questionJson?.question) ||
+    normalizeOptionalString(questionJson?.prompt)
   );
 }
 
@@ -174,12 +390,8 @@ function getStem(questionJson) {
  */
 function getQuestionPassage(questionJson) {
   return (
-    normalizeOptionalString(
-      questionJson?.passage,
-    ) ||
-    normalizeOptionalString(
-      questionJson?.stimulus,
-    )
+    normalizeOptionalString(questionJson?.passage) ||
+    normalizeOptionalString(questionJson?.stimulus)
   );
 }
 
@@ -201,9 +413,7 @@ function getCorrectAnswer(questionJson) {
  * @returns {Array<object>}
  */
 function getHotTextTargets(questionJson) {
-  return Array.isArray(
-    questionJson?.hot_text_targets,
-  )
+  return Array.isArray(questionJson?.hot_text_targets)
     ? questionJson.hot_text_targets
     : [];
 }
@@ -212,33 +422,18 @@ function getHotTextTargets(questionJson) {
  * @param {object} questionJson
  * @returns {object|null}
  */
-function getCorrectHotTextTarget(
-  questionJson,
-) {
-  const targets =
-    getHotTextTargets(questionJson);
+function getCorrectHotTextTarget(questionJson) {
+  const targets = getHotTextTargets(questionJson);
 
-  const correctAnswer =
-    getCorrectAnswer(questionJson);
+  const correctAnswer = getCorrectAnswer(questionJson);
 
-  const answerIds = Array.isArray(
-    correctAnswer,
-  )
-    ? correctAnswer
-        .map(normalizeOptionalString)
-        .filter(Boolean)
-    : [
-        normalizeOptionalString(
-          correctAnswer,
-        ),
-      ].filter(Boolean);
+  const answerIds = Array.isArray(correctAnswer)
+    ? correctAnswer.map(normalizeOptionalString).filter(Boolean)
+    : [normalizeOptionalString(correctAnswer)].filter(Boolean);
 
-  const embeddedCorrect =
-    targets.filter(
-      (target) =>
-        isPlainObject(target) &&
-        target.is_correct === true,
-    );
+  const embeddedCorrect = targets.filter(
+    (target) => isPlainObject(target) && target.is_correct === true,
+  );
 
   if (embeddedCorrect.length === 1) {
     return embeddedCorrect[0];
@@ -247,10 +442,7 @@ function getCorrectHotTextTarget(
   if (answerIds.length === 1) {
     return (
       targets.find(
-        (target) =>
-          normalizeOptionalString(
-            target?.id,
-          ) === answerIds[0],
+        (target) => normalizeOptionalString(target?.id) === answerIds[0],
       ) || null
     );
   }
@@ -268,9 +460,7 @@ function getCorrectHotTextTarget(
  * @returns {string|null}
  */
 function normalizeTargetKey(value) {
-  return normalizeOptionalString(
-    value,
-  )?.toLowerCase() ?? null;
+  return normalizeOptionalString(value)?.toLowerCase() ?? null;
 }
 
 /**
@@ -278,29 +468,16 @@ function normalizeTargetKey(value) {
  * @param {string} passageText
  * @returns {boolean}
  */
-function passageContainsScene(
-  targetScene,
-  passageText,
-) {
-  const normalizedTarget =
-    targetScene
-      .trim()
-      .replace(/^scene\s*/i, "");
+function passageContainsScene(targetScene, passageText) {
+  const normalizedTarget = targetScene.trim().replace(/^scene\s*/i, "");
 
   if (!normalizedTarget) {
     return false;
   }
 
-  const escaped =
-    normalizedTarget.replace(
-      /[.*+?^${}()|[\]\\]/g,
-      "\\$&",
-    );
+  const escaped = normalizedTarget.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-  const pattern = new RegExp(
-    `\\bSCENE\\s+${escaped}\\b`,
-    "i",
-  );
+  const pattern = new RegExp(`\\bSCENE\\s+${escaped}\\b`, "i");
 
   return pattern.test(passageText);
 }
@@ -311,10 +488,7 @@ function passageContainsScene(
  * @param {object} passage
  * @param {Array<object>} issues
  */
-function validatePassageMetadata(
-  passage,
-  issues,
-) {
+function validatePassageMetadata(passage, issues) {
   if (!isPlainObject(passage)) {
     addIssue(
       issues,
@@ -335,11 +509,7 @@ function validatePassageMetadata(
   ];
 
   for (const field of requiredStringFields) {
-    if (
-      !normalizeOptionalString(
-        passage[field],
-      )
-    ) {
+    if (!normalizeOptionalString(passage[field])) {
       addIssue(
         issues,
         `passage.${field}`,
@@ -358,9 +528,7 @@ function validatePassageMetadata(
     );
   }
 
-  if (
-    passage.is_active === true
-  ) {
+  if (passage.is_active === true) {
     addIssue(
       issues,
       "passage.is_active",
@@ -369,15 +537,11 @@ function validatePassageMetadata(
     );
   }
 
-  const difficultyLevel = Number(
-    passage.difficulty_level,
-  );
+  const difficultyLevel = Number(passage.difficulty_level);
 
   if (
-    passage.difficulty_level !==
-      undefined &&
-    (!Number.isFinite(difficultyLevel) ||
-      difficultyLevel < 1)
+    passage.difficulty_level !== undefined &&
+    (!Number.isFinite(difficultyLevel) || difficultyLevel < 1)
   ) {
     addIssue(
       issues,
@@ -387,10 +551,7 @@ function validatePassageMetadata(
     );
   }
 
-  if (
-    passage.skill_tags !== undefined &&
-    !Array.isArray(passage.skill_tags)
-  ) {
+  if (passage.skill_tags !== undefined && !Array.isArray(passage.skill_tags)) {
     addIssue(
       issues,
       "passage.skill_tags",
@@ -398,6 +559,10 @@ function validatePassageMetadata(
       "invalid_skill_tags",
     );
   }
+  validateStimulusJson(
+  passage.stimulus_json,
+  issues,
+);
 }
 
 /**
@@ -417,9 +582,9 @@ function validateQuestionAgainstPassage({
   question,
   questionIndex,
   issues,
+  allowQuestionTeksMismatch = false,
 }) {
-  const rowPath =
-    `questions[${questionIndex}]`;
+  const rowPath = `questions[${questionIndex}]`;
 
   if (!isPlainObject(question)) {
     addIssue(
@@ -432,8 +597,7 @@ function validateQuestionAgainstPassage({
     return;
   }
 
-  const questionJson =
-    getQuestionJson(question);
+  const questionJson = getQuestionJson(question);
 
   if (!questionJson) {
     addIssue(
@@ -446,21 +610,11 @@ function validateQuestionAgainstPassage({
     return;
   }
 
-  const passageSubject =
-    normalizeOptionalString(
-      passage.subject,
-    );
+  const passageSubject = normalizeOptionalString(passage.subject);
 
-  const questionSubject =
-    normalizeOptionalString(
-      question.subject,
-    );
+  const questionSubject = normalizeOptionalString(question.subject);
 
-  if (
-    questionSubject &&
-    passageSubject &&
-    questionSubject !== passageSubject
-  ) {
+  if (questionSubject && passageSubject && questionSubject !== passageSubject) {
     addIssue(
       issues,
       `${rowPath}.subject`,
@@ -469,21 +623,15 @@ function validateQuestionAgainstPassage({
     );
   }
 
-  const passageGrade =
-    normalizeOptionalString(
-      String(passage.grade_level ?? ""),
-    );
+  const passageGrade = normalizeOptionalString(
+    String(passage.grade_level ?? ""),
+  );
 
-  const questionGrade =
-    normalizeOptionalString(
-      String(question.grade_level ?? ""),
-    );
+  const questionGrade = normalizeOptionalString(
+    String(question.grade_level ?? ""),
+  );
 
-  if (
-    questionGrade &&
-    passageGrade &&
-    questionGrade !== passageGrade
-  ) {
+  if (questionGrade && passageGrade && questionGrade !== passageGrade) {
     addIssue(
       issues,
       `${rowPath}.grade_level`,
@@ -492,62 +640,110 @@ function validateQuestionAgainstPassage({
     );
   }
 
-  const passageTeks =
-    normalizeOptionalString(
-      passage.teks_standard,
-    );
+  const passageTeks = normalizeOptionalString(passage.teks_standard);
 
-  const rowTeks =
-    normalizeOptionalString(
-      question.teks_standard,
-    );
+  const rowTeks = normalizeOptionalString(question.teks_standard);
 
-  const jsonTeks =
-    normalizeOptionalString(
-      questionJson.teks_standard,
-    );
+  const jsonTeks = normalizeOptionalString(questionJson.teks_standard);
 
-  if (
-    rowTeks &&
-    passageTeks &&
-    rowTeks !== passageTeks
-  ) {
-    addIssue(
-      issues,
-      `${rowPath}.teks_standard`,
-      `Question row TEKS "${rowTeks}" does not match passage TEKS "${passageTeks}".`,
-      "package_teks_mismatch",
-    );
-  }
-
-  if (
-    jsonTeks &&
-    passageTeks &&
-    jsonTeks !== passageTeks
-  ) {
+  /*
+   * The row TEKS and question_json TEKS must always match each other.
+   */
+  if (rowTeks && jsonTeks && rowTeks !== jsonTeks) {
     addIssue(
       issues,
       `${rowPath}.question_json.teks_standard`,
-      `question_json TEKS "${jsonTeks}" does not match passage TEKS "${passageTeks}".`,
-      "package_teks_mismatch",
+      `Question row TEKS "${rowTeks}" does not match question_json TEKS "${jsonTeks}".`,
+      "question_teks_mismatch",
     );
   }
 
-  const rowType =
-    normalizeQuestionType(
-      question.question_type,
-    );
+  /*
+   * ELA packages may contain the primary passage TEKS plus approved
+   * supporting TEKS from the configured passage-bank cluster.
+   */
+  if (passageSubject === "ELA" && passageTeks) {
+    const cluster = getElaPassageBankTeksCluster(passageTeks);
 
-  const jsonType =
-    normalizeQuestionType(
-      questionJson.question_type,
-    );
+    if (!cluster) {
+      addIssue(
+        issues,
+        "passage.teks_standard",
+        `No ELA passage-bank TEKS cluster is configured for primary TEKS "${passageTeks}".`,
+        "unsupported_primary_teks",
+      );
+    }
 
-  if (
-    rowType &&
-    jsonType &&
-    rowType !== jsonType
-  ) {
+    if (
+      rowTeks &&
+      !isAllowedElaPackageQuestionTeks({
+        primaryTeks: passageTeks,
+
+        questionTeks: rowTeks,
+      })
+    ) {
+      addIssue(
+        issues,
+        `${rowPath}.teks_standard`,
+        `Question TEKS "${rowTeks}" is not allowed for primary passage TEKS "${passageTeks}".`,
+        "question_teks_not_in_cluster",
+      );
+    }
+
+    if (
+      jsonTeks &&
+      !isAllowedElaPackageQuestionTeks({
+        primaryTeks: passageTeks,
+
+        questionTeks: jsonTeks,
+      })
+    ) {
+      addIssue(
+        issues,
+        `${rowPath}.question_json.teks_standard`,
+        `question_json TEKS "${jsonTeks}" is not allowed for primary passage TEKS "${passageTeks}".`,
+        "question_teks_not_in_cluster",
+      );
+    }
+  } else {
+    /*
+     * Non-ELA subjects retain the existing exact-match behavior
+     * until subject-specific TEKS clusters are added.
+     */
+   if (!allowQuestionTeksMismatch) {
+      if (
+        rowTeks &&
+        passageTeks &&
+        rowTeks !== passageTeks
+      ) {
+        addIssue(
+          issues,
+          `${rowPath}.teks_standard`,
+          `Question row TEKS "${rowTeks}" does not match passage TEKS "${passageTeks}".`,
+          "package_teks_mismatch",
+        );
+      }
+
+      if (
+        jsonTeks &&
+        passageTeks &&
+        jsonTeks !== passageTeks
+      ) {
+        addIssue(
+          issues,
+          `${rowPath}.question_json.teks_standard`,
+          `question_json TEKS "${jsonTeks}" does not match passage TEKS "${passageTeks}".`,
+          "package_teks_mismatch",
+        );
+      }
+    }
+  }
+
+  const rowType = normalizeQuestionType(question.question_type);
+
+  const jsonType = normalizeQuestionType(questionJson.question_type);
+
+  if (rowType && jsonType && rowType !== jsonType) {
     addIssue(
       issues,
       `${rowPath}.question_json.question_type`,
@@ -556,21 +752,11 @@ function validateQuestionAgainstPassage({
     );
   }
 
-  const rowDok =
-    normalizeDokLevel(
-      question.dok_level,
-    );
+  const rowDok = normalizeDokLevel(question.dok_level);
 
-  const jsonDok =
-    normalizeDokLevel(
-      questionJson.dok_level,
-    );
+  const jsonDok = normalizeDokLevel(questionJson.dok_level);
 
-  if (
-    rowDok &&
-    jsonDok &&
-    rowDok !== jsonDok
-  ) {
+  if (rowDok && jsonDok && rowDok !== jsonDok) {
     addIssue(
       issues,
       `${rowPath}.question_json.dok_level`,
@@ -579,21 +765,11 @@ function validateQuestionAgainstPassage({
     );
   }
 
-  const rowSkillFocus =
-    normalizeOptionalString(
-      question.skill_focus,
-    );
+  const rowSkillFocus = normalizeOptionalString(question.skill_focus);
 
-  const jsonSkillFocus =
-    normalizeOptionalString(
-      questionJson.skill_focus,
-    );
+  const jsonSkillFocus = normalizeOptionalString(questionJson.skill_focus);
 
-  if (
-    rowSkillFocus &&
-    jsonSkillFocus &&
-    rowSkillFocus !== jsonSkillFocus
-  ) {
+  if (rowSkillFocus && jsonSkillFocus && rowSkillFocus !== jsonSkillFocus) {
     addIssue(
       issues,
       `${rowPath}.question_json.skill_focus`,
@@ -602,21 +778,16 @@ function validateQuestionAgainstPassage({
     );
   }
 
-  const rowAssessmentMove =
-    normalizeOptionalString(
-      question.assessment_move,
-    );
+  const rowAssessmentMove = normalizeOptionalString(question.assessment_move);
 
-  const jsonAssessmentMove =
-    normalizeOptionalString(
-      questionJson.assessment_move,
-    );
+  const jsonAssessmentMove = normalizeOptionalString(
+    questionJson.assessment_move,
+  );
 
   if (
     rowAssessmentMove &&
     jsonAssessmentMove &&
-    rowAssessmentMove !==
-      jsonAssessmentMove
+    rowAssessmentMove !== jsonAssessmentMove
   ) {
     addIssue(
       issues,
@@ -626,14 +797,9 @@ function validateQuestionAgainstPassage({
     );
   }
 
-  const questionPassage =
-    getQuestionPassage(questionJson);
+  const questionPassage = getQuestionPassage(questionJson);
 
-  if (
-    questionPassage &&
-    passageText &&
-    questionPassage !== passageText
-  ) {
+  if (questionPassage && passageText && questionPassage !== passageText) {
     addIssue(
       issues,
       `${rowPath}.question_json.passage`,
@@ -644,10 +810,7 @@ function validateQuestionAgainstPassage({
 
   if (
     !questionPassage &&
-    [
-      "hot_text",
-      "constructed_response",
-    ].includes(rowType)
+    ["hot_text", "constructed_response"].includes(rowType)
   ) {
     addIssue(
       issues,
@@ -690,57 +853,20 @@ function validateQuestionTargetMetadata({
   questionIndex,
   issues,
 }) {
-  const rowPath =
-    `questions[${questionIndex}]`;
+  const rowPath = `questions[${questionIndex}]`;
 
-  const passageFormat =
-    normalizeOptionalString(
-      passage.passage_format,
-    )?.toLowerCase();
+  const passageFormat = normalizeOptionalString(
+    passage.passage_format,
+  )?.toLowerCase();
 
-  const targetScene =
-    normalizeOptionalString(
-      question.target_scene,
-    );
+  const targetScene = normalizeOptionalString(question.target_scene);
 
-  const dramaticFunction =
-    normalizeOptionalString(
-      question.dramatic_function,
-    );
-
-  if (
-    passageFormat === "drama" &&
-    !dramaticFunction
-  ) {
-    addIssue(
-      issues,
-      `${rowPath}.dramatic_function`,
-      "Drama-based bank questions should include dramatic_function.",
-      "recommended_metadata_missing",
-      "warning",
-    );
-  }
-
-  if (
-    passageFormat === "drama" &&
-    !targetScene
-  ) {
-    addIssue(
-      issues,
-      `${rowPath}.target_scene`,
-      "Drama-based bank questions should include target_scene.",
-      "recommended_metadata_missing",
-      "warning",
-    );
-  }
+  const dramaticFunction = normalizeOptionalString(question.dramatic_function);
 
   if (
     targetScene &&
     passageText &&
-    !passageContainsScene(
-      targetScene,
-      passageText,
-    )
+    !passageContainsScene(targetScene, passageText)
   ) {
     addIssue(
       issues,
@@ -750,17 +876,14 @@ function validateQuestionTargetMetadata({
     );
   }
 
-  const correctTargetText =
-    normalizeOptionalString(
-      question.correct_target_text,
-    );
+  const correctTargetText = normalizeOptionalString(
+    question.correct_target_text,
+  );
 
   if (
     correctTargetText &&
     passageText &&
-    !passageText.includes(
-      correctTargetText,
-    )
+    !passageText.includes(correctTargetText)
   ) {
     addIssue(
       issues,
@@ -774,43 +897,26 @@ function validateQuestionTargetMetadata({
     return;
   }
 
-  const correctTarget =
-    getCorrectHotTextTarget(
-      questionJson,
-    );
+  const correctTarget = getCorrectHotTextTarget(questionJson);
 
   if (!correctTarget) {
     return;
   }
 
-  const targetId =
-    normalizeTargetKey(
-      correctTarget.id,
-    );
+  const targetId = normalizeTargetKey(correctTarget.id);
 
-  const targetText =
-    normalizeOptionalString(
-      correctTarget.text,
-    );
+  const targetText = normalizeOptionalString(correctTarget.text);
 
-  const rowTargetKey =
-    normalizeTargetKey(
-      question.correct_target_key,
-    );
+  const rowTargetKey = normalizeTargetKey(question.correct_target_key);
 
-  if (
-    !rowTargetKey
-  ) {
+  if (!rowTargetKey) {
     addIssue(
       issues,
       `${rowPath}.correct_target_key`,
       "Hot-text bank questions must include correct_target_key.",
       "required",
     );
-  } else if (
-    targetId &&
-    rowTargetKey !== targetId
-  ) {
+  } else if (targetId && rowTargetKey !== targetId) {
     addIssue(
       issues,
       `${rowPath}.correct_target_key`,
@@ -819,19 +925,14 @@ function validateQuestionTargetMetadata({
     );
   }
 
-  if (
-    !correctTargetText
-  ) {
+  if (!correctTargetText) {
     addIssue(
       issues,
       `${rowPath}.correct_target_text`,
       "Hot-text bank questions must include correct_target_text.",
       "required",
     );
-  } else if (
-    targetText &&
-    correctTargetText !== targetText
-  ) {
+  } else if (targetText && correctTargetText !== targetText) {
     addIssue(
       issues,
       `${rowPath}.correct_target_text`,
@@ -842,107 +943,412 @@ function validateQuestionTargetMetadata({
 }
 
 /**
- * Checks duplicate stems and reused targets across the package.
+ * Creates a frequency map for normalized non-empty values.
  *
+ * @param {Array<object>} questions
+ * @param {(question: object) => unknown} selector
+ * @returns {Map<string, {
+ *   value: string,
+ *   indexes: number[]
+ * }>}
+ */
+function buildValueFrequencyMap(questions, selector) {
+  const frequencyMap = new Map();
+
+  questions.forEach((question, index) => {
+    const originalValue = normalizeOptionalString(selector(question));
+
+    const normalizedValue = normalizeComparableString(originalValue);
+
+    if (!normalizedValue) {
+      return;
+    }
+
+    const existing = frequencyMap.get(normalizedValue);
+
+    if (existing) {
+      existing.indexes.push(index);
+
+      return;
+    }
+
+    frequencyMap.set(normalizedValue, {
+      value: originalValue,
+
+      indexes: [index],
+    });
+  });
+
+  return frequencyMap;
+}
+
+/**
+ * Warns when one metadata value dominates a sufficiently large package.
+ *
+ * For small packages, repeated metadata may be intentional. Apply this
+ * concentration warning only when the package contains at least 4 questions.
+ *
+ * @param {{
+ *   questions: Array<object>,
+ *   issues: Array<object>,
+ *   field: string,
+ *   label: string,
+ *   selector: (question: object) => unknown,
+ *   code: string
+ * }} params
+ */
+function warnAboutRepeatedMetadata({
+  questions,
+  issues,
+  field,
+  label,
+  selector,
+  code,
+}) {
+  if (questions.length < 4) {
+    return;
+  }
+
+  const frequencyMap = buildValueFrequencyMap(questions, selector);
+
+  for (const entry of frequencyMap.values()) {
+    const count = entry.indexes.length;
+
+    const concentration = count / questions.length;
+
+    /*
+     * Warn when the same value appears in at least 3 questions and
+     * represents at least 60% of the package.
+     */
+    if (count < 3 || concentration < 0.6) {
+      continue;
+    }
+
+    const firstIndex = entry.indexes[0];
+
+    addIssue(
+      issues,
+
+      `questions[${firstIndex}].${field}`,
+
+      `${count} of ${questions.length} questions use ${label} "${entry.value}". Consider increasing question variety.`,
+
+      code,
+
+      "warning",
+    );
+  }
+}
+
+/**
+ * Checks duplicate stems, reused targets, metadata concentration,
+ * and DOK distribution across the package.
+ *
+ * @param {object} passage
  * @param {Array<object>} questions
  * @param {Array<object>} issues
  */
-function validatePackageVariety(
-  questions,
-  issues,
-) {
+function validatePackageVariety(passage, questions, issues) {
   const seenStems = new Map();
-  const seenTargetKeys = new Map();
+  const normalizedStems = [];
   const seenTargetTexts = new Map();
 
-  questions.forEach(
-    (question, index) => {
-      const questionJson =
-        getQuestionJson(question);
+  questions.forEach((question, index) => {
+    const questionJson = getQuestionJson(question);
 
-      if (!questionJson) {
-        return;
-      }
+    if (!questionJson) {
+      return;
+    }
 
-      const stem =
-        getStem(questionJson);
+    const stem = getStem(questionJson);
+    if (stem) {
+      normalizedStems.push({
+        index,
+        stem,
+      });
+    }
 
-      const normalizedStem =
-        normalizeComparableString(stem);
+    const normalizedStem = normalizeComparableString(stem);
 
-      if (normalizedStem) {
-        if (
-          seenStems.has(normalizedStem)
-        ) {
-          addIssue(
-            issues,
-            `questions[${index}].question_json.stem`,
-            `Question stem duplicates questions[${seenStems.get(
-              normalizedStem,
-            )}].question_json.stem.`,
-            "duplicate_question_stem",
-          );
-        } else {
-          seenStems.set(
+    if (normalizedStem) {
+      if (seenStems.has(normalizedStem)) {
+        addIssue(
+          issues,
+
+          `questions[${index}].question_json.stem`,
+
+          `Question stem duplicates questions[${seenStems.get(
             normalizedStem,
-            index,
-          );
-        }
-      }
+          )}].question_json.stem.`,
 
-      const targetKey =
-        normalizeTargetKey(
-          question.correct_target_key,
+          "duplicate_question_stem",
         );
-
-      if (targetKey) {
-        if (
-          seenTargetKeys.has(targetKey)
-        ) {
-          addIssue(
-            issues,
-            `questions[${index}].correct_target_key`,
-            `correct_target_key duplicates questions[${seenTargetKeys.get(
-              targetKey,
-            )}].correct_target_key.`,
-            "duplicate_correct_target_key",
-            "warning",
-          );
-        } else {
-          seenTargetKeys.set(
-            targetKey,
-            index,
-          );
-        }
+      } else {
+        seenStems.set(normalizedStem, index);
       }
+    }
 
-      const targetText =
-        normalizeComparableString(
-          question.correct_target_text,
-        );
+    const targetText = normalizeComparableString(question.correct_target_text);
 
-      if (targetText) {
-        if (
-          seenTargetTexts.has(targetText)
-        ) {
-          addIssue(
-            issues,
-            `questions[${index}].correct_target_text`,
-            `correct_target_text duplicates questions[${seenTargetTexts.get(
-              targetText,
-            )}].correct_target_text.`,
-            "duplicate_correct_target_text",
-            "warning",
-          );
-        } else {
-          seenTargetTexts.set(
+    if (targetText) {
+      if (seenTargetTexts.has(targetText)) {
+        addIssue(
+          issues,
+
+          `questions[${index}].correct_target_text`,
+
+          `correct_target_text duplicates questions[${seenTargetTexts.get(
             targetText,
-            index,
+          )}].correct_target_text.`,
+
+          "duplicate_correct_target_text",
+
+          "warning",
+        );
+      } else {
+        seenTargetTexts.set(targetText, index);
+      }
+    }
+  });
+  for (
+    let firstIndex = 0;
+    firstIndex < normalizedStems.length;
+    firstIndex += 1
+  ) {
+    for (
+      let secondIndex = firstIndex + 1;
+      secondIndex < normalizedStems.length;
+      secondIndex += 1
+    ) {
+      const first = normalizedStems[firstIndex];
+
+      const second = normalizedStems[secondIndex];
+
+      const firstComparable = normalizeComparableString(first.stem);
+
+      const secondComparable = normalizeComparableString(second.stem);
+
+      /*
+       * Exact duplicates are already handled above.
+       */
+      if (firstComparable === secondComparable) {
+        continue;
+      }
+
+      const similarity = calculateStemSimilarity(first.stem, second.stem);
+
+      if (similarity >= 0.6) {
+        addIssue(
+          issues,
+
+          `questions[${second.index}].question_json.stem`,
+
+          `Question stem is highly similar to questions[${first.index}].question_json.stem. Consider varying the question focus or wording.`,
+
+          "near_duplicate_question_stem",
+
+          "warning",
+        );
+      }
+    }
+  }
+
+  /*
+   * ----------------------------------------------------------
+   * Shared genre-neutral variation checks
+   * ----------------------------------------------------------
+   */
+
+  warnAboutRepeatedMetadata({
+    questions,
+    issues,
+
+    field: "skill_focus",
+
+    label: "skill_focus",
+
+    selector: (question) =>
+      question.skill_focus ?? question.question_json?.skill_focus,
+
+    code: "repeated_skill_focus",
+  });
+
+  warnAboutRepeatedMetadata({
+    questions,
+    issues,
+
+    field: "assessment_move",
+
+    label: "assessment_move",
+
+    selector: (question) =>
+      question.assessment_move ?? question.question_json?.assessment_move,
+
+    code: "repeated_assessment_move",
+  });
+
+  /*
+   * ----------------------------------------------------------
+   * Drama-specific variation checks
+   * ----------------------------------------------------------
+   */
+
+  const passageFormat = normalizeOptionalString(
+    passage?.passage_format,
+  )?.toLowerCase();
+
+  if (passageFormat === "drama") {
+    warnAboutRepeatedMetadata({
+      questions,
+      issues,
+
+      field: "target_scene",
+
+      label: "target_scene",
+
+      selector: (question) => question.target_scene,
+
+      code: "repeated_target_scene",
+    });
+
+    warnAboutRepeatedMetadata({
+      questions,
+      issues,
+
+      field: "dramatic_function",
+
+      label: "dramatic_function",
+
+      selector: (question) => question.dramatic_function,
+
+      code: "repeated_dramatic_function",
+    });
+  }
+
+  /*
+   * ----------------------------------------------------------
+   * DOK coverage
+   * ----------------------------------------------------------
+   */
+
+  if (questions.length >= 4) {
+    const dokCounts = {
+      1: 0,
+      2: 0,
+      3: 0,
+    };
+
+    questions.forEach((question) => {
+      const dokLevel = normalizeDokLevel(
+        question.dok_level ?? question.question_json?.dok_level,
+      );
+
+      if (dokLevel) {
+        dokCounts[dokLevel] += 1;
+      }
+    });
+
+    const presentDokLevels = [1, 2, 3].filter((level) => dokCounts[level] > 0);
+
+    if (presentDokLevels.length === 1) {
+      const onlyDok = presentDokLevels[0];
+
+      addIssue(
+        issues,
+
+        "questions",
+
+        `All ${questions.length} questions use DOK ${onlyDok}. Consider adding questions at other DOK levels.`,
+
+        "single_dok_package",
+
+        "warning",
+      );
+    }
+
+    /*
+     * Only add concentration warnings when the package already
+     * contains more than one DOK level. This prevents duplicating
+     * the single-DOK warning above.
+     */
+    if (presentDokLevels.length > 1) {
+      for (const level of [1, 2, 3]) {
+        const count = dokCounts[level];
+
+        if (count >= 3 && count / questions.length >= 0.75) {
+          addIssue(
+            issues,
+
+            "questions",
+
+            `${count} of ${questions.length} questions use DOK ${level}. Consider balancing the package across additional DOK levels.`,
+
+            "dok_concentration",
+
+            "warning",
           );
         }
       }
-    },
-  );
+    }
+
+    /*
+     * DOK 3 is most meaningful for packages intended to contain
+     * several reviewed questions. Avoid warning on very small drafts.
+     */
+    if (questions.length >= 6 && dokCounts[3] === 0) {
+      addIssue(
+        issues,
+
+        "questions",
+
+        "This package contains no DOK 3 questions.",
+
+        "missing_dok_3",
+
+        "warning",
+      );
+    }
+  }
+}
+
+/**
+ * Ensures the package contains at least one question aligned to
+ * the passage's primary TEKS.
+ *
+ * @param {object} passage
+ * @param {Array<object>} questions
+ * @param {Array<object>} issues
+ */
+function validatePrimaryTeksCoverage(passage, questions, issues,requirePrimaryTeksQuestion = true) {
+    // Attach-question packages may intentionally contain
+  // only a secondary TEKS bank for an existing passage.
+  if (!requirePrimaryTeksQuestion) {
+    return;
+  }
+  const primaryTeks = normalizeOptionalString(passage?.teks_standard);
+
+  if (!primaryTeks || !Array.isArray(questions)) {
+    return;
+  }
+
+  const primaryQuestionCount = questions.filter((question) => {
+    const rowTeks = normalizeOptionalString(question?.teks_standard);
+
+    const jsonTeks = normalizeOptionalString(
+      question?.question_json?.teks_standard,
+    );
+
+    return rowTeks === primaryTeks || jsonTeks === primaryTeks;
+  }).length;
+
+  if (primaryQuestionCount === 0) {
+    addIssue(
+      issues,
+      "questions",
+      `The package must contain at least one question aligned to the primary passage TEKS "${primaryTeks}".`,
+      "missing_primary_teks_question",
+    );
+  }
 }
 
 /**
@@ -956,72 +1362,45 @@ function validatePackageVariety(
  * @param {Array<object>} questions
  * @returns {Array<object>}
  */
-function buildValidationRows(
-  passage,
-  questions,
-) {
+function buildValidationRows(passage, questions) {
   return questions.map((question) => ({
-    passage_bank_id:
-      question.passage_bank_id ||
-      "pending-passage-bank-id",
+    passage_bank_id: question.passage_bank_id || "pending-passage-bank-id",
 
-    teks_standard:
-      question.teks_standard ??
-      passage.teks_standard,
+    teks_standard: question.teks_standard ?? passage.teks_standard,
 
-    subject:
-      question.subject ??
-      passage.subject,
+    subject: question.subject ?? passage.subject,
 
-    grade_level:
-      question.grade_level ??
-      passage.grade_level,
+    grade_level: question.grade_level ?? passage.grade_level,
 
-    question_type:
-      question.question_type,
+    question_type: question.question_type,
 
-    dok_level:
-      question.dok_level,
+    dok_level: question.dok_level,
 
-    skill_focus:
-      question.skill_focus ?? null,
+    skill_focus: question.skill_focus ?? null,
 
-    assessment_move:
-      question.assessment_move ?? null,
+    assessment_move: question.assessment_move ?? null,
 
-    dramatic_function:
-      question.dramatic_function ?? null,
+    dramatic_function: question.dramatic_function ?? null,
 
-    target_scene:
-      question.target_scene ?? null,
+    target_scene: question.target_scene ?? null,
 
-    correct_target_text:
-      question.correct_target_text ?? null,
+    correct_target_text: question.correct_target_text ?? null,
 
-    correct_target_key:
-      question.correct_target_key ?? null,
+    correct_target_key: question.correct_target_key ?? null,
 
-    question_json:
-      question.question_json,
+    question_json: question.question_json,
 
-    review_status:
-      question.review_status ??
-      "draft",
+    review_status: question.review_status ?? "draft",
 
-    is_active:
-      question.is_active === true,
+    is_active: question.is_active === true,
 
-    times_used:
-      question.times_used ?? 0,
+    times_used: question.times_used ?? 0,
 
-    created_by:
-      question.created_by ?? null,
+    created_by: question.created_by ?? null,
 
-    reviewed_by:
-      question.reviewed_by ?? null,
+    reviewed_by: question.reviewed_by ?? null,
 
-    reviewed_at:
-      question.reviewed_at ?? null,
+    reviewed_at: question.reviewed_at ?? null,
   }));
 }
 
@@ -1033,9 +1412,11 @@ function buildValidationRows(
  *   questions: Array<object>
  * }} draft
  *
- * @param {{
+ * * @param {{
  *   allowUnknownQuestionTypes?: boolean,
- *   treatRecommendationsAsErrors?: boolean
+ *   treatRecommendationsAsErrors?: boolean,
+ *   allowQuestionTeksMismatch?: boolean,
+ *   requirePrimaryTeksQuestion?: boolean
  * }} [options]
  *
  * @returns {{
@@ -1055,6 +1436,8 @@ export function validatePassageQuestionBankPackage(
   {
     allowUnknownQuestionTypes = false,
     treatRecommendationsAsErrors = false,
+    allowQuestionTeksMismatch = false,
+    requirePrimaryTeksQuestion = true,
   } = {},
 ) {
   const issues = [];
@@ -1077,15 +1460,9 @@ export function validatePassageQuestionBankPackage(
   const passage = draft.passage;
   const questions = draft.questions;
 
-  validatePassageMetadata(
-    passage,
-    issues,
-  );
+  validatePassageMetadata(passage, issues);
 
-  if (
-    !Array.isArray(questions) ||
-    questions.length === 0
-  ) {
+  if (!Array.isArray(questions) || questions.length === 0) {
     addIssue(
       issues,
       "questions",
@@ -1100,9 +1477,10 @@ export function validatePassageQuestionBankPackage(
     });
   }
 
+    // IMPORTANT — must remain in this scope.
   const passageText =
     getPassageText(passage);
-
+  
   questions.forEach(
     (question, questionIndex) => {
       validateQuestionAgainstPassage({
@@ -1111,46 +1489,32 @@ export function validatePassageQuestionBankPackage(
         question,
         questionIndex,
         issues,
+        allowQuestionTeksMismatch,
       });
     },
   );
 
-  validatePackageVariety(
-    questions,
-    issues,
-  );
+  validatePrimaryTeksCoverage(passage, questions, issues, requirePrimaryTeksQuestion);
 
-  const validationRows =
-    buildValidationRows(
-      passage,
-      questions,
-    );
+  validatePackageVariety(passage, questions, issues);
 
-  const rowValidation =
-    validatePassageQuestionBankRows(
-      validationRows,
-      {
-        passageFormat:
-          passage?.passage_format ??
-          null,
+  const validationRows = buildValidationRows(passage, questions);
 
-        allowUnknownQuestionTypes,
+  const rowValidation = validatePassageQuestionBankRows(validationRows, {
+    passageFormat: passage?.passage_format ?? null,
 
-        treatRecommendationsAsErrors,
-      },
-    );
+    allowUnknownQuestionTypes,
+
+    treatRecommendationsAsErrors,
+  });
 
   for (const issue of rowValidation.issues) {
     issues.push({
       ...issue,
-      path: issue.path.replace(
-        /^rows/,
-        "questions",
-      ),
+      path: issue.path.replace(/^rows/, "questions"),
       severity:
         issue.severity === "warning" ||
-        issue.code ===
-          "recommended_metadata_missing"
+        issue.code === "recommended_metadata_missing"
           ? "warning"
           : "error",
     });
@@ -1170,23 +1534,17 @@ export function validatePassageQuestionBankPackage(
  *   rowValidation: object|null
  * }} params
  */
-function buildResult({
-  draft,
-  issues,
-  rowValidation,
-}) {
+function buildResult({ draft, issues, rowValidation }) {
   const warnings = issues.filter(
     (issue) =>
       issue.severity === "warning" ||
-      issue.code ===
-        "recommended_metadata_missing",
+      issue.code === "recommended_metadata_missing",
   );
 
   const errors = issues.filter(
     (issue) =>
       issue.severity !== "warning" &&
-      issue.code !==
-        "recommended_metadata_missing",
+      issue.code !== "recommended_metadata_missing",
   );
 
   return {
@@ -1196,9 +1554,7 @@ function buildResult({
       errors.length === 0 && draft
         ? {
             passage: draft.passage,
-            questions:
-              rowValidation?.data ??
-              draft.questions,
+            questions: rowValidation?.data ?? draft.questions,
           }
         : null,
 
@@ -1216,27 +1572,15 @@ function buildResult({
  * @param {object} [options]
  * @returns {object}
  */
-export function assertValidPassageQuestionBankPackage(
-  draft,
-  options = {},
-) {
-  const result =
-    validatePassageQuestionBankPackage(
-      draft,
-      options,
-    );
+export function assertValidPassageQuestionBankPackage(draft, options = {}) {
+  const result = validatePassageQuestionBankPackage(draft, options);
 
   if (!result.success) {
     const message = result.errors
-      .map(
-        (issue) =>
-          `${issue.path || "draft"}: ${issue.message}`,
-      )
+      .map((issue) => `${issue.path || "draft"}: ${issue.message}`)
       .join("; ");
 
-    throw new Error(
-      `Invalid passage question bank package: ${message}`,
-    );
+    throw new Error(`Invalid passage question bank package: ${message}`);
   }
 
   return result.data;

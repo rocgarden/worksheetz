@@ -4,7 +4,19 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
+import DramaPassage, { renderDramaLine } from "@/components/(v2)/questions/DramaPassage";
 
+function getPassageLabel(passageFormat) {
+  if (passageFormat === "drama") {
+    return "Read this drama";
+  }
+
+  if (passageFormat === "poetry") {
+    return "Read this poem";
+  }
+
+  return "Read this passage";
+}
 // ─── MultipleChoice ───────────────────────────────────────────────────────────
 
 function MultipleChoice({ options, selected, onSelect, disabled }) {
@@ -190,7 +202,7 @@ function InlineChoice({ stem, options, selected, onSelect, disabled }) {
 // Renders passage_tokens directly — no string matching, no mode detection.
 // Falls back to old behavior if passage_tokens is absent (backwards compat).
  
-function HotText({ passage, targets, passageTokens, selectedIdx, onSelect, disabled }) {
+function HotText({ passage, targets, passageTokens, selectedIdx, onSelect, disabled, passageFormat }) {
   // Build id→idx map from hot_text_targets array e.g. {ht1:0, ht2:1, ...}
   const idToIdx = useMemo(() => {
     const map = {};
@@ -234,6 +246,8 @@ if (isSentenceMode) {
       return { id: i, text: part, targetIdx, isTarget: targetIdx !== -1, isSpace: /^\s+$/.test(part) };
     });
   }, [passage, targets, useTokens]);
+
+  
  
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
@@ -251,95 +265,143 @@ if (isSentenceMode) {
       </p>
  
       {/* Passage */}
-      <div style={{
-        background: "#faf5ff",
-        borderRadius: "12px",
-        padding: "18px 20px",
-        fontSize: "15px",
-        lineHeight: "1.9",
-        color: "#1e1b4b",
-        fontFamily: "'Georgia', serif",
-        border: "1px solid #e9d5ff",
-        borderLeft: "4px solid #7c3aed",
-      }}>
-        {useTokens
-          ? passageTokens.map((token, i) => {
-              if (!token.is_target) {
-                return <span key={i} style={{ color: "#374151" }}>{token.text}</span>;
-              }
-              const idx = idToIdx[token.target_id] ?? -1;
-              if (idx === -1) {
-                return <span key={i} style={{ color: "#374151" }}>{token.text}</span>;
-              }
-              const isSelected = idx === selectedIdx;
-              return (
-                <span
-                  key={i}
-                  onClick={() => !disabled && onSelect(idx)}
-                  style={{
-                  display: "inline",
-                  // display: "inline-block",
-                  cursor: disabled ? "default" : "pointer",
-                  borderRadius: "4px",
-                  padding: "4px 3px",
-                  // verticalAlign: "baseline",
-                  background: isSelected ? "#7c3aed" : "transparent",
-                  color: isSelected ? "#ffffff" : "#4c1d95",
-                  fontWeight: isSelected ? "700" : "600",
-                  textDecorationLine: isSelected ? "none" : "underline",
-                  textDecorationStyle: "solid",
-                  textDecorationColor: isSelected ? "transparent" : "#7c3aed",
-                  textDecorationThickness: "2px",
-                  textUnderlineOffset: "3px",
-                  transition: "all 0.15s ease",
-                  touchAction: "manipulation",
-                  WebkitTapHighlightColor: "transparent",
-                  userSelect: "none",
-                  WebkitUserSelect: "none",
-                }}
-                >
-                  {token.text}
-                </span>
-              );
-            })
-          : legacyTokens.map((token) => {
-              if (token.isSpace) return <span key={token.id}>{token.text}</span>;
-              if (!token.isTarget) {
-                return <span key={token.id} style={{ color: "#374151" }}>{token.text}{token.isSentence ? " " : ""}</span>;
-              }
-              const isSelected = token.targetIdx === selectedIdx;
-              return (
-                <span
-                  key={token.id}
-                  onClick={() => !disabled && onSelect(token.targetIdx)}
-                 style={{
-                  display: "inline",
-                  // display: "inline-block",
-                  cursor: disabled ? "default" : "pointer",
-                  borderRadius: "4px",
-                  padding: "4px 3px",
-                  // verticalAlign: "baseline",
-                  background: isSelected ? "#7c3aed" : "transparent",
-                  color: isSelected ? "#ffffff" : "#4c1d95",
-                  fontWeight: isSelected ? "700" : "600",
-                  textDecorationLine: isSelected ? "none" : "underline",
-                  textDecorationStyle: "solid",
-                  textDecorationColor: isSelected ? "transparent" : "#7c3aed",
-                  textDecorationThickness: "2px",
-                  textUnderlineOffset: "3px",
-                  transition: "all 0.15s ease",
-                  touchAction: "manipulation",
-                  WebkitTapHighlightColor: "transparent",
-                  userSelect: "none",
-                  WebkitUserSelect: "none",
-                }}
-                >
-                  {token.text}{token.isSentence ? " " : ""}
-                </span>
-              );
-            })
+<div style={{
+  background: "#faf5ff",
+  borderRadius: "12px",
+  padding: "18px 20px",
+  fontSize: "15px",
+  lineHeight: "1.9",
+  color: "#1e1b4b",
+  fontFamily: "'Georgia', serif",
+  border: "1px solid #e9d5ff",
+  borderLeft: "4px solid #7c3aed",
+}}>
+  {/* Passage label */}
+  <p style={{
+    fontSize: "14px", fontWeight: "800", letterSpacing: "0.1em",
+    color: "#7c3aed", margin: "0 0 12px 0", textTransform: "uppercase",
+    fontFamily: "'Nunito', sans-serif",
+  }}>
+{getPassageLabel(passageFormat)}
+      </p>
+
+  {useTokens
+    ? passageTokens.map((token, i) => {
+        if (!token.is_target) {
+          // NON-TARGET — drama gets styled block, prose gets plain span (unchanged)
+          return passageFormat === "drama"
+            ? 
+        <div key={i}>{token.text.split("\n").map((line, j) => {
+          const isTitle = i === 0 && j === 0 && line.trim() !== "";
+          return renderDramaLine(line, `${i}-${j}`, { isTitle });
+        })}</div>   
+         : <span key={i} style={{ color: "#374151" }}>{token.text}</span>;
         }
-      </div>
+        const idx = idToIdx[token.target_id] ?? -1;
+        if (idx === -1) {
+          return passageFormat === "drama"
+            ? 
+      <div key={i}>{token.text.split("\n").map((line, j) => {
+        const isTitle = i === 0 && j === 0 && line.trim() !== "";
+        return renderDramaLine(line, `${i}-${j}`, { isTitle });
+      })}</div>
+            : <span key={i} style={{ color: "#374151" }}>{token.text}</span>;
+        }
+        const isSelected = idx === selectedIdx;
+        // TARGET — drama gets clickable renderDramaLine, prose gets existing span (unchanged)
+        return passageFormat === "drama"
+          ? (
+            <div
+              key={i}
+              onClick={() => !disabled && onSelect(idx)}
+              style={{
+                cursor: disabled ? "default" : "pointer",
+                borderRadius: "6px",
+                padding: "4px 8px",
+                margin: "1px 0",
+                background: isSelected ? "rgba(124,58,237,0.08)" : "transparent",
+                borderLeft: isSelected ? "3px solid #7c3aed" : "3px solid transparent",
+                textDecorationLine: isSelected ? "none" : "underline",
+                textDecorationColor: "#7c3aed",
+                textDecorationThickness: "2px",
+                textUnderlineOffset: "3px",
+                textDecorationSkipInk: "none",
+                fontFamily: "'Inter', 'Nunito', sans-serif",
+                transition: "all 0.15s ease",
+                touchAction: "manipulation",
+                WebkitTapHighlightColor: "transparent",
+                userSelect: "none",
+              }}
+            >
+            {token.text.split("\n").map((line, j) => renderDramaLine(line, `${i}-${j}`, { selected: isSelected, isTitle: false, clickable: true }))}
+            </div>
+          )
+          : (
+            // PROSE clickable span — exactly as before, zero changes
+            <span
+              key={i}
+              onClick={() => !disabled && onSelect(idx)}
+              style={{
+                display: "inline",
+                cursor: disabled ? "default" : "pointer",
+                borderRadius: "4px",
+                padding: "4px 3px",
+                background: isSelected ? "#7c3aed" : "transparent",
+                color: isSelected ? "#ffffff" : "#4c1d95",
+                fontWeight: isSelected ? "700" : "600",
+                textDecorationLine: isSelected ? "none" : "underline",
+                textDecorationStyle: "solid",
+                textDecorationColor: isSelected ? "transparent" : "#7c3aed",
+                textDecorationThickness: "2px",
+                textUnderlineOffset: "3px",
+                transition: "all 0.15s ease",
+                touchAction: "manipulation",
+                WebkitTapHighlightColor: "transparent",
+                userSelect: "none",
+                WebkitUserSelect: "none",
+              }}
+            >
+              {token.text}
+            </span>
+          );
+      })
+    : legacyTokens.map((token) => {
+        // LEGACY PATH — completely unchanged
+        if (token.isSpace) return <span key={token.id}>{token.text}</span>;
+        if (!token.isTarget) {
+          return <span key={token.id} style={{ color: "#374151" }}>{token.text}{token.isSentence ? " " : ""}</span>;
+        }
+        const isSelected = token.targetIdx === selectedIdx;
+        return (
+          <span
+            key={token.id}
+            onClick={() => !disabled && onSelect(token.targetIdx)}
+            style={{
+              display: "inline",
+              cursor: disabled ? "default" : "pointer",
+              borderRadius: "4px",
+              padding: "4px 3px",
+              background: isSelected ? "#7c3aed" : "transparent",
+              color: isSelected ? "#ffffff" : "#4c1d95",
+              fontWeight: isSelected ? "700" : "600",
+              textDecorationLine: isSelected ? "none" : "underline",
+              textDecorationStyle: "solid",
+              textDecorationColor: isSelected ? "transparent" : "#7c3aed",
+              textDecorationThickness: "2px",
+              textUnderlineOffset: "3px",
+              transition: "all 0.15s ease",
+              touchAction: "manipulation",
+              WebkitTapHighlightColor: "transparent",
+              userSelect: "none",
+              WebkitUserSelect: "none",
+            }}
+          >
+            {token.text}{token.isSentence ? " " : ""}
+          </span>
+        );
+      })
+  }
+</div>
  
       {/* Selection preview */}
       <div style={{ minHeight: "22px" }}>
@@ -361,11 +423,206 @@ if (isSentenceMode) {
   );
 }
 
+//  stimulusJson
+function StructuredStimulus({ stimulusJson }) {
+  const blocks = Array.isArray(stimulusJson?.blocks)
+    ? stimulusJson.blocks
+    : [];
+
+  if (!blocks.length) {
+    return null;
+  }
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "18px",
+      }}
+    >
+      {blocks.map((block, index) => {
+        const key = block?.id || `stimulus-block-${index}`;
+
+        if (block?.type === "section") {
+          return (
+            <section key={key}>
+              {block.heading && (
+                <h3
+                  style={{
+                    margin: "0 0 8px 0",
+                    fontSize: "18px",
+                    color: "#4c1d95",
+                    fontFamily: "'Nunito', sans-serif",
+                    fontWeight: "800",
+                  }}
+                >
+                  {block.heading}
+                </h3>
+              )}
+
+              <p
+                style={{
+                  margin: 0,
+                  whiteSpace: "pre-wrap",
+                  lineHeight: "1.85",
+                }}
+              >
+                {block.text}
+              </p>
+            </section>
+          );
+        }
+
+        if (block?.type === "diagram") {
+          const labels = Array.isArray(block.labels)
+            ? block.labels
+            : [];
+
+          return (
+            <figure
+              key={key}
+              style={{
+                margin: 0,
+                padding: "18px",
+                borderRadius: "14px",
+                border: "2px solid #ddd6fe",
+                background: "#ffffff",
+              }}
+            >
+              {block.title && (
+                <h3
+                  style={{
+                    margin: "0 0 14px 0",
+                    fontSize: "17px",
+                    color: "#4c1d95",
+                    fontFamily: "'Nunito', sans-serif",
+                    fontWeight: "800",
+                    textAlign: "center",
+                  }}
+                >
+                  {block.title}
+                </h3>
+              )}
+
+              {labels.length > 0 && (
+                <div
+                  style={{
+                    display: "grid",
+                    gap: "10px",
+                  }}
+                >
+                  {labels.map((label, labelIndex) => (
+                    <div
+                      key={label.key || labelIndex}
+                      style={{
+                        padding: "12px 14px",
+                        borderRadius: "10px",
+                        background: "#f5f3ff",
+                        border: "1px solid #ddd6fe",
+                      }}
+                    >
+                      <strong
+                        style={{
+                          color: "#4c1d95",
+                          fontFamily: "'Nunito', sans-serif",
+                        }}
+                      >
+                        {label.label}
+                      </strong>
+
+                      {label.text && (
+                        <div
+                          style={{
+                            marginTop: "3px",
+                            color: "#374151",
+                          }}
+                        >
+                          {label.text}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {block.caption && (
+                <figcaption
+                  style={{
+                    marginTop: "12px",
+                    fontSize: "14px",
+                    lineHeight: "1.6",
+                    color: "#6b7280",
+                    fontStyle: "italic",
+                  }}
+                >
+                  {block.caption}
+                </figcaption>
+              )}
+            </figure>
+          );
+        }
+
+        if (block?.type === "sidebar") {
+          const items = Array.isArray(block.items)
+            ? block.items
+            : [];
+
+          return (
+            <aside
+              key={key}
+              style={{
+                padding: "16px 18px",
+                borderRadius: "14px",
+                background: "#fef9c3",
+                border: "1px solid #fde68a",
+              }}
+            >
+              {block.title && (
+                <h3
+                  style={{
+                    margin: "0 0 10px 0",
+                    fontSize: "17px",
+                    color: "#854d0e",
+                    fontFamily: "'Nunito', sans-serif",
+                    fontWeight: "800",
+                  }}
+                >
+                  {block.title}
+                </h3>
+              )}
+
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "8px",
+                }}
+              >
+                {items.map((item, itemIndex) => (
+                  <div key={itemIndex}>
+                    {item.label && (
+                      <strong>{item.label}: </strong>
+                    )}
+                    {item.value ?? item.text ?? ""}
+                  </div>
+                ))}
+              </div>
+            </aside>
+          );
+        }
+
+        return null;
+      })}
+    </div>
+  );
+}
+
 
 // ─── QuestionWrapper ──────────────────────────────────────────────────────────
 
-function QuestionWrapper({ question, onSubmit, disabled }) {
-  const { question_type, stem, passage, answer_options, hot_text_targets } = question;
+function QuestionWrapper({ question, stimulus, stimulusJson,passageFormat, onSubmit, disabled }) {
+  const { question_type, stem, passage, answer_options, hot_text_targets, passage_format } = question;
  
   // hot_text_targets from API are objects { id, text, is_correct } — map to strings
   // for the HotText renderer. Falls back gracefully if already strings.
@@ -431,12 +688,13 @@ function QuestionWrapper({ question, onSubmit, disabled }) {
       case "hot_text":
         return (
           <HotText
-            passage={passage}
+            passage={stimulus ?? passage}
             targets={targetStrings}
             passageTokens={question.passage_tokens ?? null} 
             selectedIdx={answer}
             onSelect={setAnswer}
             disabled={disabled}
+            passageFormat={passageFormat}
           />
         );
       case "constructed_response":
@@ -470,30 +728,82 @@ function QuestionWrapper({ question, onSubmit, disabled }) {
  
   return (
     <div>
-      {/* Passage block — skipped for hot_text since HotText renders its own passage */}
-      {passage && question_type !== "hot_text" && (
-        <div style={{
-          background: "#faf5ff",
-          borderLeft: "4px solid #7c3aed",
-          borderRadius: "12px",
-          padding: "18px 20px",
-          marginBottom: "24px",
-          fontSize: "16px",
-          lineHeight: "1.85",
-          color: "#374151",
-          fontFamily: "'Georgia', serif",
-          maxHeight: "220px",
-          overflowY: "auto",
-          border: "1px solid #e9d5ff",
-          borderLeftWidth: "4px",
-          borderLeftColor: "#7c3aed",
-        }}>
-          <p style={{ fontSize: "14px", fontWeight: "800", letterSpacing: "0.1em", color: "#7c3aed", margin: "0 0 10px 0", textTransform: "uppercase", fontFamily: "'Nunito', sans-serif" }}>
-            Read this passage
-          </p>
-          {passage}
-        </div>
-      )}
+     {/* Passage block — skipped for hot_text since HotText renders its own passage */}
+     {passage && question_type !== "hot_text" && (
+  passageFormat === "drama" ? (
+    <DramaPassage passage={stimulus ?? passage} />
+  ) : stimulusJson?.blocks?.length ? (
+    <div
+      style={{
+        background: "#faf5ff",
+        borderRadius: "12px",
+        padding: "18px 20px",
+        marginBottom: "24px",
+        fontSize: "16px",
+        lineHeight: "1.85",
+        color: "#374151",
+        fontFamily: "'Georgia', serif",
+        maxHeight: "420px",
+        overflowY: "auto",
+        border: "1px solid #e9d5ff",
+        borderLeft: "4px solid #7c3aed",
+      }}
+    >
+      <p
+        style={{
+          fontSize: "14px",
+          fontWeight: "800",
+          letterSpacing: "0.1em",
+          color: "#7c3aed",
+          margin: "0 0 14px 0",
+          textTransform: "uppercase",
+          fontFamily: "'Nunito', sans-serif",
+        }}
+      >
+        Read this passage
+      </p>
+
+      <StructuredStimulus stimulusJson={stimulusJson} />
+    </div>
+  ) : (
+    <div
+      style={{
+        background: "#faf5ff",
+        borderLeft: "4px solid #7c3aed",
+        borderRadius: "12px",
+        padding: "18px 20px",
+        marginBottom: "24px",
+        fontSize: "16px",
+        lineHeight: "1.85",
+        color: "#374151",
+        fontFamily: "'Georgia', serif",
+        maxHeight: "260px",
+        overflowY: "auto",
+        border: "1px solid #e9d5ff",
+        borderLeftWidth: "4px",
+        borderLeftColor: "#7c3aed",
+      }}
+    >
+      <p
+        style={{
+          fontSize: "14px",
+          fontWeight: "800",
+          letterSpacing: "0.1em",
+          color: "#7c3aed",
+          margin: "0 0 10px 0",
+          textTransform: "uppercase",
+          fontFamily: "'Nunito', sans-serif",
+        }}
+      >
+        {getPassageLabel(passageFormat)}
+      </p>
+
+      <span style={{ whiteSpace: "pre-wrap" }}>
+        {stimulus ?? passage}
+      </span>
+    </div>
+  )
+)}
  
       {/* Stem */}
       {question_type !== "inline_choice" && (
@@ -744,7 +1054,9 @@ export default function SessionClient({ sessionId }) {
   const [totalAnswered, setTotalAnswered] = useState(0);
   const [nextQuestion, setNextQuestion] = useState(null); // for preloading the next question after feedback is shown
   const [pendingComplete, setPendingComplete] = useState(false); // store final data to show on completion screen after feedback
-
+  const [stimulus, setStimulus] = useState(null);
+  const [stimulusJson, setStimulusJson] = useState(null);
+  const [passageFormat, setPassageFormat] = useState("prose"); 
   const startTimeRef = useRef(null);
  
   const startTimer = useCallback(() => {
@@ -757,37 +1069,79 @@ export default function SessionClient({ sessionId }) {
   }, []);
 
 
-  useEffect(() => {
-    if (!sessionId) return;
-    const load = async () => {
-      try {
-        const res = await fetch(`/api/v2/assessments/${sessionId}/current`);
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          throw new Error(body.error || "Could not load session.");
-        }
-        const data = await res.json();
-        console.log("Loaded session data:", data);
-        if (data.session_complete) {
-          setSessionComplete(true);
-          setLoading(false);
-          return;
-        }
-        setStudentName(data.joined_name ?? "");
-        setTeksStandard(data.question.teks_standard ?? "");
-        setQuestion(data.question);
-        setQuestionNumber(data.question_number ?? 1);
-        setCorrectCount(data.correct_count ?? 0);
-        setTotalAnswered(data.total_answered ?? 0);
-        startTimer();
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, [sessionId, startTimer]);
+  // useEffect(() => {
+  //   if (!sessionId) return;
+  //   const load = async () => {
+  //     try {
+  //       const res = await fetch(`/api/v2/assessments/${sessionId}/current`);
+  //       if (!res.ok) {
+  //         const body = await res.json().catch(() => ({}));
+  //         throw new Error(body.error || "Could not load session.");
+  //       }
+  //       const data = await res.json();
+  //       console.log("Loaded session data:", data);
+  //       if (data.session_complete) {
+  //         setSessionComplete(true);
+  //         setLoading(false);
+  //         return;
+  //       }
+  //       setStudentName(data.joined_name ?? "");
+  //       setTeksStandard(data.question.teks_standard ?? "");
+  //       setQuestion(data.question);
+  //       setQuestionNumber(data.question_number ?? 1);
+  //       setCorrectCount(data.correct_count ?? 0);
+  //       setTotalAnswered(data.total_answered ?? 0);
+  //       startTimer();
+  //     } catch (err) {
+  //       setError(err.message);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+  //   load();
+  // }, [sessionId, startTimer]);
+
+  const load = useCallback(async () => {
+  setLoading(true);
+  setError(null);
+  try {
+    const res = await fetch(`/api/v2/assessments/${sessionId}/current`);
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.error || "Could not load session.");
+    }
+    const data = await res.json();
+    if (data.session_complete) {
+      setSessionComplete(true);
+      return;
+    }
+    setStudentName(data.joined_name ?? "");
+    setTeksStandard(data.question.teks_standard ?? "");
+    setQuestion(data.question);
+    setStimulus(data.stimulus ?? null);
+    setStimulusJson(
+        data.stimulus_json &&
+        typeof data.stimulus_json === "object" &&
+        !Array.isArray(data.stimulus_json)
+          ? data.stimulus_json
+          : null,
+      );
+    setPassageFormat(data.passage_format ?? "prose");
+    setQuestionNumber(data.question_number ?? 1);
+    setCorrectCount(data.correct_count ?? 0);
+    setTotalAnswered(data.total_answered ?? 0);
+    startTimer();
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+}, [sessionId, startTimer]);
+
+useEffect(() => {
+  if (!sessionId) return;
+  load();
+}, [sessionId, load]);
 
   const handleSubmit = async (studentAnswer) => {
     if (submitting || !question) return;
@@ -813,6 +1167,17 @@ export default function SessionClient({ sessionId }) {
       });
 
       const data = await res.json();
+      if (
+          data.stimulus_json &&
+          typeof data.stimulus_json === "object" &&
+          !Array.isArray(data.stimulus_json)
+        ) {
+          setStimulusJson(data.stimulus_json);
+        }
+
+        if (typeof data.stimulus === "string" && data.stimulus) {
+          setStimulus(data.stimulus);
+        }
       setScoring(false); // response is back — hand off to feedback banner
       if (!res.ok) throw new Error(data.error || "Submit failed.");
 
@@ -980,14 +1345,26 @@ export default function SessionClient({ sessionId }) {
             )}
 
             {error && (
-              <div style={{ textAlign: "center", padding: "40px 20px", color: "#f87171" }}>
-                <div style={{ fontSize: "40px", marginBottom: "16px" }}>⚠️</div>
-                <p style={{ fontSize: "16px", fontWeight: "700", margin: "0 0 8px 0", fontFamily: "'Nunito', sans-serif" }}>
-                  Something went wrong
+              <div style={{ textAlign: "center", padding: "40px 20px" }}>
+                <div style={{ fontSize: "40px", marginBottom: "16px" }}>📶</div>
+                <p style={{ fontSize: "16px", fontWeight: "700", margin: "0 0 8px 0",
+                  fontFamily: "'Nunito', sans-serif", color: "#4c1d95" }}>
+                  Connection lost
                 </p>
-                <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.4)", margin: 0, fontFamily: "'Nunito', sans-serif" }}>
-                  {error}
+                <p style={{ fontSize: "14px", color: "#7c3aed", margin: "0 0 24px 0",
+                  fontFamily: "'Nunito', sans-serif" }}>
+                  Check your internet and tap to continue.
                 </p>
+                <button
+                  onClick={load}
+                  style={{
+                    padding: "14px 28px", borderRadius: "12px", border: "none",
+                    background: "#facc15", color: "#1e1b4b", fontSize: "15px",
+                    fontWeight: "800", cursor: "pointer", fontFamily: "'Nunito', sans-serif",
+                  }}
+                >
+                  Try Again
+                </button>
               </div>
             )}
 
@@ -1024,6 +1401,9 @@ export default function SessionClient({ sessionId }) {
                 {!scoring && !feedback && (
                   <QuestionWrapper
                     question={question}
+                    stimulus={stimulus}
+                    stimulusJson={stimulusJson}
+                    passageFormat={passageFormat}
                     onSubmit={handleSubmit}
                     disabled={false}
                   />

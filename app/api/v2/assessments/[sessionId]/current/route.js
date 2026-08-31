@@ -20,13 +20,12 @@ import { NextResponse } from "next/server";
 export async function GET(req, { params }) {
   // ── 1. Feature flag guard ────────────────────────────────────────────────
 
-
   // ── 2. Validate sessionId route param ───────────────────────────────────
   const { sessionId } = await params;
   if (!sessionId) {
     return NextResponse.json(
       { error: "Missing sessionId in route." },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -39,19 +38,19 @@ export async function GET(req, { params }) {
     .select(
       `id,
        status,
+       stimulus,
+       stimulus_json,
+       passage_format,
        students (
          first_name,
          last_name
-       )`
+       )`,
     )
     .eq("id", sessionId)
     .single();
 
   if (sessionError || !session) {
-    return NextResponse.json(
-      { error: "Session not found." },
-      { status: 404 }
-    );
+    return NextResponse.json({ error: "Session not found." }, { status: 404 });
   }
 
   // Build joined_name from the joined student row
@@ -63,7 +62,7 @@ export async function GET(req, { params }) {
   if (session.status === "completed") {
     return NextResponse.json(
       { session_complete: true, joined_name },
-      { status: 200 }
+      { status: 200 },
     );
   }
 
@@ -71,7 +70,7 @@ export async function GET(req, { params }) {
   if (session.status === "abandoned") {
     return NextResponse.json(
       { error: "Session has been abandoned.", session_complete: false },
-      { status: 409 }
+      { status: 409 },
     );
   }
 
@@ -85,7 +84,8 @@ export async function GET(req, { params }) {
        teks_standard,
        dok_level,
        question_type,
-       question_json`
+       question_json,
+       question_source`,
     )
     .eq("session_id", sessionId)
     .is("student_answer", null)
@@ -97,7 +97,7 @@ export async function GET(req, { params }) {
     console.error("[assessments/current] attempt fetch error:", attemptError);
     return NextResponse.json(
       { error: "Failed to fetch current question." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -115,15 +115,12 @@ export async function GET(req, { params }) {
         .eq("status", "in_progress"); // guard: only update if still in_progress
     } catch (completeErr) {
       // Non-fatal — log and return session_complete anyway
-      console.error(
-        "[assessments/current] auto-complete error:",
-        completeErr
-      );
+      console.error("[assessments/current] auto-complete error:", completeErr);
     }
 
     return NextResponse.json(
       { session_complete: true, joined_name },
-      { status: 200 }
+      { status: 200 },
     );
   }
 
@@ -135,8 +132,17 @@ export async function GET(req, { params }) {
       session_id: sessionId,
       attempt_id: attempt.id,
       joined_name,
+      stimulus: session.stimulus ?? null,
+      stimulus_json:
+        session.stimulus_json &&
+        typeof session.stimulus_json === "object" &&
+        !Array.isArray(session.stimulus_json)
+          ? session.stimulus_json
+          : null,
+      passage_format: session.passage_format ?? "prose",
       question: {
-        attempt_id: attempt.id,  
+        attempt_id: attempt.id,
+        source: attempt.question_source ?? "ai",
         stem: q.stem ?? null,
         passage: q.passage ?? null,
         answer_options: q.answer_options ?? null,
@@ -146,10 +152,9 @@ export async function GET(req, { params }) {
         // hot_text_targets only present for hot_text question type
         hot_text_targets: q.hot_text_targets ?? null,
         passage_tokens: q.passage_tokens ?? null,
-      
       },
       session_complete: false,
     },
-    { status: 200 }
+    { status: 200 },
   );
 }

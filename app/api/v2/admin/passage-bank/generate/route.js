@@ -16,9 +16,13 @@
 import { NextResponse } from "next/server";
 import { requirePassageBankAdmin } from "@/libs/v2/passageBank/requirePassageBankAdmin";
 import { createV2ServiceClient } from "@/libs/supabase/server-v2";
-
+import { getELAContentFocusOption } from "@/libs/constants/adaptiveContentFocusOptions";
 import { generatePassageQuestionBankDraft } from "@/libs/adaptive/questionBank/generators";
 import { validatePassageQuestionBankPackage } from "@/libs/adaptive/questionBank/validatePassageQuestionBankPackage";
+import {
+  getElaPassageBankTeksCluster,
+  buildElaQuestionTeksPlan,
+} from "@/libs/constants/elaPassageBankTeksClusters";
 export const dynamic = "force-dynamic";
 
 const MAX_TOTAL_QUESTIONS = 30;
@@ -52,7 +56,6 @@ function normalizeOptionalString(value) {
 function normalizeRequiredString(value) {
   return typeof value === "string" ? value.trim() : "";
 }
-
 
 /**
  * @param {unknown} value
@@ -205,14 +208,13 @@ export async function POST(request) {
      * ----------------------------------------------------------
      */
 
-      const adminAuth =
-        await requirePassageBankAdmin();
+    const adminAuth = await requirePassageBankAdmin();
 
-      if (!adminAuth.success) {
-        return adminAuth.response;
-      }
+    if (!adminAuth.success) {
+      return adminAuth.response;
+    }
 
-      const { user } = adminAuth;
+    const { user } = adminAuth;
     /*
      * ----------------------------------------------------------
      * 2. Parse body
@@ -259,7 +261,21 @@ export async function POST(request) {
 
     const passageFormat = normalizeRequiredString(body.passage_format);
 
+    const requestedContentFocusKey = normalizeOptionalString(
+      body.content_focus_key,
+    );
+
     const difficultyLevel = normalizeDokLevel(body.difficulty_level ?? 2);
+
+    if (subject === "ELA" && !requestedContentFocusKey) {
+      return NextResponse.json(
+        {
+          error:
+            "content_focus_key is required for ELA passage-bank generation.",
+        },
+        { status: 400 },
+      );
+    }
 
     if (!subject || !gradeLevel || !teksStandard || !passageFormat) {
       return NextResponse.json(
@@ -284,6 +300,12 @@ export async function POST(request) {
       );
     }
 
+    /*
+     * ----------------------------------------------------------
+     * 3A. Validate and normalize question plan
+     * ----------------------------------------------------------
+     */
+
     const questionPlanResult = normalizeQuestionPlan(body.question_plan);
 
     if (!questionPlanResult.success) {
@@ -299,6 +321,69 @@ export async function POST(request) {
 
     /*
      * ----------------------------------------------------------
+     * 3B. Resolve ELA passage-bank TEKS cluster
+     * ----------------------------------------------------------
+     */
+
+    let teksCluster = null;
+    let questionTeksPlan = null;
+
+    if (subject === "ELA") {
+      teksCluster = getElaPassageBankTeksCluster(teksStandard);
+
+      if (!teksCluster) {
+        return NextResponse.json(
+          {
+            error: `${teksStandard} is not configured as an ELA passage-bank primary TEKS.`,
+          },
+          {
+            status: 400,
+          },
+        );
+      }
+
+      const totalQuestions = questionPlanResult.data.reduce(
+        (total, row) => total + Number(row.count || 0),
+        0,
+      );
+
+      questionTeksPlan = buildElaQuestionTeksPlan({
+        primaryTeks: teksStandard,
+        totalQuestions,
+      });
+    }
+    let resolvedContentFocusKey = requestedContentFocusKey;
+
+    let resolvedContentFocus = normalizeOptionalString(body.content_focus);
+
+    if (subject === "ELA") {
+      const focusOption = getELAContentFocusOption(
+        teksStandard,
+        requestedContentFocusKey,
+      );
+
+      if (!focusOption) {
+        return NextResponse.json(
+          {
+            error: `Invalid content_focus_key "${requestedContentFocusKey}" for TEKS ${teksStandard}.`,
+
+            code: "INVALID_CONTENT_FOCUS_KEY",
+          },
+          { status: 400 },
+        );
+      }
+
+      resolvedContentFocusKey = focusOption.key;
+
+      /*
+       * The backend catalog—not the request body—is the canonical
+       * source of the structural passage focus.
+       */
+      resolvedContentFocus = focusOption.prompt;
+    }
+
+    /*
+     * ----------------------------------------------------------
      * 4. Generate using shared dispatcher
      * ----------------------------------------------------------
      */
@@ -309,9 +394,20 @@ export async function POST(request) {
       teksStandard,
       passageFormat,
 
-      contentFocus: normalizeOptionalString(body.content_focus),
+      contentFocus: resolvedContentFocus,
 
-      contentFocusKey: normalizeOptionalString(body.content_focus_key),
+      contentFocusKey: resolvedContentFocusKey,
+      // contentFocus: normalizeOptionalString(body.content_focus),
+
+      // contentFocusKey: normalizeOptionalString(body.content_focus_key),
+
+      primaryTeks: teksCluster?.primary_teks ?? teksStandard,
+
+      supportedTeks: teksCluster?.supported_teks ?? [],
+
+      passageFamily: teksCluster?.passage_family ?? null,
+
+      questionTeksPlan,
 
       title: normalizeOptionalString(body.title),
 
@@ -346,259 +442,181 @@ export async function POST(request) {
         treatRecommendationsAsErrors: false,
       },
     );
- /*
- * ----------------------------------------------------------
- * 6. Build the persistent draft package
- * ----------------------------------------------------------
- */
+    /*
+     * ----------------------------------------------------------
+     * 6. Build the persistent draft package
+     * ----------------------------------------------------------
+     */
 
-const draftPackage = {
-  passage: generatedPackage.passage,
-  questions: generatedPackage.questions,
-};
+    const draftPackage = {
+      passage: generatedPackage.passage,
+      questions: generatedPackage.questions,
+    };
 
-const validationSnapshot = {
-  success: validation.success,
-  issues: validation.issues,
-  errors: validation.errors,
-  warnings: validation.warnings,
-};
+    const validationSnapshot = {
+      success: validation.success,
+      issues: validation.issues,
+      errors: validation.errors,
+      warnings: validation.warnings,
+    };
 
-const generationSnapshot = {
-  ...(isPlainObject(generatedPackage.generation)
-    ? generatedPackage.generation
-    : {}),
+    const generationSnapshot = {
+      ...(isPlainObject(generatedPackage.generation)
+        ? generatedPackage.generation
+        : {}),
 
-  request: {
-    subject,
-    grade_level: gradeLevel,
-    teks_standard: teksStandard,
-    passage_format: passageFormat,
+      request: {
+        subject,
+        grade_level: gradeLevel,
+        teks_standard: teksStandard,
+        passage_format: passageFormat,
 
-    content_focus:
-      normalizeOptionalString(
-        body.content_focus,
-      ),
+        content_focus: resolvedContentFocus,
 
-    content_focus_key:
-      normalizeOptionalString(
-        body.content_focus_key,
-      ),
+        content_focus_key: resolvedContentFocusKey,
 
-    requested_title:
-      normalizeOptionalString(
-        body.title,
-      ),
+        primary_teks: teksCluster?.primary_teks ?? teksStandard,
 
-    skill_tags:
-      normalizeStringArray(
-        body.skill_tags,
-      ),
+        supported_teks: teksCluster?.supported_teks ?? [],
 
-    difficulty_level:
-      difficultyLevel,
+        passage_family: teksCluster?.passage_family ?? null,
 
-    testing_window:
-      normalizeOptionalString(
-        body.testing_window,
-      ),
+        question_teks_plan: questionTeksPlan,
 
-    question_plan:
-      questionPlanResult.data,
+        requested_title: normalizeOptionalString(body.title),
 
-    generator_options:
-      isPlainObject(
-        body.generator_options,
-      )
-        ? body.generator_options
-        : {},
-  },
-};
+        skill_tags: normalizeStringArray(body.skill_tags),
 
-/*
- * ----------------------------------------------------------
- * 7. Persist the generated draft
- * ----------------------------------------------------------
- */
+        difficulty_level: difficultyLevel,
 
-const serviceSupabase =
-  await createV2ServiceClient();
+        testing_window: normalizeOptionalString(body.testing_window),
 
-const {
-  data: savedDraft,
-  error: saveDraftError,
-} = await serviceSupabase
-  .from(
-    "passage_bank_draft_packages",
-  )
-  .insert({
-    status: "draft",
+        question_plan: questionPlanResult.data,
 
-    subject:
-      generatedPackage.passage.subject,
+        generator_options: isPlainObject(body.generator_options)
+          ? body.generator_options
+          : {},
+      },
+    };
 
-    grade_level:
-      String(
-        generatedPackage.passage
-          .grade_level,
-      ),
+    /*
+     * ----------------------------------------------------------
+     * 7. Persist the generated draft
+     * ----------------------------------------------------------
+     */
 
-    teks_standard:
-      generatedPackage.passage
-        .teks_standard,
+    const serviceSupabase = await createV2ServiceClient();
 
-    passage_format:
-      generatedPackage.passage
-        .passage_format,
+    const { data: savedDraft, error: saveDraftError } = await serviceSupabase
+      .from("passage_bank_draft_packages")
+      .insert({
+        status: "draft",
 
-    content_focus_key:
-      normalizeOptionalString(
-        generatedPackage.passage
-          .content_focus_key,
-      ),
+        subject: generatedPackage.passage.subject,
 
-    title:
-      normalizeOptionalString(
-        generatedPackage.passage.title,
-      ),
+        grade_level: String(generatedPackage.passage.grade_level),
 
-    draft_json:
-      draftPackage,
+        teks_standard: generatedPackage.passage.teks_standard,
 
-    validation_json:
-      validationSnapshot,
+        passage_format: generatedPackage.passage.passage_format,
 
-    generation_json:
-      generationSnapshot,
+        content_focus_key: normalizeOptionalString(
+          generatedPackage.passage.content_focus_key,
+        ),
 
-    created_by:
-      user.id,
+        title: normalizeOptionalString(generatedPackage.passage.title),
 
-    updated_by:
-      user.id,
-  })
-  .select(
-    `
+        draft_json: draftPackage,
+
+        validation_json: validationSnapshot,
+
+        generation_json: generationSnapshot,
+
+        created_by: user.id,
+
+        updated_by: user.id,
+      })
+      .select(
+        `
       id,
       status,
       created_at,
       updated_at
     `,
-  )
-  .single();
+      )
+      .single();
 
-if (
-  saveDraftError ||
-  !savedDraft
-) {
-  console.error(
-    "[admin/passage-bank/generate] Draft persistence failed",
-    {
-      error:
-        saveDraftError?.message ||
-        "No saved draft was returned.",
+    if (saveDraftError || !savedDraft) {
+      console.error("[admin/passage-bank/generate] Draft persistence failed", {
+        error: saveDraftError?.message || "No saved draft was returned.",
 
-      generated_by:
-        user.id,
+        generated_by: user.id,
 
-      subject:
-        generatedPackage.passage
-          .subject,
+        subject: generatedPackage.passage.subject,
 
-      grade_level:
-        generatedPackage.passage
-          .grade_level,
+        grade_level: generatedPackage.passage.grade_level,
 
-      teks_standard:
-        generatedPackage.passage
-          .teks_standard,
-    },
-  );
+        teks_standard: generatedPackage.passage.teks_standard,
+      });
 
-  return NextResponse.json(
-    {
-      error:
-        "The content was generated, but the draft could not be saved.",
+      return NextResponse.json(
+        {
+          error: "The content was generated, but the draft could not be saved.",
 
-      details:
-        process.env.NODE_ENV ===
-        "development"
-          ? saveDraftError?.message ||
-            "No saved draft was returned."
-          : undefined,
-    },
-    {
-      status: 500,
-    },
-  );
-}
+          details:
+            process.env.NODE_ENV === "development"
+              ? saveDraftError?.message || "No saved draft was returned."
+              : undefined,
+        },
+        {
+          status: 500,
+        },
+      );
+    }
 
-/*
- * ----------------------------------------------------------
- * 8. Return the saved reviewable draft
- * ----------------------------------------------------------
- */
+    /*
+     * ----------------------------------------------------------
+     * 8. Return the saved reviewable draft
+     * ----------------------------------------------------------
+     */
 
-console.info(
-  "[admin/passage-bank/generate] Draft generated and saved",
-  {
-    draft_id:
-      savedDraft.id,
+    console.info("[admin/passage-bank/generate] Draft generated and saved", {
+      draft_id: savedDraft.id,
 
-    generated_by:
-      user.id,
+      generated_by: user.id,
 
-    subject:
-      generatedPackage.passage
-        .subject,
+      subject: generatedPackage.passage.subject,
 
-    grade_level:
-      generatedPackage.passage
-        .grade_level,
+      grade_level: generatedPackage.passage.grade_level,
 
-    teks_standard:
-      generatedPackage.passage
-        .teks_standard,
+      teks_standard: generatedPackage.passage.teks_standard,
 
-    passage_format:
-      generatedPackage.passage
-        .passage_format,
+      passage_format: generatedPackage.passage.passage_format,
 
-    question_count:
-      generatedPackage.questions
-        .length,
+      question_count: generatedPackage.questions.length,
 
-    structurally_valid:
-      validation.success,
-  },
-);
+      structurally_valid: validation.success,
+    });
 
-return NextResponse.json({
-  success: true,
+    return NextResponse.json({
+      success: true,
 
-  ready_for_review: true,
+      ready_for_review: true,
 
-  structurally_valid:
-    validation.success,
+      structurally_valid: validation.success,
 
-  draft_id:
-    savedDraft.id,
+      draft_id: savedDraft.id,
 
-  draft_status:
-    savedDraft.status,
+      draft_status: savedDraft.status,
 
-  saved_at:
-    savedDraft.created_at,
+      saved_at: savedDraft.created_at,
 
-  draft:
-    draftPackage,
+      draft: draftPackage,
 
-  validation:
-    validationSnapshot,
+      validation: validationSnapshot,
 
-  generation:
-    generationSnapshot,
-});
+      generation: generationSnapshot,
+    });
   } catch (error) {
     console.error("[admin/passage-bank/generate] Generation failed", {
       error: error instanceof Error ? error.message : String(error),

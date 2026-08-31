@@ -17,6 +17,8 @@ export default function ClassroomClient({ classroom, initialStudents, classroomI
   const [showUpload, setShowUpload] = useState(false);
   const [showAssignPanel, setShowAssignPanel] = useState(false);
 
+  const now = new Date();
+
   const sessionByStudent = Object.fromEntries(
     (active_sessions ?? [])
     .filter((s) => !(s.status === "in_progress" && s.expires_at && new Date(s.expires_at) < now))

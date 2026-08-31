@@ -1,70 +1,22 @@
 "use client";
 
-// /app/(v2)/classroom/[classroomId]/assign/AssignClient.jsx
+// /app/(protected)/(v2)/classroom/[classroomId]/assign/AssignClient.jsx
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { TEKS_READING_MAP, TEKS_LABELS,  } from "@/libs/constants/teksReadingMap";
 import { buildTeksOptions } from "@/libs/constants/teksSubjectMap";
-
-
-
-// // Build a flat list of { code, label, bucket } for every grade
-// function buildAllTeksOptions() {
-//   const options = [];
-//   const seen = new Set();
-
-//   for (const [gradeKey, buckets] of Object.entries(TEKS_READING_MAP)) {
-//     const gradeNum = gradeKey.replace("grade", "");
-//     for (const [bucket, codes] of Object.entries(buckets)) {
-//       const bucketLabel = TEKS_BUCKET_LABELS[bucket] ?? bucket;
-//       for (const code of codes) {
-//         if (!seen.has(code)) {
-//           seen.add(code);
-//           options.push({
-//             code,
-//             label: `${code} — ${bucketLabel}`,
-//             bucket: bucketLabel,
-//             grade: gradeNum,
-//           });
-//         }
-//       }
-//     }
-//   }
-
-//   // Sort by grade then code
-//   options.sort((a, b) =>
-//     Number(a.grade) !== Number(b.grade)
-//       ? Number(a.grade) - Number(b.grade)
-//       : a.code.localeCompare(b.code)
-//   );
-
-//   return options;
-// }
-
-// const ALL_TEKS_OPTIONS = buildAllTeksOptions();
-
-// // Group options by grade for <optgroup> rendering
-// function groupByGrade(options) {
-//   const map = {};
-//   for (const opt of options) {
-//     if (!map[opt.grade]) map[opt.grade] = [];
-//     map[opt.grade].push(opt);
-//   }
-//   return map;
-// }
-
-// const TEKS_BY_GRADE = groupByGrade(ALL_TEKS_OPTIONS);
-// Build a flat list of { code, label } for a specific grade level.
-// gradeLevel should be a string like "7" — matches TEKS_READING_MAP key "grade7".
-// Returns [] if the grade isn't in the map (safe fallback).
+import {
+  getAdaptiveContentFocusSuggestions,
+  ELA_CONTENT_FOCUS_CHIPS,
+} from "@/libs/constants/adaptiveContentFocusOptions";
+import { buildPassageBankTeksOptions } from "@/libs/constants/teksSubjectMap";
 
 const QUESTION_TYPES = [
   { value: "multiple_choice", label: "Multiple Choice" },
   { value: "hot_text", label: "Hot Text" },
   { value: "constructed_response", label: "Constructed Response" },
-  { value: "multi_select",    label: "Multi-Select" },
-  { value: "inline_choice",   label: "Inline Choice" },
+  { value: "multi_select", label: "Multi-Select" },
+  // { value: "inline_choice",   label: "Inline Choice" },
 ];
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -76,17 +28,11 @@ export default function AssignClient({
   preSelectedStudentId,
   gradeLevel,
   testingWindow,
-  subject
+  subject,
 }) {
-    // Derived at render time — reruns automatically if gradeLevel prop changes
- // const teksCodes = buildTeksAllowed(gradeLevel); // flat array of codes for this grade
-  // const teksOptions = teksCodes.map((code) => ({
-  // code,
-  // label: TEKS_LABELS[code] ?? code, // fallback to raw code if label missing
-  // }));  
-  const teksOptions = buildTeksOptions(subject, gradeLevel);
-  const subjectNotMapped = teksOptions.length === 0;
+  const teksOptions = buildPassageBankTeksOptions(subject, gradeLevel);
 
+  const hasNoAssignableTeks = teksOptions.length === 0;
   const router = useRouter();
 
   const [form, setForm] = useState({
@@ -95,6 +41,8 @@ export default function AssignClient({
     question_type: "multiple_choice",
     dok_level: 1,
     testing_window: testingWindow ?? "",
+    content_focus: "",
+    content_focus_key: "",
   });
   console.log("Grade level in AssignClient:", gradeLevel);
   console.log("Subject in AssignClient:", subject);
@@ -103,12 +51,62 @@ export default function AssignClient({
   const [success, setSuccess] = useState(null); // { session_id, join_code }
   const [copied, setCopied] = useState(false);
 
+  // Drama TEKS standards — content focus placeholder switches for these
+  const DRAMA_TEKS = ["6.8C", "7.8C", "8.8C"];
+
+  const contentFocusSuggestions =
+    subject === "ELA" && form.teks_standard === "8.8C"
+      ? ELA_CONTENT_FOCUS_CHIPS["8.8C"]
+      : getAdaptiveContentFocusSuggestions({
+          subject,
+          gradeLevel,
+          teksStandard: form.teks_standard,
+        });
+
+  const contentFocusPlaceholder = DRAMA_TEKS.includes(form.teks_standard)
+    ? "A short drama about..."
+    : "Example: Focus on how region, resources, food, and shelter shaped each culture.";
+
   const handleChange = (e) => {
     const { name, value } = e.target;
+
     setForm((prev) => ({
       ...prev,
       [name]: name === "dok_level" ? Number(value) : value,
+
+      // If TEKS changes, clear old content focus so the teacher
+      // does not accidentally submit a focus from a previous standard.
+      ...(name === "teks_standard"
+        ? { content_focus: "", content_focus_key: "" }
+        : {}),
     }));
+
+    if (error) setError(null);
+  };
+
+  const handleAddFocus = (suggestion) => {
+    setForm((prev) => {
+      const current = prev.content_focus.trim();
+      // Don't add if already present
+      if (current.includes(suggestion)) return prev;
+      const updated = current ? `${current}, ${suggestion}` : suggestion;
+      return { ...prev, content_focus: updated };
+    });
+    if (error) setError(null);
+  };
+
+  const handleSelectChip = (chip) => {
+    setForm((prev) => {
+      // Toggle off if already selected
+      if (prev.content_focus_key === chip.key) {
+        return { ...prev, content_focus: "", content_focus_key: "" };
+      }
+      return {
+        ...prev,
+        content_focus: chip.prompt, // generator uses this
+        content_focus_key: chip.key, // passage bank uses this
+      };
+    });
     if (error) setError(null);
   };
 
@@ -125,6 +123,16 @@ export default function AssignClient({
       return;
     }
 
+    if (!form.testing_window) {
+      setError("Please select a testing window.");
+      return;
+    }
+
+    // if (!form.content_focus.trim()) {
+    //   setError("Please add at least one content focus.");
+    //   return;
+    // }
+
     setLoading(true);
 
     try {
@@ -135,9 +143,11 @@ export default function AssignClient({
           student_id: form.student_id,
           classroom_id: classroomId,
           teks_standard: form.teks_standard,
-          question_type: form.question_type,
-          dok_level: form.dok_level,
           testing_window: form.testing_window,
+
+          question_type: "multiple_choice",
+          content_focus: null,
+          content_focus_key: null,
         }),
       });
 
@@ -150,10 +160,28 @@ export default function AssignClient({
 
       setSuccess({ session_id: data.session_id, join_code: data.join_code });
     } catch {
-      setError("Something went wrong. Please check your connection and try again.");
+      setError(
+        "Something went wrong. Please check your connection and try again.",
+      );
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleClearSelections = () => {
+    setForm({
+      student_id: preSelectedStudentId ?? "",
+      teks_standard: "",
+      question_type: "multiple_choice",
+      dok_level: 1,
+      testing_window: testingWindow ?? "",
+      content_focus: "",
+      content_focus_key: "",
+    });
+
+    setError(fetchError ?? null);
+    setSuccess(null);
+    setCopied(false);
   };
 
   const handleReset = () => {
@@ -166,6 +194,8 @@ export default function AssignClient({
       question_type: "multiple_choice",
       dok_level: 1,
       testing_window: testingWindow ?? "",
+      content_focus: "",
+      content_focus_key: "",
     });
   };
 
@@ -187,6 +217,18 @@ export default function AssignClient({
       setTimeout(() => setCopied(false), 2000);
     }
   };
+
+  const groupedTeksOptions = teksOptions.reduce((groups, option) => {
+    const groupName = option.family_label || "Other";
+
+    if (!groups[groupName]) {
+      groups[groupName] = [];
+    }
+
+    groups[groupName].push(option);
+
+    return groups;
+  }, {});
 
   // ── Success state ──────────────────────────────────────────────────────────
   if (success) {
@@ -397,40 +439,130 @@ export default function AssignClient({
               >
                 TEKS Standard <span className="text-red-500">*</span>
               </label>
-             {/* Subject not yet mapped warning */}
-{subjectNotMapped && (
-  <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl text-sm">
-    <span>
-      TEKS standards for <strong>{subject}</strong> aren&apos;t mapped yet.
-      Add them to <code className="text-xs bg-amber-100 px-1 rounded">teksSubjectMap.js</code> to
-      enable assignment for this classroom.
-    </span>
-  </div>
-)}
 
-{/* TEKS dropdown — disable when subject not mapped */}
-<select
-  id="teks_standard"
-  name="teks_standard"
-  required
-  value={form.teks_standard}
-  onChange={handleChange}
-  disabled={subjectNotMapped}
-  className="w-full px-4 py-2.5 rounded-xl border border-purple-200 bg-purple-50 text-purple-900 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
->
-              <option value="">
-                {subjectNotMapped ? "— No standards mapped for this subject —" : "— Select standard —"}
-              </option>
-              {teksOptions.map((opt) => (
-                <option key={opt.code} value={opt.code}>
-                  {opt.label}
+              {hasNoAssignableTeks && (
+                <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl text-sm">
+                  <span>
+                    No passage-bank standards are currently available for{" "}
+                    <strong>{subject}</strong> in grade{" "}
+                    <strong>{gradeLevel}</strong>.
+                  </span>
+                </div>
+              )}
+
+              <select
+                id="teks_standard"
+                name="teks_standard"
+                required
+                value={form.teks_standard}
+                onChange={handleChange}
+                disabled={hasNoAssignableTeks}
+                className="w-full px-4 py-2.5 max-h-64 overflow-y-auto rounded-xl border border-purple-200 bg-purple-50 text-purple-900 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <option value="">
+                  {hasNoAssignableTeks
+                    ? "— No passage-bank standards available —"
+                    : "— Select primary standard —"}
                 </option>
-              ))}
-            </select>
+
+                {Object.entries(groupedTeksOptions).map(
+                  ([familyLabel, options]) => (
+                    <optgroup key={familyLabel} label={familyLabel}>
+                      {options.map((option) => (
+                        <option key={option.code} value={option.code}>
+                          {option.code} — {option.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ),
+                )}
+              </select>
+            </div>
+
+            {/* ── Content Focus ─────────────────────────────────────────── */}
+            <div className="space-y-2">
+              {/* <label
+                htmlFor="content_focus"
+                className="block text-sm font-semibold text-purple-900"
+              >
+                Content Focus <span className="text-red-500">*</span>
+              </label> */}
+
+              {/* Suggestion chips — clicking appends to textarea */}
+              {/* {contentFocusSuggestions.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {contentFocusSuggestions.map((chip) => {
+                    // ELA drama chips are objects { key, label, prompt }
+                    // SS/Science chips are plain strings
+                    const isObject = chip !== null && typeof chip === "object";
+                    const chipKey = isObject ? chip.key : null;
+                    const chipLabel = isObject ? chip.label : chip;
+
+                    const isSelected = isObject
+                      ? form.content_focus_key === chipKey
+                      : form.content_focus.includes(chip);
+
+                    return (
+                      <button
+                        key={chipKey ?? chipLabel}
+                        type="button"
+                        onClick={
+                          () =>
+                            isObject
+                              ? handleSelectChip(chip) // ELA drama — single select with key
+                              : handleAddFocus(chipLabel) // SS/Science — append to textarea
+                        }
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition active:scale-95 ${
+                          isSelected
+                            ? "bg-purple-600 text-white border-purple-600"
+                            : "bg-white text-purple-700 border-purple-200 hover:border-purple-400"
+                        }`}
+                      >
+                        {isSelected ? `✓ ${chipLabel}` : `+ ${chipLabel}`}
+                      </button>
+                    );
+                  })}
+                </div>
+              )} */}
+              {/* Textarea — teacher can edit freely or type their own */}
+              {/* <textarea
+                id="content_focus"
+                name="content_focus"
+                value={form.content_focus}
+                onChange={form.content_focus_key ? undefined : handleChange}
+                readOnly={!!form.content_focus_key}
+                rows={3}
+                placeholder={contentFocusPlaceholder}
+                className={`w-full px-4 py-2.5 rounded-xl border border-purple-200 text-purple-900 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition ${
+                  form.content_focus_key
+                    ? "bg-purple-50 opacity-75 cursor-default"
+                    : "bg-purple-50"
+                }`}
+              /> */}
+              {/* {form.content_focus_key ? (
+                <p className="text-xs text-purple-500 pl-1">
+                  Using curated drama passage — select a different chip to
+                  change.
+                </p>
+              ):
+                <p className="text-xs text-purple-400 pl-1">
+                Select one or more focus areas, or write your own. Chips append
+                to the field — you can edit freely.
+              </p>
+              } */}
+
+              {/* <button
+                type="button"
+                onClick={handleClearSelections}
+                disabled={loading}
+                className="w-full rounded-xl border border-purple-200 bg-white px-4 py-2.5 text-sm font-medium text-purple-700 hover:bg-purple-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Clear selections
+              </button> */}
             </div>
 
             {/* ── 3. Question type ───────────────────────────────────────── */}
-            <div className="space-y-1.5">
+            {/* <div className="space-y-1.5">
               <label
                 htmlFor="question_type"
                 className="block text-sm font-semibold text-purple-900"
@@ -450,9 +582,9 @@ export default function AssignClient({
                   </option>
                 ))}
               </select>
-            </div>
+            </div> */}
 
-                        {/* ── 4. Testing Window ──────────────────────────────────────── */}
+            {/* ── 4. Testing Window ──────────────────────────────────────── */}
             <div className="space-y-1.5">
               <label
                 htmlFor="testing_window"
@@ -467,7 +599,9 @@ export default function AssignClient({
                 onChange={handleChange}
                 className="w-full px-4 py-2.5 rounded-xl border border-purple-200 bg-purple-50 text-purple-900 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
               >
-                <option value="">— None / Not specified —</option>
+                <option value="" disabled>
+                  — None / Not specified —
+                </option>
                 <option value="BOY">BOY — Beginning of Year</option>
                 <option value="MOY">MOY — Middle of Year</option>
                 <option value="EOY">EOY — End of Year</option>
@@ -479,9 +613,8 @@ export default function AssignClient({
               )}
             </div>
 
-
             {/* ── 5. Starting DOK level ──────────────────────────────────── */}
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <span className="block text-sm font-semibold text-purple-900">
                 Starting DOK Level
               </span>
@@ -524,7 +657,7 @@ export default function AssignClient({
                 Sessions always start at DOK 1 by default. Adjust only if you
                 have prior data on this student.
               </p>
-            </div>
+            </div> */}
 
             {/* ── Actions ────────────────────────────────────────────────── */}
             <div className="flex gap-3 pt-2">
@@ -538,7 +671,7 @@ export default function AssignClient({
               </button>
               <button
                 type="submit"
-                disabled={loading || students.length === 0 || subjectNotMapped}
+                disabled={loading || students.length === 0 || hasNoAssignableTeks}
                 className="flex-1 px-4 py-2.5 rounded-xl bg-yellow-400 text-purple-900 text-sm font-bold hover:bg-yellow-300 active:scale-95 transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
               >
                 {loading ? (
@@ -595,23 +728,14 @@ function BackgroundAccent() {
   );
 }
 
-
-
-
-
-
-
-
-
-
 // function buildTeksOptionsForGrade(gradeLevel) {
 //   if (!gradeLevel) return [];
 //   const buckets = TEKS_READING_MAP[`grade${gradeLevel}`];
 //   if (!buckets) return [];
- 
+
 //   const options = [];
 //   const seen = new Set();
- 
+
 //   for (const [bucket, codes] of Object.entries(buckets)) {
 //     const bucketLabel = TEKS_BUCKET_LABELS[bucket] ?? bucket;
 //     for (const code of codes) {
@@ -621,6 +745,6 @@ function BackgroundAccent() {
 //       }
 //     }
 //   }
- 
+
 //   return options.sort((a, b) => a.code.localeCompare(b.code));
 // }

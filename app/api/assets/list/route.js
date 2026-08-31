@@ -34,7 +34,7 @@ export async function GET() {
 
     return NextResponse.json({ assets: data || [] });
   } catch (err) {
-    console.error("assets/list fatal:", e);
+    console.error("assets/list fatal:", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

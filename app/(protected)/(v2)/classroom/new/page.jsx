@@ -1,3 +1,4 @@
+//app/(protected)/(v2)/classroom/new/page.jsx
 "use client";
 
 // /app/(v2)/classroom/new/page.jsx
@@ -41,7 +42,7 @@ export default function NewClassroomPage() {
     setError(null);
 
     const { name, grade_level, subject, school_year, testing_window } = form;
-    if (!name.trim() || !grade_level || !subject || !school_year) {
+    if (!name.trim() || !grade_level || !subject || !school_year || !testing_window) {
       setError("Please fill in all required fields.");
       return;
     }
@@ -212,13 +213,20 @@ export default function NewClassroomPage() {
             />
           </Field>
 
-          {/* Testing window */}
-          <Field label="Testing Window" hint="Optional — you can update this later">
+          {/* Testing window — REQUIRED. A classroom with no testing_window
+              silently breaks portfolio scoring in completeSession.js, since
+              boy_score/moy_score/eoy_score never get written for sessions
+              without a valid window. */}
+          <Field
+            label="Testing Window"
+            required
+            hint="Sets which window this classroom's sessions count toward"
+          >
             <Select
               name="testing_window"
               value={form.testing_window}
               onChange={handleChange}
-              placeholder="Select testing window (optional)"
+              placeholder="Select testing window"
               options={TESTING_WINDOWS}
             />
           </Field>
@@ -277,7 +285,7 @@ export default function NewClassroomPage() {
         </button>
 
         <p className="text-center text-xs" style={{ color: "#6b5a99" }}>
-          You'll be able to upload a roster after setup. Google Classroom connect coming soon!
+          You&apos;ll be able to upload a roster after setup. Google Classroom connect coming soon!
         </p>
       </form>
     </div>
@@ -347,4 +355,3 @@ function Select({ name, value, onChange, placeholder, options }) {
     </div>
   );
 }
-

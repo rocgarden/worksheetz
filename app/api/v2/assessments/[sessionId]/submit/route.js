@@ -3,13 +3,15 @@
 // Scores a student answer, updates question_attempts,
 // generates next question via next_question_logic,
 // and returns next question or session complete signal.
-import { createClient } from "@/libs/supabase/server";
 import { createV2ServiceClient } from "@/libs/supabase/server-v2";
-import { adaptiveQuestionGenerator } from "@/libs/adaptive";
 import { completeSession } from "@/libs/v2/completeSession";
 import { NextResponse } from "next/server";
 import { OpenAI } from "openai";
-import { sanitizeInput, deepSanitize } from "@/libs/sanitize"; // ← Use wrapper
+import { sanitizeInput } from "@/libs/sanitize"; // ← Use wrapper
+import {
+  getReusableQuestionForSession,
+  incrementPassageQuestionUsage,
+} from "@/libs/adaptive/passageBank";
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -23,7 +25,6 @@ const MAX_QUESTIONS_BY_TYPE = {
 };
 export async function POST(req, { params }) {
   // ── 1. Feature flag guard ────────────────────────────────────────────────
- 
 
   // ── 2. Auth check ────────────────────────────────────────────────────────
   //const supabase = await createClient(); // no need to fetch user for auth check since this route is teacher-facing and we verify ownership in the next step
@@ -39,7 +40,7 @@ export async function POST(req, { params }) {
   if (!sessionId) {
     return NextResponse.json(
       { error: "Missing sessionId in route." },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -50,7 +51,7 @@ export async function POST(req, { params }) {
   } catch {
     return NextResponse.json(
       { error: "Invalid request body." },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -59,10 +60,9 @@ export async function POST(req, { params }) {
   if (!attempt_id || student_answer === undefined || student_answer === null) {
     return NextResponse.json(
       {
-        error:
-          "Missing required fields: attempt_id, student_answer.",
+        error: "Missing required fields: attempt_id, student_answer.",
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -70,7 +70,23 @@ export async function POST(req, { params }) {
   const { data: session, error: sessionError } = await serviceSupabase
     .from("adaptive_sessions")
     .select(
-      "id, student_id, teacher_id, classroom_id, teks_standard, subject, grade_level, testing_window, status"
+      `
+    id,
+    student_id,
+    teacher_id,
+    classroom_id,
+    teks_standard,
+    subject,
+    grade_level,
+    testing_window,
+    status,
+    stimulus,
+    stimulus_json,
+    content_focus,
+    content_focus_key,
+    passage_format,
+    passage_bank_id
+  `,
     )
     .eq("id", sessionId)
     // .eq("teacher_id", user.id) // ownership verified via attempt → session → teacher_id, so no need to filter by teacher_id here
@@ -79,21 +95,23 @@ export async function POST(req, { params }) {
   if (sessionError || !session) {
     return NextResponse.json(
       { error: "Session not found or access denied." },
-      { status: 404 }
+      { status: 404 },
     );
   }
 
   if (session.status !== "in_progress") {
     return NextResponse.json(
       { error: `Session is already ${session.status}.` },
-      { status: 409 }
+      { status: 409 },
     );
   }
 
   // ── 6. Fetch the current question_attempt ────────────────────────────────
   const { data: attempt, error: attemptError } = await serviceSupabase
     .from("question_attempts")
-    .select("id, session_id, student_id, question_json, student_answer, dok_level, question_type, teks_standard")
+    .select(
+      "id, session_id, student_id, question_json, student_answer, dok_level, question_type, teks_standard",
+    )
     .eq("id", attempt_id)
     .eq("session_id", sessionId)
     .single();
@@ -101,14 +119,14 @@ export async function POST(req, { params }) {
   if (attemptError || !attempt) {
     return NextResponse.json(
       { error: "Attempt not found or does not belong to this session." },
-      { status: 404 }
+      { status: 404 },
     );
   }
 
   if (attempt.student_answer !== null) {
     return NextResponse.json(
       { error: "This attempt has already been submitted." },
-      { status: 409 }
+      { status: 409 },
     );
   }
 
@@ -117,10 +135,13 @@ export async function POST(req, { params }) {
   const correctAnswer = questionJson?.correct_answer;
 
   if (correctAnswer === undefined || correctAnswer === null) {
-    console.error("[assessments/submit] question_json missing correct_answer:", attempt_id);
+    console.error(
+      "[assessments/submit] question_json missing correct_answer:",
+      attempt_id,
+    );
     return NextResponse.json(
       { error: "Question data is malformed. Cannot score answer." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -131,95 +152,100 @@ export async function POST(req, { params }) {
     return JSON.stringify(val);
   };
 
-// hot_text scoring: student submits { index, sentence }
-// correct_answer is an array of target IDs e.g. ["ht4"]
-// Resolve student's selected index → target ID, then check membership
-let is_correct;
-let scr_feedback = null;
-let scr_score = null;
+  // hot_text scoring: student submits { index, sentence }
+  // correct_answer is an array of target IDs e.g. ["ht4"]
+  // Resolve student's selected index → target ID, then check membership
+  let is_correct;
+  let scr_feedback = null;
+  let scr_score = null;
 
-if (attempt.question_type === "hot_text") {
-  const targets = questionJson?.hot_text_targets ?? [];
-  const selectedTarget = targets[student_answer?.index];
-  const selectedId = selectedTarget?.id ?? null;
-  is_correct = Array.isArray(correctAnswer)
-    ? correctAnswer.includes(selectedId)
-    : correctAnswer === selectedId;
+  if (attempt.question_type === "hot_text") {
+    const targets = questionJson?.hot_text_targets ?? [];
+    const selectedTarget = targets[student_answer?.index];
+    const selectedId = selectedTarget?.id ?? null;
+    is_correct = Array.isArray(correctAnswer)
+      ? correctAnswer.includes(selectedId)
+      : correctAnswer === selectedId;
+  } else if (attempt.question_type === "constructed_response") {
+    // SCR scoring via OpenAI — 0|1|2 rubric
+    const scoringRubric = questionJson?.scoring_rubric ?? {};
+    const rubricText = Object.entries(scoringRubric)
+      .map(([k, v]) => `Score ${k}: ${v}`)
+      .join("\n");
+    const rawAnswer =
+      typeof student_answer === "string"
+        ? student_answer
+        : JSON.stringify(student_answer);
+    const sanitizedAnswer = sanitizeInput(rawAnswer);
+    const trimmed = sanitizedAnswer.trim();
 
-} else if (attempt.question_type === "constructed_response") {
-  // SCR scoring via OpenAI — 0|1|2 rubric
-  const scoringRubric = questionJson?.scoring_rubric ?? {};
-  const rubricText = Object.entries(scoringRubric)
-    .map(([k, v]) => `Score ${k}: ${v}`)
-    .join("\n");
-  const rawAnswer = typeof student_answer === "string"
-    ? student_answer
-    : JSON.stringify(student_answer);
-  const sanitizedAnswer = sanitizeInput(rawAnswer);
-  const trimmed = sanitizedAnswer.trim();
+    // ── Minimum effort guard ────────────────────────────────────────────────
+    // Catches "idk", "I don't know", "Teacher help me", etc.
+    // Skips OpenAI call entirely — saves cost and returns instant feedback.
+    const MIN_WORDS = 8;
+    const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
 
-  // ── Minimum effort guard ────────────────────────────────────────────────
-  // Catches "idk", "I don't know", "Teacher help me", etc.
-  // Skips OpenAI call entirely — saves cost and returns instant feedback.
-  const MIN_WORDS = 8;
-  const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
- 
-  const LOW_EFFORT_PATTERNS = [
-    /^i\s*(don'?t|do not)\s*know/i,
-    /^(idk|idc|idek|no\s*se|nope|nah|none|nothing|idk\s*lol)/i,
-    /^(teacher|ms\.|mr\.|mrs\.)/i,         // "Teacher I don't know"
-    /^(i\s*(can'?t|cannot)\s*(do|answer))/i,
-    /^(help|please\s*help|i\s*need\s*help)/i,
-    /^(\.+|\?+|!+|[^a-z0-9\s]{3,})/i,     // just punctuation / symbols
-  ];
- 
-  const isLowEffort =
-    wordCount < MIN_WORDS ||
-    LOW_EFFORT_PATTERNS.some((pattern) => pattern.test(trimmed));
- 
-  if (isLowEffort) {
-    console.log(`[assessments/submit] SCR low-effort detected — skipping AI scoring. words: ${wordCount}`);
-    is_correct = false;
-    scr_score = 0;
-    scr_feedback = wordCount < MIN_WORDS
-      ? "Your response is too short. Write at least 2 complete sentences and use evidence from the passage."
-      : "It looks like you may not have answered the question. Re-read the passage and try to use specific details in your response.";
-  } 
+    const LOW_EFFORT_PATTERNS = [
+      /^i\s*(don'?t|do not)\s*know/i,
+      /^(idk|idc|idek|no\s*se|nope|nah|none|nothing|idk\s*lol)/i,
+      /^(teacher|ms\.|mr\.|mrs\.)/i, // "Teacher I don't know"
+      /^(i\s*(can'?t|cannot)\s*(do|answer))/i,
+      /^(help|please\s*help|i\s*need\s*help)/i,
+      /^(\.+|\?+|!+|[^a-z0-9\s]{3,})/i, // just punctuation / symbols
+    ];
 
-else {
+    const isLowEffort =
+      wordCount < MIN_WORDS ||
+      LOW_EFFORT_PATTERNS.some((pattern) => pattern.test(trimmed));
 
-  try {
-    //const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    //const scoringResponse = await openai.chat.completions.create({
-    const scoringResponse = await client.chat.completions.create({
-      model: "gpt-4o",
-      temperature: 0,
-      response_format: { type: "json_object" },
-      messages: [
-        {
-          role: "user",
-          content: `You are a Texas ELA assessment scorer. Score this Grade ${session.grade_level} student response on a 0-2 rubric.\n\nTEKS: ${attempt.teks_standard}\nQuestion: ${questionJson?.stem}\nScoring rubric:\n${rubricText}\nStudent response: ${sanitizedAnswer}\n\nReturn ONLY valid JSON: { "score": 0|1|2, "feedback": "<one sentence explaining the score>" }`,
-        },
-      ],
-    });
+    if (isLowEffort) {
+      console.log(
+        `[assessments/submit] SCR low-effort detected — skipping AI scoring. words: ${wordCount}`,
+      );
+      is_correct = false;
+      scr_score = 0;
+      scr_feedback =
+        wordCount < MIN_WORDS
+          ? "Your response is too short. Write at least 2 complete sentences and use evidence from the passage."
+          : "It looks like you may not have answered the question. Re-read the passage and try to use specific details in your response.";
+    } else {
+      try {
+        //const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+        //const scoringResponse = await openai.chat.completions.create({
+        const scoringResponse = await client.chat.completions.create({
+          model: "gpt-4o",
+          temperature: 0,
+          response_format: { type: "json_object" },
+          messages: [
+            {
+              role: "user",
+              content: `You are a Texas ELA assessment scorer. Score this Grade ${session.grade_level} student response on a 0-2 rubric.\n\nTEKS: ${attempt.teks_standard}\nQuestion: ${questionJson?.stem}\nScoring rubric:\n${rubricText}\nStudent response: ${sanitizedAnswer}\n\nReturn ONLY valid JSON: { "score": 0|1|2, "feedback": "<one sentence explaining the score>" }`,
+            },
+          ],
+        });
 
-    const raw = scoringResponse.choices[0].message.content;
-    const parsed = JSON.parse(raw);
-    scr_score = Number(parsed.score);
-    scr_feedback = parsed.feedback ?? null;
-    is_correct = scr_score >= 1;
-  } catch (scrErr) {
-    console.error("[assessments/submit] SCR scoring error:", scrErr.message);
-    // Fail open — mark as incorrect, surface error in feedback
-    is_correct = false;
-    scr_feedback = "Scoring could not be completed. Please try again.";
-    scr_score = 0;
+        const raw = scoringResponse.choices[0].message.content;
+        const parsed = JSON.parse(raw);
+        scr_score = Number(parsed.score);
+        scr_feedback = parsed.feedback ?? null;
+        is_correct = scr_score >= 2;
+      } catch (scrErr) {
+        console.error(
+          "[assessments/submit] SCR scoring error:",
+          scrErr.message,
+        );
+        // Fail open — mark as incorrect, surface error in feedback
+        is_correct = false;
+        scr_feedback = "Scoring could not be completed. Please try again.";
+        scr_score = 0;
+      }
+    }
+  } else {
+    is_correct = normalize(student_answer) === normalize(correctAnswer);
   }
-  }
-} 
-else {
-  is_correct = normalize(student_answer) === normalize(correctAnswer);
-}
+
+  const isMastered = Number(scr_score) === 2;
+  const isPartial = Number(scr_score) === 1;
 
   // ── 8. Update question_attempts with submission ──────────────────────────
   const { error: updateError } = await serviceSupabase
@@ -237,7 +263,7 @@ else {
     console.error("[assessments/submit] attempt update error:", updateError);
     return NextResponse.json(
       { error: "Failed to save student answer." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 
@@ -253,14 +279,33 @@ else {
   }
 
   const maxQuestionsForThisSession =
-  MAX_QUESTIONS_BY_TYPE[attempt.question_type] ??
-  MAX_QUESTIONS_BY_TYPE.default;
-  
+    MAX_QUESTIONS_BY_TYPE[attempt.question_type] ??
+    MAX_QUESTIONS_BY_TYPE.default;
+
   const isScr = attempt.question_type === "constructed_response";
-  const shouldComplete = attemptCount >= (isScr ? MAX_SCR_QUESTIONS_PER_SESSION : maxQuestionsForThisSession);
+  const shouldComplete =
+    attemptCount >=
+    (isScr ? MAX_SCR_QUESTIONS_PER_SESSION : maxQuestionsForThisSession);
   // ── 10. Determine next dok_level from next_question_logic ────────────────
   const nextLogic = questionJson?.next_question_logic;
-  const branch = is_correct ? nextLogic?.if_correct : nextLogic?.if_incorrect;
+
+  let branch;
+  if (attempt.question_type === "constructed_response") {
+    // 3-way branch: 2 = mastered, 1 = partial (retry same DOK), 0 = incorrect/low-effort
+    if (isMastered) {
+      branch = nextLogic?.if_correct;
+    } else if (isPartial) {
+      branch = nextLogic?.if_partial ?? {
+        dok_level: attempt.dok_level,
+        action: "retry_same_dok",
+      };
+    } else {
+      branch = nextLogic?.if_incorrect;
+    }
+  } else {
+    branch = is_correct ? nextLogic?.if_correct : nextLogic?.if_incorrect;
+  }
+
   const next_dok_level = branch?.dok_level ?? attempt.dok_level;
   const next_action = branch?.action ?? null;
 
@@ -285,7 +330,7 @@ else {
           session_id: sessionId,
           scoring_error: true,
         },
-        { status: 200 }
+        { status: 200 },
       );
     }
 
@@ -293,54 +338,191 @@ else {
       {
         session_complete: true,
         is_correct,
-        ...(scr_feedback !== null && { feedback: scr_feedback, score: scr_score }),
+        ...(scr_feedback !== null && {
+          feedback: scr_feedback,
+          score: scr_score,
+        }),
         session_id: sessionId,
         summary: completionResult.summary,
       },
-      { status: 200 }
+      { status: 200 },
     );
   }
 
   // ── 12. Fetch all previous attempts in session (for deduplication) ────────
   // question_json included so we can extract question_bank_id for dedup.
+  // Fetch session stimulus alongside previous attempts
+
   const { data: previousAttempts, error: prevError } = await serviceSupabase
     .from("question_attempts")
-    .select("id, is_correct, dok_level, question_type, question_json")
+    .select(
+      `
+    id,
+    is_correct,
+    dok_level,
+    question_type,
+    question_json,
+    passage_question_bank_id,
+    question_source
+  `,
+    )
     .eq("session_id", sessionId)
-    .order("created_at", { ascending: true });
-
+    .order("created_at", {
+      ascending: true,
+    });
   if (prevError) {
-    console.error("[assessments/submit] fetch previous attempts error:", prevError);
+    console.error(
+      "[assessments/submit] fetch previous attempts error:",
+      prevError,
+    );
   }
 
   // Extract question_bank_ids seen so far — passed to generator to prevent repeats.
   // question_json may be a parsed object or a raw JSON string depending on Supabase driver.
-  const seenBankIds = (previousAttempts ?? [])
-    .map(a => {
-      const q = typeof a.question_json === "string"
-        ? JSON.parse(a.question_json)
-        : a.question_json;
-      return q?.question_bank_id ?? null;
-    })
-    .filter(Boolean);
+  const seenPassageQuestionBankIds = [
+    ...new Set(
+      (previousAttempts ?? [])
+        .map((previousAttempt) => previousAttempt.passage_question_bank_id)
+        .filter(Boolean),
+    ),
+  ];
+  // ── 13. Select reviewed bank question before AI fallback ─────────────────
 
-  // ── 13. Generate next question ───────────────────────────────────────────
+  const reusableBankQuestion = session.passage_bank_id
+    ? await getReusableQuestionForSession({
+        supabase: serviceSupabase,
+        passage_bank_id: session.passage_bank_id,
+        teks_standard: session.teks_standard,
+        question_type: attempt.question_type,
+        dok_level: next_dok_level,
+        exclude_question_ids: seenPassageQuestionBankIds,
+      })
+    : null;
+
   let nextQuestion;
-  try {
-    nextQuestion = await adaptiveQuestionGenerator({
-      teks_standard: session.teks_standard,
-      grade_level: session.grade_level,
-      subject: session.subject,
-      dok_level: next_dok_level,
-      question_type: attempt.question_type, // keep same question type throughout session
-      previous_attempts: previousAttempts ?? [],
-      previous_attempt_ids: seenBankIds,
-    });
-  } catch (genError) {
-    console.error("[assessments/submit] next question generation error:", genError);
+  let nextQuestionSource;
+  let selectedPassageQuestionBankId = null;
+
+  if (reusableBankQuestion?.id && reusableBankQuestion?.question_json) {
+    nextQuestion = reusableBankQuestion.question_json;
+
+    nextQuestionSource = "bank";
+
+    selectedPassageQuestionBankId = reusableBankQuestion.id;
+  } else if (session.passage_bank_id) {
+    /*
+     * The current answer was saved successfully, but this published passage
+     * has no unused approved question at the adaptive DOK requested next.
+     *
+     * Teacher-started bank sessions must never generate live content.
+     */
+    let completionResult = null;
+
+    try {
+      completionResult = await completeSession(sessionId, serviceSupabase);
+    } catch (completionError) {
+      console.error(
+        "[assessments/submit] inventory-exhausted completion error:",
+        completionError instanceof Error
+          ? completionError.message
+          : String(completionError),
+      );
+    }
+
     return NextResponse.json(
-      { error: "Failed to generate next question." },
-      { status: 500 }
+      {
+        session_complete: true,
+        is_correct,
+        session_id: sessionId,
+
+        completion_reason: "bank_inventory_exhausted",
+
+        requested_dok_level: next_dok_level,
+
+        next_action,
+
+        ...(completionResult?.summary
+          ? {
+              summary: completionResult.summary,
+            }
+          : {}),
+      },
+      { status: 200 },
+    );
+  } else {
+    // nextQuestionSource = "ai";
+
+    // try {
+    //   nextQuestion =
+    //     await adaptiveQuestionGenerator({
+    //       teks_standard:
+    //         session.teks_standard,
+
+    //       grade_level:
+    //         session.grade_level,
+
+    //       subject:
+    //         session.subject,
+
+    //       dok_level:
+    //         next_dok_level,
+
+    //       question_type:
+    //         attempt.question_type,
+
+    //       previous_attempts:
+    //         previousAttempts ?? [],
+
+    //       previous_attempt_ids:
+    //         (previousAttempts ?? []).map(
+    //           (previousAttempt) =>
+    //             previousAttempt.id,
+    //         ),
+
+    //       content_focus:
+    //         session.content_focus ??
+    //         null,
+
+    //       content_focus_key:
+    //         session.content_focus_key ??
+    //         null,
+
+    //       passage_format:
+    //         session.passage_format ??
+    //         null,
+
+    //       stimulus:
+    //         session.stimulus ??
+    //         null,
+    //     });
+    // } catch (genError) {
+    //   console.error(
+    //     "[assessments/submit] next question generation error:",
+    //     genError,
+    //   );
+
+    //   return NextResponse.json(
+    //     {
+    //       error:
+    //         "Failed to generate next question.",
+    //     },
+    //     {
+    //       status: 500,
+    //     },
+    //   );
+    // }
+    /*
+     * Temporary legacy behavior only for sessions that were created before
+     * passage-bank enforcement and therefore have no passage_bank_id.
+     */
+    return NextResponse.json(
+      {
+        error:
+          "This session is not connected to published passage-bank content.",
+
+        code: "SESSION_PASSAGE_BANK_MISSING",
+      },
+      { status: 409 },
     );
   }
 
@@ -349,48 +531,107 @@ else {
     .from("question_attempts")
     .insert({
       session_id: sessionId,
+
       student_id: session.student_id,
+
       teks_standard: session.teks_standard,
-      dok_level: nextQuestion.dok_level ?? next_dok_level,
-      question_type: nextQuestion.question_type ?? attempt.question_type,
+
+      dok_level:
+        nextQuestion.dok_level ??
+        reusableBankQuestion?.dok_level ??
+        next_dok_level,
+
+      question_type:
+        nextQuestion.question_type ??
+        reusableBankQuestion?.question_type ??
+        attempt.question_type,
+
       question_json: nextQuestion,
+
+      passage_question_bank_id: selectedPassageQuestionBankId,
+
+      question_source: nextQuestionSource,
+
       student_answer: null,
+
       is_correct: null,
+
       time_spent_seconds: null,
     })
     .select("id")
     .single();
 
   if (nextAttemptError || !nextAttempt) {
-    console.error("[assessments/submit] next attempt insert error:", nextAttemptError);
+    console.error(
+      "[assessments/submit] next attempt insert error:",
+      nextAttemptError,
+    );
     return NextResponse.json(
       { error: "Failed to save next question." },
-      { status: 500 }
+      { status: 500 },
     );
+  }
+
+  if (nextQuestionSource === "bank" && reusableBankQuestion) {
+    await incrementPassageQuestionUsage({
+      supabase: serviceSupabase,
+
+      question: reusableBankQuestion,
+    });
   }
 
   // ── 15. Return scoring result + next question ────────────────────────────
   // correct_answer and explanation are intentionally omitted from response
- return NextResponse.json(
+  return NextResponse.json(
     {
       session_complete: false,
       is_correct,
       next_action,
-      ...(scr_feedback !== null && { feedback: scr_feedback, score: scr_score }),
-      attempt_id: nextAttempt.id,
+
+      stimulus: session.stimulus ?? null,
+
+      stimulus_json:
+        session.stimulus_json &&
+        typeof session.stimulus_json === "object" &&
+        !Array.isArray(session.stimulus_json)
+          ? session.stimulus_json
+          : null,
+
+      ...(scr_feedback !== null && {
+        feedback: scr_feedback,
+        score: scr_score,
+      }),
+
       question: {
         attempt_id: nextAttempt.id,
-        teks_standard: nextQuestion.teks_standard,
-        dok_level: nextQuestion.dok_level ?? next_dok_level,
-        question_type: nextQuestion.question_type ?? attempt.question_type,
+
+        source: nextQuestionSource,
+
+        teks_standard: nextQuestion.teks_standard ?? session.teks_standard,
+
+        dok_level:
+          nextQuestion.dok_level ??
+          reusableBankQuestion?.dok_level ??
+          next_dok_level,
+
+        question_type:
+          nextQuestion.question_type ??
+          reusableBankQuestion?.question_type ??
+          attempt.question_type,
+
         stem: nextQuestion.stem,
-        passage: nextQuestion.passage ?? null,
+
+        passage: nextQuestion.passage ?? session.stimulus ?? null,
+
         answer_options: nextQuestion.answer_options ?? null,
+
         hot_text_targets: nextQuestion.hot_text_targets ?? null,
+
         passage_tokens: nextQuestion.passage_tokens ?? null,
-        // correct_answer and explanation intentionally omitted
+
+        // Never return correct_answer, explanation, or scoring_rubric.
       },
     },
-    { status: 200 }
+    { status: 200 },
   );
 }

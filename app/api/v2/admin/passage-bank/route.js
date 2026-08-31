@@ -111,6 +111,10 @@ function validatePassage(rawPassage) {
   const title = normalizeRequiredString(rawPassage.title);
   const passage = normalizeRequiredString(rawPassage.passage);
 
+  const stimulusJson = isPlainObject(rawPassage.stimulus_json)
+    ? rawPassage.stimulus_json
+    : null;
+
   const difficultyLevel = Number(rawPassage.difficulty_level ?? 2);
 
   if (!subject) {
@@ -195,6 +199,10 @@ function validatePassage(rawPassage) {
       content_focus: contentFocus,
       title,
       passage,
+      // Structured rendering metadata for diagrams, labels,
+      // captions, sidebars, tables, maps, etc.
+      // The canonical passage string remains unchanged.
+      stimulus_json: stimulusJson,
       skill_tags: normalizeSkillTags(rawPassage.skill_tags),
       difficulty_level: difficultyLevel,
       is_active: rawPassage.is_active !== false,
@@ -204,99 +212,73 @@ function validatePassage(rawPassage) {
 }
 
 /**
- * Builds complete question-bank rows from the incoming question objects.
+ * Builds complete question-bank rows from validated question objects.
  *
- * Passage identity fields are always derived from the newly inserted passage.
- * The request cannot assign a question to a different subject, grade, TEKS,
- * or passage ID.
- *
+ * Subject and grade are inherited from the parent passage.
+ * Each question preserves its own validated TEKS, which may be the
+ * primary passage TEKS or an approved supporting TEKS.
  * @param {Array<object>} rawQuestions
  * @param {object} passage
  * @param {string} userId
  * @returns {Array<object>}
  */
-function buildQuestionRows({
-  validatedQuestions,
-  passage,
-  userId,
-}) {
+function buildQuestionRows({ validatedQuestions, passage, userId }) {
   const now = new Date().toISOString();
 
-  return validatedQuestions.map((question) => {
+  return validatedQuestions.map((question, index) => {
     const reviewStatus =
-      normalizeOptionalString(
-        question.review_status,
-      ) || "draft";
+      normalizeOptionalString(question.review_status) || "draft";
 
-    const isApproved =
-      reviewStatus === "approved";
+    const isApproved = reviewStatus === "approved";
+
+    const questionTeksStandard = normalizeRequiredString(
+      question.teks_standard ?? question.question_json?.teks_standard,
+    );
+
+    if (!questionTeksStandard) {
+      throw new Error(`Validated question ${index} is missing teks_standard.`);
+    }
 
     return {
-      teks_standard:
-        passage.teks_standard,
+      teks_standard: questionTeksStandard,
+      subject: passage.subject,
 
-      subject:
-        passage.subject,
+      grade_level: passage.grade_level,
 
-      grade_level:
-        passage.grade_level,
+      question_type: question.question_type,
 
-      question_type:
-        question.question_type,
+      dok_level: Number(question.dok_level),
 
-      dok_level:
-        Number(question.dok_level),
+      skill_focus: normalizeOptionalString(question.skill_focus),
 
-      skill_focus:
-        normalizeOptionalString(
-          question.skill_focus,
-        ),
+      assessment_move: normalizeOptionalString(question.assessment_move),
 
-      assessment_move:
-        normalizeOptionalString(
-          question.assessment_move,
-        ),
+      dramatic_function: normalizeOptionalString(question.dramatic_function),
 
-      dramatic_function:
-        normalizeOptionalString(
-          question.dramatic_function,
-        ),
+      target_scene: normalizeOptionalString(question.target_scene),
 
-      target_scene:
-        normalizeOptionalString(
-          question.target_scene,
-        ),
+      correct_target_text: normalizeOptionalString(
+        question.correct_target_text,
+      ),
 
-      correct_target_text:
-        normalizeOptionalString(
-          question.correct_target_text,
-        ),
+      correct_target_key: normalizeOptionalString(question.correct_target_key),
 
-      correct_target_key:
-        normalizeOptionalString(
-          question.correct_target_key,
-        ),
+      question_json: {
+        ...question.question_json,
 
-      question_json:
-        question.question_json,
+        teks_standard: questionTeksStandard,
+      },
+      review_status: reviewStatus,
 
-      review_status:
-        reviewStatus,
-
-      is_active:
-        isApproved &&
-        question.is_active === true,
+      is_active: isApproved && question.is_active === true,
 
       times_used: 0,
 
-      created_by:
-        userId,
+      created_by: userId,
 
-      reviewed_by:
-        isApproved ? userId : null,
+      reviewed_by: isApproved ? userId : null,
 
-      reviewed_at:
-        isApproved ? now : null,
+      reviewed_at: isApproved ? now : null,
     };
   });
 }
@@ -309,8 +291,7 @@ export async function GET() {
      * ------------------------------------------------------------
      */
 
-    const adminAuth =
-     await requirePassageBankAdmin();
+    const adminAuth = await requirePassageBankAdmin();
 
     if (!adminAuth.success) {
       return adminAuth.response;
@@ -324,10 +305,7 @@ export async function GET() {
      * ------------------------------------------------------------
      */
 
-    const {
-      data: drafts,
-      error: draftsError,
-    } = await serviceSupabase
+    const { data: drafts, error: draftsError } = await serviceSupabase
       .from("passage_bank_draft_packages")
       .select(
         `
@@ -358,12 +336,9 @@ export async function GET() {
       });
 
     if (draftsError) {
-      console.error(
-        "[admin/passage-bank] Failed to load draft overview data",
-        {
-          error: draftsError.message,
-        },
-      );
+      console.error("[admin/passage-bank] Failed to load draft overview data", {
+        error: draftsError.message,
+      });
 
       return NextResponse.json(
         {
@@ -382,13 +357,11 @@ export async function GET() {
      * ------------------------------------------------------------
      */
 
-    const {
-      data: publishedPackages,
-      error: publishedError,
-    } = await serviceSupabase
-      .from("passage_bank")
-     .select(
-        `
+    const { data: publishedPackages, error: publishedError } =
+      await serviceSupabase
+        .from("passage_bank")
+        .select(
+          `
           id,
           subject,
           grade_level,
@@ -404,10 +377,10 @@ export async function GET() {
           created_at,
           updated_at
         `,
-      )
-      .order("updated_at", {
-        ascending: false,
-      });
+        )
+        .order("updated_at", {
+          ascending: false,
+        });
 
     if (publishedError) {
       console.error(
@@ -434,10 +407,7 @@ export async function GET() {
      * ------------------------------------------------------------
      */
 
-    const {
-      data: recentEvents,
-      error: eventsError,
-    } = await serviceSupabase
+    const { data: recentEvents, error: eventsError } = await serviceSupabase
       .from("passage_bank_review_events")
       .select(
         `
@@ -460,12 +430,9 @@ export async function GET() {
       .limit(20);
 
     if (eventsError) {
-      console.error(
-        "[admin/passage-bank] Failed to load recent audit events",
-        {
-          error: eventsError.message,
-        },
-      );
+      console.error("[admin/passage-bank] Failed to load recent audit events", {
+        error: eventsError.message,
+      });
 
       return NextResponse.json(
         {
@@ -484,19 +451,13 @@ export async function GET() {
      * ------------------------------------------------------------
      */
 
-    const draftRows = Array.isArray(drafts)
-      ? drafts
-      : [];
+    const draftRows = Array.isArray(drafts) ? drafts : [];
 
-    const publishedRows = Array.isArray(
-      publishedPackages,
-    )
+    const publishedRows = Array.isArray(publishedPackages)
       ? publishedPackages
       : [];
 
-    const auditRows = Array.isArray(recentEvents)
-      ? recentEvents
-      : [];
+    const auditRows = Array.isArray(recentEvents) ? recentEvents : [];
 
     /*
      * ------------------------------------------------------------
@@ -504,54 +465,40 @@ export async function GET() {
      * ------------------------------------------------------------
      */
 
-  const archivedDrafts = draftRows.filter(
-  (draft) => draft.status === "archived",
-);
+    const archivedDrafts = draftRows.filter(
+      (draft) => draft.status === "archived",
+    );
 
-const currentDrafts = draftRows.filter(
-  (draft) => draft.status !== "archived",
-);
+    const currentDrafts = draftRows.filter(
+      (draft) => draft.status !== "archived",
+    );
 
-const draftCountsByStatus = draftRows.reduce(
-  (counts, draft) => {
-    const status =
-      normalizeOptionalString(draft.status) ||
-      "draft";
+    const draftCountsByStatus = draftRows.reduce((counts, draft) => {
+      const status = normalizeOptionalString(draft.status) || "draft";
 
-    counts[status] =
-      (counts[status] || 0) + 1;
+      counts[status] = (counts[status] || 0) + 1;
 
-    return counts;
-  },
-  {},
-);
+      return counts;
+    }, {});
 
-const needsReview = currentDrafts.filter(
-  (draft) => draft.status === "in_review",
-);
+    const needsReview = currentDrafts.filter(
+      (draft) => draft.status === "in_review",
+    );
 
-const approvedNotPublished =
-  currentDrafts.filter(
-    (draft) =>
-      draft.status === "approved" &&
-      !draft.published_passage_bank_id,
-  );
+    const approvedNotPublished = currentDrafts.filter(
+      (draft) =>
+        draft.status === "approved" && !draft.published_passage_bank_id,
+    );
 
-const revisionsAwaitingReview =
-  currentDrafts.filter(
-    (draft) =>
-      Boolean(
-        draft.revision_of_passage_bank_id,
-      ) &&
-      ["draft", "in_review"].includes(
-        draft.status,
-      ),
-  );
+    const revisionsAwaitingReview = currentDrafts.filter(
+      (draft) =>
+        Boolean(draft.revision_of_passage_bank_id) &&
+        ["draft", "in_review"].includes(draft.status),
+    );
 
-const returnedForChanges =
-  currentDrafts.filter(
-    (draft) => draft.status === "rejected",
-  );
+    const returnedForChanges = currentDrafts.filter(
+      (draft) => draft.status === "rejected",
+    );
 
     /*
      * ------------------------------------------------------------
@@ -559,27 +506,19 @@ const returnedForChanges =
      * ------------------------------------------------------------
      */
 
-    const activePublished =
-      publishedRows.filter(
-        (row) => row.is_active === true,
-      );
-
-    const inactivePublished =
-      publishedRows.filter(
-        (row) => row.is_active !== true,
-      );
-
-    const supersededPublished =
-     publishedRows.filter(
-      (row) =>
-        Boolean(row.superseded_at),
+    const activePublished = publishedRows.filter(
+      (row) => row.is_active === true,
     );
 
-    const currentPublished =
-      publishedRows.filter(
-        (row) =>
-          !row.superseded_at,
-      );
+    const inactivePublished = publishedRows.filter(
+      (row) => row.is_active !== true,
+    );
+
+    const supersededPublished = publishedRows.filter((row) =>
+      Boolean(row.superseded_at),
+    );
+
+    const currentPublished = publishedRows.filter((row) => !row.superseded_at);
 
     /*
      * ------------------------------------------------------------
@@ -591,18 +530,15 @@ const returnedForChanges =
       success: true,
 
       summary: {
-          drafts: {
+        drafts: {
           total: draftRows.length,
           current: currentDrafts.length,
           archived: archivedDrafts.length,
           by_status: draftCountsByStatus,
           needs_review: needsReview.length,
-          approved_not_published:
-            approvedNotPublished.length,
-          revisions_awaiting_review:
-            revisionsAwaitingReview.length,
-          returned_for_changes:
-            returnedForChanges.length,
+          approved_not_published: approvedNotPublished.length,
+          revisions_awaiting_review: revisionsAwaitingReview.length,
+          returned_for_changes: returnedForChanges.length,
         },
 
         published: {
@@ -610,38 +546,27 @@ const returnedForChanges =
           active: activePublished.length,
           inactive: inactivePublished.length,
           current: currentPublished.length,
-          superseded:
-            supersededPublished.length,
+          superseded: supersededPublished.length,
         },
       },
 
       review_queue: {
         needs_review: needsReview,
-        returned_for_changes:
-          returnedForChanges,
-        approved_not_published:
-          approvedNotPublished,
-        revisions_awaiting_review:
-          revisionsAwaitingReview,
+        returned_for_changes: returnedForChanges,
+        approved_not_published: approvedNotPublished,
+        revisions_awaiting_review: revisionsAwaitingReview,
       },
 
       recent_activity: auditRows,
     });
   } catch (error) {
-    console.error(
-      "[admin/passage-bank] Unexpected overview route error",
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : String(error),
-      },
-    );
+    console.error("[admin/passage-bank] Unexpected overview route error", {
+      error: error instanceof Error ? error.message : String(error),
+    });
 
     return NextResponse.json(
       {
-        error:
-          "Unable to load passage-bank admin overview.",
+        error: "Unable to load passage-bank admin overview.",
       },
       {
         status: 500,
@@ -658,16 +583,13 @@ export async function POST(request) {
      * ------------------------------------------------------------
      */
 
-
-
     /*
      * ------------------------------------------------------------
      * 2. Parse the request body
      * ------------------------------------------------------------
      */
 
-    const adminAuth =
-    await requirePassageBankAdmin();
+    const adminAuth = await requirePassageBankAdmin();
 
     if (!adminAuth.success) {
       return adminAuth.response;
@@ -736,211 +658,159 @@ export async function POST(request) {
 
     const passageData = passageValidation.data;
 
-/*
- * ------------------------------------------------------------
- * 4. Validate the complete reviewed package before any writes
- * ------------------------------------------------------------
- */
+    /*
+     * ------------------------------------------------------------
+     * 4. Validate the complete reviewed package before any writes
+     * ------------------------------------------------------------
+     */
 
-const packageValidation =
-  validatePassageQuestionBankPackage(
-    {
-      passage: {
-        ...passageData,
+    const packageValidation = validatePassageQuestionBankPackage(
+      {
+        passage: {
+          ...passageData,
 
-        /*
-         * Validate the package as an unpublished draft.
-         * Final activation is applied only after validation passes.
-         */
-        is_active: false,
+          /*
+           * Validate the package as an unpublished draft.
+           * Final activation is applied only after validation passes.
+           */
+          is_active: false,
+        },
+
+        questions: rawQuestions,
       },
+      {
+        allowUnknownQuestionTypes: false,
+        treatRecommendationsAsErrors: false,
+      },
+    );
 
-      questions: rawQuestions,
-    },
-    {
-      allowUnknownQuestionTypes: false,
-      treatRecommendationsAsErrors: false,
-    },
-  );
+    if (!packageValidation.success) {
+      return NextResponse.json(
+        {
+          error: "Passage question-bank package validation failed.",
 
-if (!packageValidation.success) {
-  return NextResponse.json(
-    {
-      error:
-        "Passage question-bank package validation failed.",
+          issues: packageValidation.issues,
 
-      issues:
-        packageValidation.issues,
+          errors: packageValidation.errors,
 
-      errors:
-        packageValidation.errors,
+          warnings: packageValidation.warnings,
+        },
+        {
+          status: 400,
+        },
+      );
+    }
 
-      warnings:
-        packageValidation.warnings,
-    },
-    {
-      status: 400,
-    },
-  );
-}
+    const validatedPackage = packageValidation.data;
 
-const validatedPackage =
-  packageValidation.data;
+    /*
+     * ------------------------------------------------------------
+     * 5. Build the final RPC payload
+     * ------------------------------------------------------------
+     */
 
-/*
- * ------------------------------------------------------------
- * 5. Build the final RPC payload
- * ------------------------------------------------------------
- */
+    const finalPassageData = {
+      ...passageData,
 
-const finalPassageData = {
-  ...passageData,
+      is_active: body.passage?.is_active === true,
+    };
 
-  is_active:
-    body.passage?.is_active === true,
-};
+    const questionRows = buildQuestionRows({
+      validatedQuestions: validatedPackage.questions,
 
-const questionRows =
-  buildQuestionRows({
-    validatedQuestions:
-      validatedPackage.questions,
+      passage: finalPassageData,
 
-    passage:
-      finalPassageData,
+      userId: user.id,
+    });
 
-    userId:
-      user.id,
-  });
+    /*
+     * ------------------------------------------------------------
+     * 6. Atomically publish passage and questions
+     * ------------------------------------------------------------
+     */
 
-/*
- * ------------------------------------------------------------
- * 6. Atomically publish passage and questions
- * ------------------------------------------------------------
- */
+    const serviceSupabase = await createV2ServiceClient();
 
-const serviceSupabase =
-  await createV2ServiceClient();
+    const { data: publishedPackage, error: publishError } =
+      await serviceSupabase.rpc("publish_passage_question_bank_package", {
+        p_passage: finalPassageData,
 
-const {
-  data: publishedPackage,
-  error: publishError,
-} = await serviceSupabase.rpc(
-  "publish_passage_question_bank_package",
-  {
-    p_passage:
-      finalPassageData,
+        p_questions: questionRows,
+      });
 
-    p_questions:
-      questionRows,
-  },
-);
+    if (publishError || !publishedPackage) {
+      console.error("[admin/passage-bank] Atomic publish failed", {
+        error: publishError?.message || "No package was returned.",
 
-if (publishError || !publishedPackage) {
-  console.error(
-    "[admin/passage-bank] Atomic publish failed",
-    {
-      error:
-        publishError?.message ||
-        "No package was returned.",
+        title: finalPassageData.title,
 
-      title:
-        finalPassageData.title,
+        teks_standard: finalPassageData.teks_standard,
+      });
 
-      teks_standard:
-        finalPassageData.teks_standard,
-    },
-  );
+      return NextResponse.json(
+        {
+          error: "Failed to publish passage question bank.",
 
-  return NextResponse.json(
-    {
-      error:
-        "Failed to publish passage question bank.",
+          details: publishError?.message || "No package was returned.",
+        },
+        {
+          status: 500,
+        },
+      );
+    }
 
-      details:
-        publishError?.message ||
-        "No package was returned.",
-    },
-    {
-      status: 500,
-    },
-  );
-}
+    /*
+     * ------------------------------------------------------------
+     * 7. Return the connected passage and questions
+     * ------------------------------------------------------------
+     */
 
-/*
- * ------------------------------------------------------------
- * 7. Return the connected passage and questions
- * ------------------------------------------------------------
- */
+    const insertedPassage = publishedPackage.passage;
 
-const insertedPassage =
-  publishedPackage.passage;
+    const insertedQuestions = Array.isArray(publishedPackage.questions)
+      ? publishedPackage.questions
+      : [];
 
-const insertedQuestions =
-  Array.isArray(
-    publishedPackage.questions,
-  )
-    ? publishedPackage.questions
-    : [];
+    console.info("[admin/passage-bank] Passage and question bank created", {
+      passage_bank_id: insertedPassage?.id,
 
-console.info(
-  "[admin/passage-bank] Passage and question bank created",
-  {
-    passage_bank_id:
-      insertedPassage?.id,
+      subject: insertedPassage?.subject,
 
-    subject:
-      insertedPassage?.subject,
+      grade_level: insertedPassage?.grade_level,
 
-    grade_level:
-      insertedPassage?.grade_level,
+      teks_standard: insertedPassage?.teks_standard,
 
-    teks_standard:
-      insertedPassage?.teks_standard,
+      question_count: insertedQuestions.length,
 
-    question_count:
-      insertedQuestions.length,
+      created_by: user.id,
+    });
 
-    created_by:
-      user.id,
-  },
-);
+    return NextResponse.json(
+      {
+        success: true,
 
-return NextResponse.json(
-  {
-    success: true,
+        passage: insertedPassage,
 
-    passage:
-      insertedPassage,
+        questions: insertedQuestions,
 
-    questions:
-      insertedQuestions,
+        warnings: packageValidation.warnings,
+      },
+      {
+        status: 201,
+      },
+    );
+  } catch (error) {
+    console.error("[admin/passage-bank] Unexpected route error", {
+      error: error instanceof Error ? error.message : String(error),
+    });
 
-    warnings:
-      packageValidation.warnings,
-  },
-  {
-    status: 201,
-  },
-);
- } catch (error) {
-  console.error(
-    "[admin/passage-bank] Unexpected route error",
-    {
-      error:
-        error instanceof Error
-          ? error.message
-          : String(error),
-    },
-  );
-
-  return NextResponse.json(
-    {
-      error:
-        "Unable to create passage question bank.",
-    },
-    {
-      status: 500,
-    },
-  );
- }
+    return NextResponse.json(
+      {
+        error: "Unable to create passage question bank.",
+      },
+      {
+        status: 500,
+      },
+    );
+  }
 }

@@ -62,7 +62,7 @@ export async function completeSession(sessionId, serviceSupabase) {
   // Only rows where student_answer IS NOT NULL (i.e. actually answered).
   const { data: attempts, error: attemptsError } = await serviceSupabase
     .from("question_attempts")
-    .select("id, teks_standard, dok_level, is_correct, student_answer, question_type")
+    .select("id, teks_standard, dok_level, is_correct, student_answer, question_type, scr_score")
     .eq("session_id", sessionId)
     .not("student_answer", "is", null);
 
@@ -105,10 +105,20 @@ export async function completeSession(sessionId, serviceSupabase) {
   let totalPossible = 0;
   let totalCorrect = 0;
 
-  for (const attempt of answeredAttempts) {
+ for (const attempt of answeredAttempts) {
     const weight = DOK_WEIGHTS[attempt.dok_level] ?? 1;
     totalPossible += weight;
-    if (attempt.is_correct === true) {
+
+    if (attempt.question_type === "constructed_response" && attempt.scr_score !== null) {
+      // Partial credit: 2 = full weight, 1 = half weight, 0 = no credit
+      if (Number(attempt.scr_score) === 2) {
+        totalEarned += weight;
+        totalCorrect += 1;
+      } else if (Number(attempt.scr_score) === 1) {
+        totalEarned += weight * 0.5;
+        if (attempt.is_correct === true) totalCorrect += 1;
+      }
+    } else if (attempt.is_correct === true) {
       totalEarned += weight;
       totalCorrect += 1;
     }
@@ -233,6 +243,12 @@ export async function completeSession(sessionId, serviceSupabase) {
 
   const scoreColumn = windowToColumn[session.testing_window] ?? null;
 
+    if (!scoreColumn) {
+    console.warn(
+      `[completeSession] session=${sessionId} classroom=${session.classroom_id} has no valid testing_window ("${session.testing_window}") — portfolio score will NOT be written. Set classrooms.testing_window to BOY/MOY/EOY to fix.`
+    );
+  }
+
   let windowScore = sessionScore; // fallback: just use this session's score
 
   if (scoreColumn && session.testing_window) {
@@ -249,13 +265,13 @@ export async function completeSession(sessionId, serviceSupabase) {
 
     if (windowSessionIds.length > 1) {
       // b) All answered attempts across those sessions
-      const { data: windowAttempts } = await serviceSupabase
+    const { data: windowAttempts } = await serviceSupabase
         .from("question_attempts")
-        .select("dok_level, is_correct")
+        .select("dok_level, is_correct, question_type, scr_score")
         .in("session_id", windowSessionIds)
         .not("student_answer", "is", null);
 
-      if (windowAttempts && windowAttempts.length > 0) {
+     if (windowAttempts && windowAttempts.length > 0) {
         // c) Recompute DOK-weighted score across all window attempts
         let wEarned = 0;
         let wPossible = 0;
@@ -263,7 +279,13 @@ export async function completeSession(sessionId, serviceSupabase) {
         for (const a of windowAttempts) {
           const w = DOK_WEIGHTS[a.dok_level] ?? 1;
           wPossible += w;
-          if (a.is_correct === true) wEarned += w;
+
+          if (a.question_type === "constructed_response" && a.scr_score !== null) {
+            if (Number(a.scr_score) === 2) wEarned += w;
+            else if (Number(a.scr_score) === 1) wEarned += w * 0.5;
+          } else if (a.is_correct === true) {
+            wEarned += w;
+          }
         }
 
         windowScore = wPossible > 0 ? Math.round((wEarned / wPossible) * 100) : 0;
@@ -364,3 +386,4 @@ export async function completeSession(sessionId, serviceSupabase) {
     },
   };
 }
+

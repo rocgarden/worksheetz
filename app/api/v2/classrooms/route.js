@@ -28,39 +28,41 @@ function planGuard(profile) {
 // ── POST /api/v2/classrooms ──────────────────────────────────────────────────
 // Creates a new classroom row owned by the authenticated teacher.
 // Enforces max_classrooms limit from profiles.
-
+// testing_window is REQUIRED — a classroom with no window silently breaks
+// portfolio scoring in completeSession.js (boy/moy/eoy_score never gets written).
+ 
 export async function POST(req) {
   // 1. Feature flag -- can be enabled later once we have auth and plans working end-to-end.
-
-
+ 
+ 
   // 2. Auth
   const supabase = await createClient();
   const serviceSupabase = await createV2ServiceClient();
-
+ 
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
  
   console.log("Authenticated user ID:", user.id);
-
+ 
   // 3. Plan access check
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("classroom_plan, school_plan, max_classrooms")
     .eq("id", user.id)
     .single();
-
+ 
   if (profileError || !profile) {
     return NextResponse.json(
       { error: "Could not retrieve user profile." },
       { status: 500 }
     );
   }
-
+ 
   const planErr = planGuard(profile);
   if (planErr) return planErr;
-
+ 
   // 4. Parse and validate body
   let body;
   try {
@@ -71,9 +73,9 @@ export async function POST(req) {
       { status: 400 }
     );
   }
-
+ 
   const { name, grade_level, subject, school_year, testing_window } = body;
-
+ 
   if (!name || !grade_level || !subject || !school_year) {
     return NextResponse.json(
       {
@@ -83,22 +85,36 @@ export async function POST(req) {
       { status: 400 }
     );
   }
-
-  // Validate testing_window if provided
+ 
+  // Normalize testing_window — treat empty string / whitespace-only as missing.
+  // ("" is falsy but !== null, so `testing_window ?? null` alone would let it
+  // slip through and silently break portfolio scoring downstream.)
+  const normalizedWindow =
+    typeof testing_window === "string" ? testing_window.trim() : testing_window;
+ 
   const validWindows = ["BOY", "MOY", "EOY"];
-  if (testing_window && !validWindows.includes(testing_window)) {
+ 
+  // testing_window is now REQUIRED at classroom creation.
+  if (!normalizedWindow) {
+    return NextResponse.json(
+      { error: "testing_window is required and must be BOY, MOY, or EOY." },
+      { status: 400 }
+    );
+  }
+ 
+  if (!validWindows.includes(normalizedWindow)) {
     return NextResponse.json(
       { error: "testing_window must be BOY, MOY, or EOY." },
       { status: 400 }
     );
   }
-
+ 
   // 5. Enforce max_classrooms limit
   const { count: existingCount, error: countError } = await serviceSupabase
     .from("classrooms")
     .select("id", { count: "exact", head: true })
     .eq("teacher_id", user.id);
-
+ 
   if (countError) {
     console.error("[classrooms/POST] count error:", countError);
     return NextResponse.json(
@@ -106,7 +122,7 @@ export async function POST(req) {
       { status: 500 }
     );
   }
-
+ 
   const maxClassrooms = profile.max_classrooms ?? 1;
   if (existingCount >= maxClassrooms) {
     return NextResponse.json(
@@ -117,7 +133,7 @@ export async function POST(req) {
       { status: 403 }
     );
   }
-
+ 
   // 6. Insert classroom
   const { data: classroom, error: insertError } = await serviceSupabase
     .from("classrooms")
@@ -127,11 +143,11 @@ export async function POST(req) {
       grade_level,
       subject,
       school_year,
-      testing_window: testing_window ?? null,
+      testing_window: normalizedWindow,
     })
     .select("id, name, grade_level, subject, school_year, testing_window, created_at")
     .single();
-
+ 
   if (insertError || !classroom) {
     console.error("[classrooms/POST] insert error:", insertError);
     return NextResponse.json(
@@ -139,7 +155,7 @@ export async function POST(req) {
       { status: 500 }
     );
   }
-
+ 
   return NextResponse.json({ classroom }, { status: 201 });
 }
 

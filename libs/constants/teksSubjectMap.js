@@ -11,8 +11,9 @@
 //   3. Add its bucket labels to TEKS_BUCKET_LABELS_BY_SUBJECT
 //
 // Nothing else in the codebase needs to change.
+import { PASSAGE_BANK_PRIMARY_TEKS_BY_SUBJECT, PASSAGE_BANK_FAMILY_LABELS } from "./passageBankPrimaryTeks";
 
-import { TEKS_READING_MAP, TEKS_LABELS } from "./teksReadingMap";
+import { TEKS_READING_MAP, TEKS_READING_BUCKET_LABELS ,TEKS_LABELS } from "./teksReadingMap";
 import { TEKS_SOCIAL_STUDIES_MAP, TEKS_SS_BUCKET_LABELS, TEKS_SS_LABELS } from "./teksSocialStudiesMap";
 import { TEKS_SCIENCE_MAP, TEKS_SCIENCE_BUCKET_LABELS, TEKS_SCIENCE_LABELS } from "./teksScienceMap";
 
@@ -37,14 +38,6 @@ export const TEKS_MAP_BY_SUBJECT = {
 // ELA bucket keys come from teksReadingMap.js; other subjects will define theirs.
 
 export const TEKS_BUCKET_LABELS_BY_SUBJECT = {
-  ELA: {
-    inference_text_evidence: "Make Inferences & Support with Text Evidence",
-    key_idea_central_idea: "Evaluate Details / Key Ideas & Central Idea",
-    summarize_paraphrase_retell: "Summarize, Paraphrase & Retell",
-    informational_central_idea_supporting:
-      "Informational: Central / Controlling Idea with Support",
-  },
-
   // Add Math bucket labels here when teksMathMap.js is created, e.g.:
   // Math: {
   //   number_operations: "Number & Operations",
@@ -53,7 +46,7 @@ export const TEKS_BUCKET_LABELS_BY_SUBJECT = {
   //   data_analysis: "Data Analysis",
   //   financial_literacy: "Personal Financial Literacy",
   // },
-
+  ELA: TEKS_READING_BUCKET_LABELS,
   Math: {},
   Science: TEKS_SCIENCE_BUCKET_LABELS,
   "Social Studies": TEKS_SS_BUCKET_LABELS,
@@ -94,6 +87,7 @@ export function buildTeksOptions(subject, gradeLevel) {
         seen.add(code);
         // Per-code label wins; bucket label is the fallback
         const label = codeLabelMap[code] ?? `${code} — ${bucketLabel}`;
+        //const label = codeLabelMap[code] ?? code;
         options.push({ code, label });
       }
     }
@@ -101,18 +95,70 @@ export function buildTeksOptions(subject, gradeLevel) {
  
   return options.sort((a, b) => a.code.localeCompare(b.code));
 }
-function buildTeksAllowed(gradeLevel) {
-  const key = `grade${gradeLevel}`;
-  const m = TEKS_READING_MAP[key];
 
-  // Use exactly your existing buckets
-  const buckets = [
-    ...(m?.inference_text_evidence || []),
-    ...(m?.key_idea_central_idea || []),
-    ...(m?.summarize_paraphrase_retell || []),
-    ...(m?.informational_central_idea_supporting || []),
-  ];
+export function getTeksBucketForSubject({ subject, gradeLevel, teksStandard }) {
+  if (!subject || !gradeLevel || !teksStandard) return null;
 
-  // unique + truthy
-  return [...new Set(buckets.filter(Boolean))];
+  const subjectMap = TEKS_MAP_BY_SUBJECT[subject];
+  if (!subjectMap) return null;
+
+  const gradeBuckets = subjectMap[`grade${gradeLevel}`];
+  if (!gradeBuckets) return null;
+
+  for (const [bucketKey, codes] of Object.entries(gradeBuckets)) {
+    if (codes.includes(teksStandard)) {
+      return bucketKey;
+    }
+  }
+
+  return null;
+}
+
+export function getTeksLabelForSubject({ subject, teksStandard }) {
+  if (!subject || !teksStandard) return null;
+
+  const codeLabelMap = CODE_LABELS_BY_SUBJECT[subject] ?? {};
+
+  return codeLabelMap[teksStandard] ?? null;
+}
+
+export function buildPassageBankTeksOptions(
+  subject,
+  gradeLevel,
+) {
+  if (!subject || !gradeLevel) return [];
+
+  const gradeMap =
+    PASSAGE_BANK_PRIMARY_TEKS_BY_SUBJECT?.[
+      subject
+    ]?.[`grade${gradeLevel}`];
+
+  if (!gradeMap) return [];
+
+  const codeLabelMap =
+    CODE_LABELS_BY_SUBJECT[subject] ?? {};
+
+  const options = [];
+  const seen = new Set();
+
+  for (const [family, codes] of Object.entries(
+    gradeMap,
+  )) {
+    for (const code of codes) {
+      if (seen.has(code)) continue;
+
+      seen.add(code);
+
+      options.push({
+        code,
+        label: codeLabelMap[code] ?? code,
+        family,
+        family_label:
+          PASSAGE_BANK_FAMILY_LABELS[family] ??
+          family,
+      });
+    }
+  }
+
+  return options;
 }

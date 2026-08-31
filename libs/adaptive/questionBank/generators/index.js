@@ -44,11 +44,7 @@ const SUBJECT_ALIASES = Object.freeze({
  * @returns {boolean}
  */
 function isPlainObject(value) {
-  return (
-    value !== null &&
-    typeof value === "object" &&
-    !Array.isArray(value)
-  );
+  return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
 /**
@@ -92,9 +88,7 @@ function normalizeSubject(value) {
 function normalizeDokLevel(value) {
   const dokLevel = Number(value);
 
-  return [1, 2, 3].includes(dokLevel)
-    ? dokLevel
-    : null;
+  return [1, 2, 3].includes(dokLevel) ? dokLevel : null;
 }
 
 /**
@@ -110,38 +104,24 @@ function normalizeDokLevel(value) {
  */
 function normalizeQuestionPlanItem(item, index) {
   if (!isPlainObject(item)) {
-    throw new Error(
-      `questionPlan[${index}] must be an object.`,
-    );
+    throw new Error(`questionPlan[${index}] must be an object.`);
   }
 
-  const questionType = normalizeOptionalString(
-    item.question_type,
-  );
+  const questionType = normalizeOptionalString(item.question_type);
 
-  const dokLevel = normalizeDokLevel(
-    item.dok_level,
-  );
+  const dokLevel = normalizeDokLevel(item.dok_level);
 
   const count = Number(item.count ?? 1);
 
   if (!questionType) {
-    throw new Error(
-      `questionPlan[${index}].question_type is required.`,
-    );
+    throw new Error(`questionPlan[${index}].question_type is required.`);
   }
 
   if (!dokLevel) {
-    throw new Error(
-      `questionPlan[${index}].dok_level must be 1, 2, or 3.`,
-    );
+    throw new Error(`questionPlan[${index}].dok_level must be 1, 2, or 3.`);
   }
 
-  if (
-    !Number.isInteger(count) ||
-    count < 1 ||
-    count > 20
-  ) {
+  if (!Number.isInteger(count) || count < 1 || count > 20) {
     throw new Error(
       `questionPlan[${index}].count must be an integer from 1 to 20.`,
     );
@@ -163,18 +143,13 @@ function normalizeQuestionPlanItem(item, index) {
  * }>}
  */
 function normalizeQuestionPlan(questionPlan) {
-  if (
-    !Array.isArray(questionPlan) ||
-    questionPlan.length === 0
-  ) {
+  if (!Array.isArray(questionPlan) || questionPlan.length === 0) {
     throw new Error(
       "generatePassageQuestionBankDraft requires a non-empty questionPlan.",
     );
   }
 
-  return questionPlan.map(
-    normalizeQuestionPlanItem,
-  );
+  return questionPlan.map(normalizeQuestionPlanItem);
 }
 
 /**
@@ -221,11 +196,7 @@ function expandQuestionPlan(questionPlan) {
   const expanded = [];
 
   for (const item of questionPlan) {
-    for (
-      let sequence = 1;
-      sequence <= item.count;
-      sequence += 1
-    ) {
+    for (let sequence = 1; sequence <= item.count; sequence += 1) {
       expanded.push({
         question_type: item.question_type,
         dok_level: item.dok_level,
@@ -252,8 +223,7 @@ function getSubjectGenerator(normalizedSubject) {
     // Math: generateMathPassageQuestionBankDraft,
   };
 
-  const generator =
-    generators[normalizedSubject];
+  const generator = generators[normalizedSubject];
 
   if (!generator) {
     throw new Error(
@@ -310,31 +280,18 @@ function getSubjectGenerator(normalizedSubject) {
  */
 function assertValidGeneratedPackage(result) {
   if (!isPlainObject(result)) {
-    throw new Error(
-      "Subject generator must return an object.",
-    );
+    throw new Error("Subject generator must return an object.");
   }
 
   if (!isPlainObject(result.passage)) {
-    throw new Error(
-      "Subject generator must return a passage object.",
-    );
+    throw new Error("Subject generator must return a passage object.");
   }
 
-  if (
-    !Array.isArray(result.questions) ||
-    result.questions.length === 0
-  ) {
-    throw new Error(
-      "Subject generator must return at least one question.",
-    );
+  if (!Array.isArray(result.questions) || result.questions.length === 0) {
+    throw new Error("Subject generator must return at least one question.");
   }
 
-  for (
-    let index = 0;
-    index < result.questions.length;
-    index += 1
-  ) {
+  for (let index = 0; index < result.questions.length; index += 1) {
     const question = result.questions[index];
 
     if (!isPlainObject(question)) {
@@ -343,31 +300,19 @@ function assertValidGeneratedPackage(result) {
       );
     }
 
-    if (
-      !normalizeOptionalString(
-        question.question_type,
-      )
-    ) {
+    if (!normalizeOptionalString(question.question_type)) {
       throw new Error(
         `Generated question at index ${index} is missing question_type.`,
       );
     }
 
-    if (
-      !normalizeDokLevel(
-        question.dok_level,
-      )
-    ) {
+    if (!normalizeDokLevel(question.dok_level)) {
       throw new Error(
         `Generated question at index ${index} has an invalid dok_level.`,
       );
     }
 
-    if (
-      !isPlainObject(
-        question.question_json,
-      )
-    ) {
+    if (!isPlainObject(question.question_json)) {
       throw new Error(
         `Generated question at index ${index} is missing question_json.`,
       );
@@ -420,6 +365,12 @@ export async function generatePassageQuestionBankDraft({
 
   contentFocus = null,
   contentFocusKey = null,
+
+  primaryTeks = teksStandard,
+  supportedTeks = [],
+  passageFamily = null,
+  questionTeksPlan = [],
+
   title = null,
   skillTags = [],
   difficultyLevel = 2,
@@ -429,46 +380,33 @@ export async function generatePassageQuestionBankDraft({
 
   generatorOptions = {},
 }) {
-  const normalizedSubject =
-    normalizeSubject(subject);
+  const normalizedSubject = normalizeSubject(subject);
 
   if (!normalizedSubject) {
-    throw new Error(
-      "generatePassageQuestionBankDraft requires subject.",
-    );
+    throw new Error("generatePassageQuestionBankDraft requires subject.");
   }
 
-  const normalizedGradeLevel =
-    normalizeOptionalString(
-      String(gradeLevel ?? ""),
-    );
+  const normalizedGradeLevel = normalizeOptionalString(
+    String(gradeLevel ?? ""),
+  );
 
   if (!normalizedGradeLevel) {
-    throw new Error(
-      "generatePassageQuestionBankDraft requires gradeLevel.",
-    );
+    throw new Error("generatePassageQuestionBankDraft requires gradeLevel.");
   }
 
-  const normalizedTeksStandard =
-    normalizeOptionalString(teksStandard);
+  const normalizedTeksStandard = normalizeOptionalString(teksStandard);
 
   if (!normalizedTeksStandard) {
-    throw new Error(
-      "generatePassageQuestionBankDraft requires teksStandard.",
-    );
+    throw new Error("generatePassageQuestionBankDraft requires teksStandard.");
   }
 
-  const normalizedPassageFormat =
-    normalizeOptionalString(passageFormat);
+  const normalizedPassageFormat = normalizeOptionalString(passageFormat);
 
   if (!normalizedPassageFormat) {
-    throw new Error(
-      "generatePassageQuestionBankDraft requires passageFormat.",
-    );
+    throw new Error("generatePassageQuestionBankDraft requires passageFormat.");
   }
 
-  const normalizedDifficultyLevel =
-    normalizeDokLevel(difficultyLevel);
+  const normalizedDifficultyLevel = normalizeDokLevel(difficultyLevel);
 
   if (!normalizedDifficultyLevel) {
     throw new Error(
@@ -476,104 +414,117 @@ export async function generatePassageQuestionBankDraft({
     );
   }
 
+  const normalizedPrimaryTeks = String(
+    primaryTeks || teksStandard || "",
+  ).trim();
+
+  if (!normalizedPrimaryTeks) {
+  throw new Error(
+    "generatePassageQuestionBankDraft requires primaryTeks.",
+  );
+}
+
+  const normalizedSupportedTeks = Array.isArray(supportedTeks)
+    ? supportedTeks.map((value) => String(value).trim()).filter(Boolean)
+    : [];
+
+  const normalizedQuestionTeksPlan = Array.isArray(questionTeksPlan)
+    ? questionTeksPlan
+        .map((row) => ({
+          teks_standard: String(row?.teks_standard || "").trim(),
+          count: Number(row?.count || 0),
+        }))
+        .filter(
+          (row) =>
+            row.teks_standard && Number.isInteger(row.count) && row.count > 0,
+        )
+    : [];
+
   if (!isPlainObject(generatorOptions)) {
     throw new Error(
       "generatePassageQuestionBankDraft generatorOptions must be an object.",
     );
   }
 
-  const normalizedQuestionPlan =
-    normalizeQuestionPlan(questionPlan);
+  const normalizedQuestionPlan = normalizeQuestionPlan(questionPlan);
 
-  const expandedQuestionPlan =
-    expandQuestionPlan(
-      normalizedQuestionPlan,
-    );
+  const expandedQuestionPlan = expandQuestionPlan(normalizedQuestionPlan);
 
-  const subjectGenerator =
-    getSubjectGenerator(
-      normalizedSubject,
-    );
+  const questionTeksPlanTotal =
+  normalizedQuestionTeksPlan.reduce(
+    (total, row) =>
+      total + row.count,
+    0,
+  );
 
-  const generatedPackage =
-    await subjectGenerator({
-      subject: normalizedSubject,
+if (
+  normalizedQuestionTeksPlan.length > 0 &&
+  questionTeksPlanTotal !==
+    expandedQuestionPlan.length
+) {
+  throw new Error(
+    `questionTeksPlan contains ${questionTeksPlanTotal} questions, but questionPlan contains ${expandedQuestionPlan.length}.`,
+  );
+}
 
-      gradeLevel:
-        normalizedGradeLevel,
+  const subjectGenerator = getSubjectGenerator(normalizedSubject);
 
-      teksStandard:
-        normalizedTeksStandard,
+  const generatedPackage = await subjectGenerator({
+    subject: normalizedSubject,
 
-      passageFormat:
-        normalizedPassageFormat,
+    gradeLevel: normalizedGradeLevel,
 
-      contentFocus:
-        normalizeOptionalString(
-          contentFocus,
-        ),
+    teksStandard: normalizedTeksStandard,
 
-      contentFocusKey:
-        normalizeOptionalString(
-          contentFocusKey,
-        ),
+    passageFormat: normalizedPassageFormat,
 
-      title:
-        normalizeOptionalString(title),
+    contentFocus: normalizeOptionalString(contentFocus),
 
-      skillTags:
-        Array.isArray(skillTags)
-          ? skillTags
-          : [],
+    contentFocusKey: normalizeOptionalString(contentFocusKey),
 
-      difficultyLevel:
-        normalizedDifficultyLevel,
+    primaryTeks: normalizedPrimaryTeks,
 
-      testingWindow:
-        normalizeOptionalString(
-          testingWindow,
-        ),
+    supportedTeks: normalizedSupportedTeks,
 
-      questionPlan:
-        normalizedQuestionPlan,
+    passageFamily: normalizeOptionalString(passageFamily),
 
-      expandedQuestionPlan,
+    questionTeksPlan: normalizedQuestionTeksPlan,
+    title: normalizeOptionalString(title),
 
-      generatorOptions,
-    });
+    skillTags: Array.isArray(skillTags) ? skillTags : [],
 
-  const validatedPackage =
-    assertValidGeneratedPackage(
-      generatedPackage,
-    );
+    difficultyLevel: normalizedDifficultyLevel,
+
+    testingWindow: normalizeOptionalString(testingWindow),
+
+    questionPlan: normalizedQuestionPlan,
+
+    expandedQuestionPlan,
+
+    generatorOptions,
+  });
+
+  const validatedPackage = assertValidGeneratedPackage(generatedPackage);
 
   return {
     ...validatedPackage,
 
     generation: {
-      ...(isPlainObject(
-        validatedPackage.generation,
-      )
+      ...(isPlainObject(validatedPackage.generation)
         ? validatedPackage.generation
         : {}),
 
-      subject:
-        normalizedSubject,
+      subject: normalizedSubject,
 
-      grade_level:
-        normalizedGradeLevel,
+      grade_level: normalizedGradeLevel,
 
-      teks_standard:
-        normalizedTeksStandard,
+      teks_standard: normalizedTeksStandard,
 
-      passage_format:
-        normalizedPassageFormat,
+      passage_format: normalizedPassageFormat,
 
-      question_plan:
-        normalizedQuestionPlan,
+      question_plan: normalizedQuestionPlan,
 
-      total_questions:
-        validatedPackage.questions.length,
+      total_questions: validatedPackage.questions.length,
     },
   };
 }

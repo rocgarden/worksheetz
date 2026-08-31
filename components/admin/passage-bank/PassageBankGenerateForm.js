@@ -1,7 +1,15 @@
+//components/admin/passage-bank/PassageBankGenerateForm.js
 "use client";
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import {
+  getELAContentFocusOptions,
+  getAdaptiveContentFocusSuggestions,
+  ELA_CONTENT_FOCUS_CHIPS,
+} from "@/libs/constants/adaptiveContentFocusOptions";
+
+import { buildPassageBankTeksOptions } from "@/libs/constants/teksSubjectMap";
 
 const DEFAULT_PLAN = [
   {
@@ -30,13 +38,7 @@ function createPlanRow() {
   };
 }
 
-function TextField({
-  label,
-  value,
-  onChange,
-  placeholder,
-  required = false,
-}) {
+function TextField({ label, value, onChange, placeholder, required = false }) {
   return (
     <label className="block space-y-2">
       <span className="text-sm font-semibold">
@@ -47,15 +49,35 @@ function TextField({
       <input
         type="text"
         value={value}
-        onChange={(event) =>
-          onChange(event.target.value)
-        }
+        onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         required={required}
         className="input input-bordered w-full rounded-2xl bg-white"
       />
     </label>
   );
+}
+
+function getDefaultPassageFormat(teksOption) {
+  switch (teksOption?.family) {
+    case "fiction":
+      return "fiction";
+
+    case "poetry":
+      return "poetry";
+
+    case "drama":
+      return "drama";
+
+    case "informational":
+      return "informational";
+
+    case "argumentative":
+      return "argumentative";
+
+    default:
+      return "";
+  }
 }
 
 export default function PassageBankGenerateForm() {
@@ -66,8 +88,7 @@ export default function PassageBankGenerateForm() {
     grade_level: "8",
     teks_standard: "8.8C",
     passage_format: "drama",
-    content_focus_key:
-      "misunderstanding_deadline_choice",
+    content_focus_key: "misunderstanding_deadline_choice",
     content_focus:
       "Overheard information creates a misunderstanding, a second complication, and a difficult choice before a deadline.",
     title: "",
@@ -76,24 +97,25 @@ export default function PassageBankGenerateForm() {
     testing_window: "",
   });
 
-  const [questionPlan, setQuestionPlan] =
-    useState(DEFAULT_PLAN);
+  const [questionPlan, setQuestionPlan] = useState(DEFAULT_PLAN);
 
-  const [submitting, setSubmitting] =
-    useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const [error, setError] =
-    useState("");
+  const [error, setError] = useState("");
 
   const totalQuestions = useMemo(
     () =>
-      questionPlan.reduce(
-        (total, item) =>
-          total + Number(item.count || 0),
-        0,
-      ),
+      questionPlan.reduce((total, item) => total + Number(item.count || 0), 0),
     [questionPlan],
   );
+
+  const teksOptions = useMemo(
+    () => buildPassageBankTeksOptions(form.subject, form.grade_level),
+    [form.subject, form.grade_level],
+  );
+
+  const contentFocusOptions =
+    form.subject === "ELA" ? getELAContentFocusOptions(form.teks_standard) : [];
 
   const updateForm = (field, value) => {
     setForm((current) => ({
@@ -102,11 +124,7 @@ export default function PassageBankGenerateForm() {
     }));
   };
 
-  const updatePlanRow = (
-    index,
-    field,
-    value,
-  ) => {
+  const updatePlanRow = (index, field, value) => {
     setQuestionPlan((current) =>
       current.map((item, itemIndex) =>
         itemIndex === index
@@ -120,18 +138,12 @@ export default function PassageBankGenerateForm() {
   };
 
   const addPlanRow = () => {
-    setQuestionPlan((current) => [
-      ...current,
-      createPlanRow(),
-    ]);
+    setQuestionPlan((current) => [...current, createPlanRow()]);
   };
 
   const removePlanRow = (index) => {
     setQuestionPlan((current) =>
-      current.filter(
-        (_, itemIndex) =>
-          itemIndex !== index,
-      ),
+      current.filter((_, itemIndex) => itemIndex !== index),
     );
   };
 
@@ -142,95 +154,68 @@ export default function PassageBankGenerateForm() {
     setError("");
 
     try {
-      if (
-        totalQuestions < 1 ||
-        totalQuestions > 30
-      ) {
-        throw new Error(
-          "Total questions must be between 1 and 30.",
-        );
+      if (totalQuestions < 1 || totalQuestions > 30) {
+        throw new Error("Total questions must be between 1 and 30.");
       }
 
       const payload = {
-        subject:
-          form.subject.trim(),
+        subject: form.subject.trim(),
 
-        grade_level:
-          form.grade_level.trim(),
+        grade_level: form.grade_level.trim(),
 
-        teks_standard:
-          form.teks_standard.trim(),
+        teks_standard: form.teks_standard.trim(),
 
-        passage_format:
-          form.passage_format.trim(),
+        passage_format: form.passage_format.trim(),
 
-        content_focus_key:
-          form.content_focus_key.trim() ||
-          null,
+        content_focus_key: form.content_focus_key.trim() || null,
 
-        content_focus:
-          form.content_focus.trim() ||
-          null,
+        // content_focus:
+        //   form.content_focus.trim() ||
+        //   null,
 
-        title:
-          form.title.trim() ||
-          null,
+        title: form.title.trim() || null,
 
-        skill_tags:
-          form.skill_tags
-            .split(",")
-            .map((tag) =>
-              tag.trim(),
-            )
-            .filter(Boolean),
+        skill_tags: form.skill_tags
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter(Boolean),
 
-        difficulty_level:
-          Number(
-            form.difficulty_level,
-          ),
+        difficulty_level: Number(form.difficulty_level),
 
-        testing_window:
-          form.testing_window.trim() ||
-          null,
+        testing_window: form.testing_window.trim() || null,
 
-        question_plan:
-          questionPlan.map((item) => ({
-            question_type:
-              item.question_type,
+        question_plan: questionPlan.map((item) => ({
+          question_type: item.question_type,
 
-            dok_level:
-              Number(item.dok_level),
+          dok_level: Number(item.dok_level),
 
-            count:
-              Number(item.count),
-          })),
+          count: Number(item.count),
+        })),
       };
 
-      const response = await fetch(
-        "/api/v2/admin/passage-bank/generate",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify(payload),
-        },
-      );
+      if (form.subject === "ELA" && !form.content_focus_key) {
+        setError("Select a content focus before generating the package.");
 
-      const data =
-        await response.json();
+        return;
+      }
+
+      const response = await fetch("/api/v2/admin/passage-bank/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
 
       if (!response.ok) {
         throw new Error(
-          data?.error ||
-            "Failed to generate passage-bank draft.",
+          data?.error || "Failed to generate passage-bank draft.",
         );
       }
 
-      const draftId =
-        data?.draft_id ||
-        data?.draft?.id;
+      const draftId = data?.draft_id || data?.draft?.id;
 
       if (!draftId) {
         throw new Error(
@@ -238,9 +223,7 @@ export default function PassageBankGenerateForm() {
         );
       }
 
-      router.push(
-        `/admin/passage-bank/drafts/${draftId}`,
-      );
+      router.push(`/admin/passage-bank/drafts/${draftId}`);
     } catch (submitError) {
       setError(
         submitError instanceof Error
@@ -252,82 +235,124 @@ export default function PassageBankGenerateForm() {
     }
   };
 
+  function handleSelectContentFocus(option) {
+    setForm((current) => ({
+      ...current,
+
+      content_focus_key:
+        current.content_focus_key === option.key ? "" : option.key,
+    }));
+  }
+
+  function handleChange(event) {
+    const { name, value } = event.target;
+
+    setForm((current) => {
+      const next = {
+        ...current,
+        [name]: value,
+      };
+
+      if (name === "teks_standard" || name === "subject") {
+        next.content_focus_key = "";
+      }
+
+      return next;
+    });
+  }
+
+  const selectedContentFocus =
+    contentFocusOptions.find(
+      (option) => option.key === form.content_focus_key,
+    ) ?? null;
+
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-8"
-    >
+    <form onSubmit={handleSubmit} className="space-y-8">
       <section className="rounded-[1.5rem] border border-base-300 bg-white p-6 shadow-sm">
-        <h2 className="text-xl font-bold">
-          Passage settings
-        </h2>
+        <h2 className="text-xl font-bold">Passage settings</h2>
 
         <div className="mt-6 grid gap-5 md:grid-cols-2">
           <label className="block space-y-2">
-            <span className="text-sm font-semibold">
-              Subject *
-            </span>
+            <span className="text-sm font-semibold">Subject *</span>
 
             <select
               value={form.subject}
-              onChange={(event) =>
-                updateForm(
-                  "subject",
-                  event.target.value,
-                )
-              }
+              onChange={(event) => updateForm("subject", event.target.value)}
               className="select select-bordered w-full rounded-2xl bg-white"
             >
-              <option value="ELA">
-                ELA
-              </option>
-              <option value="Science">
-                Science
-              </option>
-              <option value="Social Studies">
-                Social Studies
-              </option>
-              <option value="Math">
-                Math
-              </option>
+              <option value="ELA">ELA</option>
+              <option value="Science">Science</option>
+              <option value="Social Studies">Social Studies</option>
+              <option value="Math">Math</option>
             </select>
           </label>
 
           <TextField
             label="Grade level"
             value={form.grade_level}
-            onChange={(value) =>
-              updateForm(
-                "grade_level",
-                value,
-              )
-            }
+            onChange={(value) => updateForm("grade_level", value)}
             placeholder="8"
             required
           />
 
-          <TextField
-            label="TEKS standard"
-            value={form.teks_standard}
-            onChange={(value) =>
-              updateForm(
-                "teks_standard",
-                value,
-              )
-            }
-            placeholder="8.8C"
-            required
-          />
+          <label className="block space-y-2">
+            <span className="text-sm font-semibold">Primary TEKS *</span>
+
+            <select
+              value={form.teks_standard}
+              onChange={(event) => {
+                const nextTeks = event.target.value;
+
+                const selectedOption =
+                  teksOptions.find((option) => option.code === nextTeks) ??
+                  null;
+
+                const nextFocusOptions =
+                  form.subject === "ELA"
+                    ? getELAContentFocusOptions(nextTeks)
+                    : [];
+
+                setForm((current) => ({
+                  ...current,
+                  teks_standard: nextTeks,
+                  passage_format: getDefaultPassageFormat(selectedOption),
+                  content_focus_key: nextFocusOptions[0]?.key ?? "",
+                  content_focus: nextFocusOptions[0]?.prompt ?? "",
+                  skill_tags: "",
+                }));
+              }}
+              required
+              className="select select-bordered w-full rounded-2xl bg-white"
+            >
+              <option value="">Select a primary TEKS</option>
+
+              {Object.entries(
+                teksOptions.reduce((groups, option) => {
+                  const group = option.family_label || "Other";
+
+                  if (!groups[group]) {
+                    groups[group] = [];
+                  }
+
+                  groups[group].push(option);
+                  return groups;
+                }, {}),
+              ).map(([familyLabel, options]) => (
+                <optgroup key={familyLabel} label={familyLabel}>
+                  {options.map((option) => (
+                    <option key={option.code} value={option.code}>
+                      {option.code} — {option.label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </label>
 
           <TextField
             label="Passage format"
             value={form.passage_format}
-            onChange={(value) =>
-              updateForm(
-                "passage_format",
-                value,
-              )
-            }
+            onChange={(value) => updateForm("passage_format", value)}
             placeholder="drama"
             required
           />
@@ -335,88 +360,119 @@ export default function PassageBankGenerateForm() {
           <TextField
             label="Title"
             value={form.title}
-            onChange={(value) =>
-              updateForm(
-                "title",
-                value,
-              )
-            }
+            onChange={(value) => updateForm("title", value)}
             placeholder="Optional title"
           />
 
-          <TextField
+          {/* <TextField
             label="Content focus key"
-            value={
-              form.content_focus_key
-            }
-            onChange={(value) =>
-              updateForm(
-                "content_focus_key",
-                value,
-              )
-            }
+            value={form.content_focus_key}
+            onChange={(value) => updateForm("content_focus_key", value)}
             placeholder="misunderstanding_deadline_choice"
-          />
+          /> */}
 
           <label className="block space-y-2">
-            <span className="text-sm font-semibold">
-              Difficulty level
-            </span>
+            <span className="text-sm font-semibold">Difficulty level</span>
 
             <select
-              value={
-                form.difficulty_level
-              }
+              value={form.difficulty_level}
               onChange={(event) =>
-                updateForm(
-                  "difficulty_level",
-                  Number(
-                    event.target.value,
-                  ),
-                )
+                updateForm("difficulty_level", Number(event.target.value))
               }
               className="select select-bordered w-full rounded-2xl bg-white"
             >
-              <option value={1}>
-                1
-              </option>
-              <option value={2}>
-                2
-              </option>
-              <option value={3}>
-                3
-              </option>
+              <option value={1}>1</option>
+              <option value={2}>2</option>
+              <option value={3}>3</option>
             </select>
           </label>
 
           <TextField
             label="Skill tags"
             value={form.skill_tags}
-            onChange={(value) =>
-              updateForm(
-                "skill_tags",
-                value,
-              )
-            }
+            onChange={(value) => updateForm("skill_tags", value)}
             placeholder="dramatic_action, conflict"
           />
 
           <TextField
             label="Testing window"
-            value={
-              form.testing_window
-            }
-            onChange={(value) =>
-              updateForm(
-                "testing_window",
-                value,
-              )
-            }
+            value={form.testing_window}
+            onChange={(value) => updateForm("testing_window", value)}
             placeholder="Optional"
           />
         </div>
+        {/* ── Content Focus ─────────────────────────────────────────── */}
+        <div className="mt-6 space-y-3">
+          <div>
+            <label className="block text-sm font-semibold text-purple-900">
+              Content Focus <span className="text-red-500">*</span>
+            </label>
 
-        <label className="mt-5 block space-y-2">
+            <p className="mt-1 text-xs text-purple-500">
+              Select the structural focus for this passage. The backend will
+              resolve the approved generation prompt from this selection.
+            </p>
+          </div>
+
+          {contentFocusOptions.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {contentFocusOptions.map((option) => {
+                const isSelected = form.content_focus_key === option.key;
+
+                return (
+                  <button
+                    key={option.key}
+                    type="button"
+                    onClick={() => handleSelectContentFocus(option)}
+                    disabled={submitting}
+                    aria-pressed={isSelected}
+                    className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
+                      isSelected
+                        ? "border-purple-600 bg-purple-600 text-white"
+                        : "border-purple-200 bg-white text-purple-700 hover:border-purple-400 hover:bg-purple-50"
+                    }`}
+                  >
+                    {isSelected ? `✓ ${option.label}` : option.label}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              No keyed content-focus options are configured for this TEKS yet.
+            </div>
+          )}
+
+          {selectedContentFocus && (
+            <div className="rounded-xl border border-purple-100 bg-purple-50 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-purple-500">
+                Generation focus
+              </p>
+
+              <p className="mt-1 text-sm text-purple-900">
+                {selectedContentFocus.prompt}
+              </p>
+            </div>
+          )}
+
+          {selectedContentFocus && (
+            <button
+              type="button"
+              onClick={() =>
+                setForm((current) => ({
+                  ...current,
+                  content_focus_key: "",
+                }))
+              }
+              disabled={submitting}
+              className="text-xs font-semibold text-purple-600 hover:text-purple-800 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Clear content focus
+            </button>
+          )}
+        </div>
+
+        {/* <label className="mt-5 block space-y-2">
           <span className="text-sm font-semibold">
             Content focus
           </span>
@@ -433,15 +489,13 @@ export default function PassageBankGenerateForm() {
             className="textarea textarea-bordered w-full rounded-2xl bg-white leading-7"
             placeholder="Describe the required passage structure and content."
           />
-        </label>
+        </label> */}
       </section>
 
       <section className="rounded-[1.5rem] border border-base-300 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-xl font-bold">
-              Question plan
-            </h2>
+            <h2 className="text-xl font-bold">Question plan</h2>
 
             <p className="mt-1 text-sm text-base-content/60">
               {totalQuestions} of 30 questions
@@ -458,119 +512,76 @@ export default function PassageBankGenerateForm() {
         </div>
 
         <div className="mt-6 space-y-4">
-          {questionPlan.map(
-            (item, index) => (
-              <div
-                key={index}
-                className="grid gap-4 rounded-2xl border border-base-300 bg-base-100 p-5 md:grid-cols-[1fr_150px_150px_auto]"
-              >
-                <label className="space-y-2">
-                  <span className="text-sm font-semibold">
-                    Question type
-                  </span>
+          {questionPlan.map((item, index) => (
+            <div
+              key={index}
+              className="grid gap-4 rounded-2xl border border-base-300 bg-base-100 p-5 md:grid-cols-[1fr_150px_150px_auto]"
+            >
+              <label className="space-y-2">
+                <span className="text-sm font-semibold">Question type</span>
 
-                  <select
-                    value={
-                      item.question_type
-                    }
-                    onChange={(event) =>
-                      updatePlanRow(
-                        index,
-                        "question_type",
-                        event.target.value,
-                      )
-                    }
-                    className="select select-bordered w-full rounded-2xl bg-white"
-                  >
-                    {QUESTION_TYPES.map(
-                      (type) => (
-                        <option
-                          key={type}
-                          value={type}
-                        >
-                          {type.replaceAll(
-                            "_",
-                            " ",
-                          )}
-                        </option>
-                      ),
-                    )}
-                  </select>
-                </label>
-
-                <label className="space-y-2">
-                  <span className="text-sm font-semibold">
-                    DOK
-                  </span>
-
-                  <select
-                    value={item.dok_level}
-                    onChange={(event) =>
-                      updatePlanRow(
-                        index,
-                        "dok_level",
-                        Number(
-                          event.target
-                            .value,
-                        ),
-                      )
-                    }
-                    className="select select-bordered w-full rounded-2xl bg-white"
-                  >
-                    <option value={1}>
-                      1
+                <select
+                  value={item.question_type}
+                  onChange={(event) =>
+                    updatePlanRow(index, "question_type", event.target.value)
+                  }
+                  className="select select-bordered w-full rounded-2xl bg-white"
+                >
+                  {QUESTION_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {type.replaceAll("_", " ")}
                     </option>
-                    <option value={2}>
-                      2
-                    </option>
-                    <option value={3}>
-                      3
-                    </option>
-                  </select>
-                </label>
+                  ))}
+                </select>
+              </label>
 
-                <label className="space-y-2">
-                  <span className="text-sm font-semibold">
-                    Count
-                  </span>
+              <label className="space-y-2">
+                <span className="text-sm font-semibold">DOK</span>
 
-                  <input
-                    type="number"
-                    min={1}
-                    max={20}
-                    value={item.count}
-                    onChange={(event) =>
-                      updatePlanRow(
-                        index,
-                        "count",
-                        Number(
-                          event.target
-                            .value,
-                        ),
-                      )
-                    }
-                    className="input input-bordered w-full rounded-2xl bg-white"
-                  />
-                </label>
+                <select
+                  value={item.dok_level}
+                  onChange={(event) =>
+                    updatePlanRow(
+                      index,
+                      "dok_level",
+                      Number(event.target.value),
+                    )
+                  }
+                  className="select select-bordered w-full rounded-2xl bg-white"
+                >
+                  <option value={1}>1</option>
+                  <option value={2}>2</option>
+                  <option value={3}>3</option>
+                </select>
+              </label>
 
-                <div className="flex items-end">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      removePlanRow(index)
-                    }
-                    disabled={
-                      questionPlan.length ===
-                      1
-                    }
-                    className="rounded-full border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 disabled:opacity-40"
-                  >
-                    Remove
-                  </button>
-                </div>
+              <label className="space-y-2">
+                <span className="text-sm font-semibold">Count</span>
+
+                <input
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={item.count}
+                  onChange={(event) =>
+                    updatePlanRow(index, "count", Number(event.target.value))
+                  }
+                  className="input input-bordered w-full rounded-2xl bg-white"
+                />
+              </label>
+
+              <div className="flex items-end">
+                <button
+                  type="button"
+                  onClick={() => removePlanRow(index)}
+                  disabled={questionPlan.length === 1}
+                  className="rounded-full border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 disabled:opacity-40"
+                >
+                  Remove
+                </button>
               </div>
-            ),
-          )}
+            </div>
+          ))}
         </div>
       </section>
 
@@ -583,16 +594,10 @@ export default function PassageBankGenerateForm() {
       <div className="flex justify-end">
         <button
           type="submit"
-          disabled={
-            submitting ||
-            totalQuestions < 1 ||
-            totalQuestions > 30
-          }
+          disabled={submitting || totalQuestions < 1 || totalQuestions > 30}
           className="inline-flex min-w-48 items-center justify-center rounded-full bg-primary px-6 py-3 font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {submitting
-            ? "Generating draft…"
-            : "Generate draft"}
+          {submitting ? "Generating draft…" : "Generate draft"}
         </button>
       </div>
     </form>

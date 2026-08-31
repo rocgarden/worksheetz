@@ -16,16 +16,16 @@
 
 import { useState, useCallback } from "react";
 import { buildTeksOptions } from "@/libs/constants/teksSubjectMap";
-
+import { buildPassageBankTeksOptions } from "@/libs/constants/teksSubjectMap";
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const QUESTION_TYPES = [
-  { value: "multiple_choice", label: "Multiple Choice" },
-  { value: "hot_text", label: "Hot Text" },
-  { value: "constructed_response", label: "Constructed Response" },
-  { value: "multi_select", label: "Multi-Select" },
-  { value: "inline_choice", label: "Inline Choice" },
-];
+// const QUESTION_TYPES = [
+//   { value: "multiple_choice", label: "Multiple Choice" },
+//   { value: "hot_text", label: "Hot Text" },
+//   { value: "constructed_response", label: "Constructed Response" },
+//   { value: "multi_select", label: "Multi-Select" },
+//   // { value: "inline_choice", label: "Inline Choice" },
+// ];
 
 const TESTING_WINDOWS = [
   { value: "BOY", label: "Beginning of Year (BOY)" },
@@ -87,16 +87,33 @@ export default function ClassAssignPanel({
 }) {
   // Derived from subject + gradeLevel — reruns automatically if props change.
   // Returns [] for any subject not yet in teksSubjectMap (safe fallback).
-  const teksOptions = buildTeksOptions(subject, gradeLevel);
-  const subjectNotMapped = teksOptions.length === 0;
+  const teksOptions = buildPassageBankTeksOptions(subject, gradeLevel);
 
+  const hasNoAssignableTeks = teksOptions.length === 0;
+  const groupedTeksOptions = teksOptions.reduce((groups, option) => {
+    const groupName = option.family_label || "Other";
+
+    if (!groups[groupName]) {
+      groups[groupName] = [];
+    }
+
+    groups[groupName].push(option);
+
+    return groups;
+  }, {});
   // ── Form state
   const [form, setForm] = useState({
     teks_standard: "",
-    question_type: "multiple_choice",
+    // question_type: "multiple_choice",
     testing_window: testingWindow ?? "",
     expires_in_hours: 24,
   });
+
+  // const contentFocusSuggestions = getAdaptiveContentFocusSuggestions({
+  // subject,
+  // gradeLevel,
+  // teksStandard: form.teks_standard,
+  // });
 
   // ── UI state
   const [loading, setLoading] = useState(false);
@@ -108,12 +125,27 @@ export default function ClassAssignPanel({
 
   function handleChange(e) {
     const { name, value } = e.target;
+
     setForm((prev) => ({
       ...prev,
       [name]: name === "expires_in_hours" ? Number(value) : value,
+
+      // If TEKS changes, clear old content focus so the teacher
+      // does not accidentally submit a focus from a previous standard.
+      // ...(name === "teks_standard" ? { content_focus: "" } : {}),
     }));
+
     if (error) setError(null);
   }
+
+  // function handleContentFocusSuggestionClick(suggestion) {
+  //   setForm((prev) => ({
+  //     ...prev,
+  //     content_focus: suggestion,
+  //   }));
+
+  //   if (error) setError(null);
+  // }
 
   async function handleSubmit() {
     setError(null);
@@ -135,9 +167,10 @@ export default function ClassAssignPanel({
         body: JSON.stringify({
           classroom_id: classroomId,
           teks_standard: form.teks_standard,
-          question_type: form.question_type,
+          // question_type: form.question_type,
           testing_window: form.testing_window,
           expires_in_hours: form.expires_in_hours,
+          // content_focus: form.content_focus?.trim() || null,
         }),
       });
 
@@ -154,6 +187,20 @@ export default function ClassAssignPanel({
     } finally {
       setLoading(false);
     }
+  }
+
+  function handleClearSelections() {
+    setForm({
+      teks_standard: "",
+      // question_type: "multiple_choice",
+      testing_window: testingWindow ?? "",
+      expires_in_hours: 24,
+      // content_focus: "",
+    });
+
+    setError(null);
+    setResult(null);
+    setAllCopied(false);
   }
 
   const handleCopyAll = useCallback(async () => {
@@ -197,7 +244,8 @@ export default function ClassAssignPanel({
                   Sessions Started
                 </h2>
                 <p className="text-purple-300 text-sm mt-0.5">
-                  {result.teks_standard} · {result.question_type.replace(/_/g, " ")} ·{" "}
+                  {result.teks_standard} ·{" "}
+                  {result.question_type.replace(/_/g, " ")} ·{" "}
                   {result.testing_window}
                 </p>
               </div>
@@ -219,12 +267,14 @@ export default function ClassAssignPanel({
             <p className="text-yellow-900 text-xs">
               Codes expire in{" "}
               <strong>
-                {EXPIRY_OPTIONS.find((e) => e.value === result.expires_in_hours)?.label ??
-                  `${result.expires_in_hours} hours`}
+                {EXPIRY_OPTIONS.find((e) => e.value === result.expires_in_hours)
+                  ?.label ?? `${result.expires_in_hours} hours`}
               </strong>
               . Students go to{" "}
-              <span className="font-bold text-purple-800">teksportfolio.com/join</span> and
-              enter their code.
+              <span className="font-bold text-purple-800">
+                teksportfolio.com/join
+              </span>{" "}
+              and enter their code.
             </p>
           </div>
 
@@ -299,15 +349,35 @@ export default function ClassAssignPanel({
             >
               {allCopied ? (
                 <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2.5}
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M4.5 12.75l6 6 9-13.5"
+                    />
                   </svg>
                   Copied to Clipboard
                 </>
               ) : (
                 <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0015 2.25h-1.5a2.251 2.251 0 00-2.236 2.036m3.736-2.036a44.066 44.066 0 00-5.1 0m0 0A2.251 2.251 0 006 4.286M8.25 18H5.25A2.25 2.25 0 013 15.75V6.108" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0015 2.25h-1.5a2.251 2.251 0 00-2.236 2.036m3.736-2.036a44.066 44.066 0 00-5.1 0m0 0A2.251 2.251 0 006 4.286M8.25 18H5.25A2.25 2.25 0 013 15.75V6.108"
+                    />
                   </svg>
                   Copy All Codes for Google Classroom
                 </>
@@ -352,65 +422,106 @@ export default function ClassAssignPanel({
               className="text-purple-400 hover:text-white transition mt-0.5"
               aria-label="Close"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
         </div>
 
         {/* Form body */}
-        <div className="bg-white px-6 py-6 space-y-5">
-
+        <div className="bg-white px-6 py-6 space-y-5 overflow-y-auto max-h-[60vh]">
           {/* Error banner */}
           {error && (
             <div className="flex items-start gap-2.5 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
-              <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              <svg
+                className="w-4 h-4 mt-0.5 flex-shrink-0"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
               </svg>
               {error}
             </div>
           )}
 
           {/* Subject not yet mapped warning */}
-          {subjectNotMapped && (
+          {hasNoAssignableTeks && (
             <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl text-sm">
-              <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+              <svg
+                className="w-4 h-4 mt-0.5 flex-shrink-0"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
+                  clipRule="evenodd"
+                />
               </svg>
+
               <span>
-                TEKS standards for <strong>{subject}</strong> aren&apos;t set yet. More TEKS options will appear here once we add them to our system. For now, you can select any TEKS standard from the dropdown to start sessions for this classroom.
-                 {/* Add them to{" "}
-                <code className="text-xs bg-amber-100 px-1 rounded">teksSubjectMap.js</code> to
-                enable assignment for this classroom. */}
+                No passage-bank standards are currently available for{" "}
+                <strong>{subject}</strong> in grade{" "}
+                <strong>{gradeLevel}</strong>.
               </span>
             </div>
           )}
 
           {/* TEKS Standard */}
+          {/* TEKS Standard */}
           <div className="space-y-1.5">
-            <label htmlFor="cp-teks" className="block text-sm font-semibold text-purple-900">
+            <label
+              htmlFor="cp-teks"
+              className="block text-sm font-semibold text-purple-900"
+            >
               TEKS Standard <span className="text-red-500">*</span>
             </label>
+
             <select
               id="cp-teks"
               name="teks_standard"
               value={form.teks_standard}
               onChange={handleChange}
-              disabled={loading || subjectNotMapped}
+              disabled={loading || hasNoAssignableTeks}
               className="w-full px-4 py-2.5 rounded-xl border border-purple-200 bg-purple-50 text-purple-900 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <option value="">— Select standard —</option>
-              {teksOptions.map((opt) => (
-                <option key={opt.code} value={opt.code}>
-                  {opt.label}
-                </option>
-              ))}
+              <option value="">
+                {hasNoAssignableTeks
+                  ? "— No passage-bank standards available —"
+                  : "— Select standard —"}
+              </option>
+
+              {Object.entries(groupedTeksOptions).map(
+                ([familyLabel, options]) => (
+                  <optgroup key={familyLabel} label={familyLabel}>
+                    {options.map((option) => (
+                      <option key={option.code} value={option.code}>
+                        {option.code} — {option.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                ),
+              )}
             </select>
           </div>
 
           {/* Question Type */}
-          <div className="space-y-1.5">
+          {/* <div className="space-y-1.5">
             <label htmlFor="cp-qtype" className="block text-sm font-semibold text-purple-900">
               Question Type
             </label>
@@ -428,11 +539,77 @@ export default function ClassAssignPanel({
                 </option>
               ))}
             </select>
-          </div>
+          </div> */}
+          {/* Content Focus */}
+          {/* 
+
+<div>
+  <label
+    htmlFor="content_focus"
+    className="block text-sm font-medium text-purple-900 mb-1"
+  >
+    Content Focus <span className="text-purple-500">(optional)</span>
+  </label>
+
+  {contentFocusSuggestions.length > 0 && (
+    <div className="mb-3">
+      <p className="mb-2 text-xs font-medium text-purple-700">
+        Suggested lesson focuses:
+      </p>
+
+      <div className="flex flex-wrap gap-2">
+        {contentFocusSuggestions.map((suggestion) => {
+          const isSelected = form.content_focus === suggestion;
+
+          return (
+            <button
+              key={suggestion}
+              type="button"
+              onClick={() => handleContentFocusSuggestionClick(suggestion)}
+              className={`rounded-full border px-3 py-1.5 text-xs transition ${
+                isSelected
+                  ? "border-purple-500 bg-purple-100 text-purple-900"
+                  : "border-purple-200 bg-white text-purple-800 hover:bg-purple-50"
+              }`}
+            >
+              {suggestion}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  )}
+
+  <textarea
+    id="content_focus"
+    name="content_focus"
+    value={form.content_focus}
+    onChange={handleChange}
+    rows={3}
+    placeholder="Example: Focus on how region, resources, food, and shelter shaped each culture."
+    className="w-full px-4 py-2.5 rounded-xl border border-purple-200 bg-purple-50 text-purple-900 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+  />
+
+  <p className="mt-1 text-xs text-purple-600">
+    Choose a suggested focus or write your own. This helps align the practice to your current lesson.
+  </p>
+
+  <button
+  type="button"
+  onClick={handleClearSelections}
+  disabled={loading}
+  className="w-full rounded-xl border border-purple-200 bg-white px-4 py-2.5 text-sm font-medium text-purple-700 hover:bg-purple-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+>
+  Clear selections
+</button>
+</div> */}
 
           {/* Testing Window */}
           <div className="space-y-1.5">
-            <label htmlFor="cp-window" className="block text-sm font-semibold text-purple-900">
+            <label
+              htmlFor="cp-window"
+              className="block text-sm font-semibold text-purple-900"
+            >
               Testing Window <span className="text-red-500">*</span>
             </label>
             <select
@@ -454,7 +631,10 @@ export default function ClassAssignPanel({
 
           {/* Expiry */}
           <div className="space-y-1.5">
-            <label htmlFor="cp-expiry" className="block text-sm font-semibold text-purple-900">
+            <label
+              htmlFor="cp-expiry"
+              className="block text-sm font-semibold text-purple-900"
+            >
               Session Expires In
             </label>
             <select
@@ -476,9 +656,9 @@ export default function ClassAssignPanel({
           {/* Info note */}
           <div className="bg-purple-50 border border-purple-100 rounded-xl px-4 py-3">
             <p className="text-purple-800 text-xs leading-relaxed">
-              Sessions will be created for <strong>all active students</strong> in this
-              classroom. If a student&apos;s session fails, the rest still start — failures are
-              listed after submission.
+              Sessions will be created for <strong>all active students</strong>{" "}
+              in this classroom. If a student&apos;s session fails, the rest
+              still start — failures are listed after submission.
             </p>
           </div>
         </div>
@@ -495,21 +675,46 @@ export default function ClassAssignPanel({
 
           <button
             onClick={handleSubmit}
-            disabled={loading || subjectNotMapped}
+            disabled={loading || hasNoAssignableTeks}
             className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#f5c518] text-[#0f0a1e] text-sm font-bold hover:bg-[#fbbf24] transition active:scale-95 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
           >
             {loading ? (
               <>
-                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                <svg
+                  className="w-4 h-4 animate-spin"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                  />
                 </svg>
-                Generating sessions…
+                Starting sessions…
               </>
             ) : (
               <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.247 3.199a3.75 3.75 0 01-5.306 0M18 18.72V19.5m-11.25-.78a9.094 9.094 0 01-3.741-.479 3 3 0 014.682-2.72m-.247 3.199a3.75 3.75 0 005.306 0M6.75 19.5v-.78M12 15.75a3 3 0 110-6 3 3 0 010 6z" />
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.247 3.199a3.75 3.75 0 01-5.306 0M18 18.72V19.5m-11.25-.78a9.094 9.094 0 01-3.741-.479 3 3 0 014.682-2.72m-.247 3.199a3.75 3.75 0 005.306 0M6.75 19.5v-.78M12 15.75a3 3 0 110-6 3 3 0 010 6z"
+                  />
                 </svg>
                 Start Sessions for All Students
               </>

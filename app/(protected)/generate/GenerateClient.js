@@ -348,7 +348,7 @@ if (schema) {
       </h1>
 
       <p className="text-sm text-yellow-700 bg-yellow-100 border border-yellow-300 rounded-md p-3 mb-6 text-center">
-        ⚠️ Download your worksheet immediately after generation - it won't be
+        ⚠️ Download your worksheet immediately after generation - it won&apos;t be
         saved!
       </p>
 
@@ -525,7 +525,7 @@ if (schema) {
         {topic &&  (
           <div className="p-3 bg-purple-50 border border-purple-200 rounded-md">
              <p className="text-xs text-purple-700 font-medium mb-1">
-              📝 You'll get:
+              📝 You&apos;ll get:
             </p>
             <p className="text-sm text-gray-700">
               {type === "staarReading"

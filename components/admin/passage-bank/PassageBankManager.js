@@ -399,13 +399,17 @@ export default function PassageBankManager({ mode = "default" }) {
     setTeksFilter("all");
   }, [subjectFilter, gradeFilter]);
 
-  const activeSourceItems = activeTab === TABS.drafts ? drafts : published;
+const activeSourceItems = activeTab === TABS.drafts ? drafts : published;
 
+const filterSourceItems = useMemo(
+  () => [...drafts, ...published],
+  [drafts, published],
+);
   const subjectOptions = useMemo(
     () =>
       [
         ...new Set(
-          activeSourceItems
+          filterSourceItems
             .map((item) => String(item.subject || "").trim())
             .filter(Boolean),
         ),
@@ -414,14 +418,14 @@ export default function PassageBankManager({ mode = "default" }) {
           sensitivity: "base",
         }),
       ),
-    [activeSourceItems],
+    [filterSourceItems],
   );
 
   const gradeOptions = useMemo(
     () =>
       [
         ...new Set(
-          activeSourceItems
+          filterSourceItems
             .map((item) => String(item.grade_level || "").trim())
             .filter(Boolean),
         ),
@@ -431,14 +435,14 @@ export default function PassageBankManager({ mode = "default" }) {
           sensitivity: "base",
         }),
       ),
-    [activeSourceItems],
+    [filterSourceItems],
   );
 
   const teksOptions = useMemo(
     () =>
       [
         ...new Set(
-          activeSourceItems
+          filterSourceItems
             .filter(
               (item) =>
                 subjectFilter === "all" || item.subject === subjectFilter,
@@ -457,7 +461,7 @@ export default function PassageBankManager({ mode = "default" }) {
           sensitivity: "base",
         }),
       ),
-    [activeSourceItems, subjectFilter, gradeFilter],
+    [filterSourceItems, subjectFilter, gradeFilter],
   );
 
   const filteredDrafts = useMemo(() => {

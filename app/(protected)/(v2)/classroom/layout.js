@@ -14,7 +14,7 @@ export const fetchCache = "force-no-store";
 // lives in production. V2 data fetching happens in page/child routes.
 
 export default async function ClassroomLayout({ children }) {
- const supabase = await createClient();
+  const supabase = await createClient();
 
   // 1. Auth check — same pattern as dashboard/layout.js
   const {
@@ -25,7 +25,7 @@ export default async function ClassroomLayout({ children }) {
     redirect(config.auth.loginUrl);
   }
 
-//   // 2. Plan check — verify classroom_plan or school_plan
+  //   // 2. Plan check — verify classroom_plan or school_plan
   // const { data: profile, error: profileError } = await supabase
   //   .from("profiles")
   //   .select("classroom_plan, school_plan")
@@ -38,19 +38,17 @@ export default async function ClassroomLayout({ children }) {
   // }
   // const serviceSupabase = await createV2ServiceClient();
   //  const user = { id: "e1a3fef9-ae21-478a-bc7a-e41f8df3d5e0" }; // hardcoded user for testing — layout guards auth, so we know this is valid
-   console.log("Authenticated user ID:", user.id);
+  console.log("Authenticated user ID:", user.id);
 
   // 3. Plan access check
   const { data: profile, error: profileError } = await supabase
-    .from("profiles") 
+    .from("profiles")
     .select("classroom_plan, school_plan, max_classrooms")
     .eq("id", user.id)
     .single();
 
   if (profileError || !profile) {
-    return NextResponse.json(
-          redirect("/dashboard?message=profile-error") //redirect, not NextResponse
-    );
+    redirect("/dashboard?message=profile-error");
   }
 
   // const hasClassroomAccess =

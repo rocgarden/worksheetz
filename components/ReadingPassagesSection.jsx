@@ -19,7 +19,7 @@ export default function ReadingPassagesSection() {
 
             <p className="mt-4 text-lg text-slate-600 leading-relaxed">
               Teks Portfolio generates engaging reading passages and comprehension
-              question pdf's modeled after STAAR testing formats. Perfect for warm‑ups,
+              question pdf&apos;s modeled after STAAR testing formats. Perfect for warm‑ups,
               small‑group instruction, intervention, or test prep.
             </p>
 

@@ -30,11 +30,7 @@ export const dynamic = "force-dynamic";
  * @returns {boolean}
  */
 function isPlainObject(value) {
-  return (
-    value !== null &&
-    typeof value === "object" &&
-    !Array.isArray(value)
-  );
+  return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
 /**
@@ -42,11 +38,8 @@ function isPlainObject(value) {
  * @returns {string}
  */
 function normalizeRequiredString(value) {
-  return typeof value === "string"
-    ? value.trim()
-    : "";
+  return typeof value === "string" ? value.trim() : "";
 }
-
 
 function normalizeOptionalString(value) {
   if (typeof value !== "string") {
@@ -74,24 +67,20 @@ function isUuid(value) {
 /**
  * GET /api/v2/admin/passage-bank/drafts/[draftId]
  */
-export async function GET(
-  request,
-  { params },
-) {
+export async function GET(request, { params }) {
   try {
     /*
      * ----------------------------------------------------------
      * 1. Authenticate and authorize admin
      * ----------------------------------------------------------
      */
-    const adminAuth =
-  await requirePassageBankAdmin();
+    const adminAuth = await requirePassageBankAdmin();
 
-if (!adminAuth.success) {
-  return adminAuth.response;
-}
+    if (!adminAuth.success) {
+      return adminAuth.response;
+    }
 
-const { user } = adminAuth;
+    const { user } = adminAuth;
 
     /*
      * ----------------------------------------------------------
@@ -99,17 +88,12 @@ const { user } = adminAuth;
      * ----------------------------------------------------------
      */
 
-    const {
-      draftId,
-    } = await params;
+    const { draftId } = await params;
 
-    if (
-      !isUuid(draftId)
-    ) {
+    if (!isUuid(draftId)) {
       return NextResponse.json(
         {
-          error:
-            "A valid draftId is required.",
+          error: "A valid draftId is required.",
         },
         {
           status: 400,
@@ -123,16 +107,10 @@ const { user } = adminAuth;
      * ----------------------------------------------------------
      */
 
-    const serviceSupabase =
-      await createV2ServiceClient();
+    const serviceSupabase = await createV2ServiceClient();
 
-    const {
-      data: draft,
-      error: draftError,
-    } = await serviceSupabase
-      .from(
-        "passage_bank_draft_packages",
-      )
+    const { data: draft, error: draftError } = await serviceSupabase
+      .from("passage_bank_draft_packages")
       .select(
         `
           id,
@@ -156,35 +134,27 @@ const { user } = adminAuth;
           published_at
         `,
       )
-      .eq(
-        "id",
-        draftId,
-      )
+      .eq("id", draftId)
       .maybeSingle();
 
     if (draftError) {
       console.error(
         "[admin/passage-bank/drafts/[draftId]] Draft fetch failed",
         {
-          error:
-            draftError.message,
+          error: draftError.message,
 
-          draft_id:
-            draftId,
+          draft_id: draftId,
 
-          admin_user_id:
-            user.id,
+          admin_user_id: user.id,
         },
       );
 
       return NextResponse.json(
         {
-          error:
-            "Failed to retrieve passage-bank draft.",
+          error: "Failed to retrieve passage-bank draft.",
 
           details:
-            process.env.NODE_ENV ===
-            "development"
+            process.env.NODE_ENV === "development"
               ? draftError.message
               : undefined,
         },
@@ -197,8 +167,7 @@ const { user } = adminAuth;
     if (!draft) {
       return NextResponse.json(
         {
-          error:
-            "Passage-bank draft was not found.",
+          error: "Passage-bank draft was not found.",
         },
         {
           status: 404,
@@ -213,9 +182,7 @@ const { user } = adminAuth;
      */
 
     const draftPackage =
-      draft.draft_json &&
-      typeof draft.draft_json ===
-        "object"
+      draft.draft_json && typeof draft.draft_json === "object"
         ? draft.draft_json
         : {
             passage: null,
@@ -223,23 +190,16 @@ const { user } = adminAuth;
           };
 
     const passage =
-      draftPackage.passage &&
-      typeof draftPackage.passage ===
-        "object"
+      draftPackage.passage && typeof draftPackage.passage === "object"
         ? draftPackage.passage
         : null;
 
-    const questions =
-      Array.isArray(
-        draftPackage.questions,
-      )
-        ? draftPackage.questions
-        : [];
+    const questions = Array.isArray(draftPackage.questions)
+      ? draftPackage.questions
+      : [];
 
     const validation =
-      draft.validation_json &&
-      typeof draft.validation_json ===
-        "object"
+      draft.validation_json && typeof draft.validation_json === "object"
         ? draft.validation_json
         : {
             success: false,
@@ -249,25 +209,21 @@ const { user } = adminAuth;
           };
 
     const generation =
-      draft.generation_json &&
-      typeof draft.generation_json ===
-        "object"
+      draft.generation_json && typeof draft.generation_json === "object"
         ? draft.generation_json
         : {};
 
     /*
- * ----------------------------------------------------------
- * Fetch draft review and workflow history
- * ----------------------------------------------------------
- */
+     * ----------------------------------------------------------
+     * Fetch draft review and workflow history
+     * ----------------------------------------------------------
+     */
 
-const {
-  data: reviewEventRows,
-  error: reviewEventError,
-} = await serviceSupabase
-  .from("passage_bank_review_events")
-  .select(
-    `
+    const { data: reviewEventRows, error: reviewEventError } =
+      await serviceSupabase
+        .from("passage_bank_review_events")
+        .select(
+          `
       id,
       draft_package_id,
       published_passage_bank_id,
@@ -280,47 +236,37 @@ const {
       performed_by,
       created_at
     `,
-  )
-  .eq(
-    "draft_package_id",
-    draftId,
-  )
-  .order(
-    "created_at",
-    {
-      ascending: false,
-    },
-  );
+        )
+        .eq("draft_package_id", draftId)
+        .order("created_at", {
+          ascending: false,
+        });
 
-if (reviewEventError) {
-  console.error(
-    "[admin/passage-bank/drafts/[draftId]] Review history fetch failed",
-    {
-      error:
-        reviewEventError.message,
+    if (reviewEventError) {
+      console.error(
+        "[admin/passage-bank/drafts/[draftId]] Review history fetch failed",
+        {
+          error: reviewEventError.message,
 
-      draft_id:
-        draftId,
-    },
-  );
+          draft_id: draftId,
+        },
+      );
 
-  return NextResponse.json(
-    {
-      error:
-        "Failed to load draft review history.",
-    },
-    {
-      status: 500,
-    },
-  );
-}
+      return NextResponse.json(
+        {
+          error: "Failed to load draft review history.",
+        },
+        {
+          status: 500,
+        },
+      );
+    }
 
-const reviewEvents =
-  await resolvePassageBankAuditActors({
-    serviceSupabase,
-    events: reviewEventRows,
-  });
-console.log("Review Events:: ", reviewEvents)
+    const reviewEvents = await resolvePassageBankAuditActors({
+      serviceSupabase,
+      events: reviewEventRows,
+    });
+    console.log("Review Events:: ", reviewEvents);
     /*
      * ----------------------------------------------------------
      * 5. Return complete draft
@@ -331,53 +277,37 @@ console.log("Review Events:: ", reviewEvents)
       success: true,
 
       draft: {
-        id:
-          draft.id,
+        id: draft.id,
 
-        status:
-          draft.status,
+        status: draft.status,
 
-        subject:
-          draft.subject,
+        subject: draft.subject,
 
-        grade_level:
-          draft.grade_level,
+        grade_level: draft.grade_level,
 
-        teks_standard:
-          draft.teks_standard,
+        teks_standard: draft.teks_standard,
 
-        passage_format:
-          draft.passage_format,
+        passage_format: draft.passage_format,
 
-        content_focus_key:
-          draft.content_focus_key,
+        content_focus_key: draft.content_focus_key,
 
-        title:
-          draft.title,
+        title: draft.title,
 
         passage,
 
         questions,
 
-        question_count:
-          questions.length,
+        question_count: questions.length,
 
-        structurally_valid:
-          validation.success === true,
+        structurally_valid: validation.success === true,
 
-        validation_error_count:
-          Array.isArray(
-            validation.errors,
-          )
-            ? validation.errors.length
-            : 0,
+        validation_error_count: Array.isArray(validation.errors)
+          ? validation.errors.length
+          : 0,
 
-        validation_warning_count:
-          Array.isArray(
-            validation.warnings,
-          )
-            ? validation.warnings.length
-            : 0,
+        validation_warning_count: Array.isArray(validation.warnings)
+          ? validation.warnings.length
+          : 0,
 
         validation,
 
@@ -385,47 +315,31 @@ console.log("Review Events:: ", reviewEvents)
 
         reviewEvents: reviewEvents,
 
-        created_by:
-          draft.created_by,
+        created_by: draft.created_by,
 
-        updated_by:
-          draft.updated_by,
+        updated_by: draft.updated_by,
 
-        reviewed_by:
-          draft.reviewed_by,
+        reviewed_by: draft.reviewed_by,
 
-        published_passage_bank_id:
-          draft
-            .published_passage_bank_id,
+        published_passage_bank_id: draft.published_passage_bank_id,
 
-        created_at:
-          draft.created_at,
+        created_at: draft.created_at,
 
-        updated_at:
-          draft.updated_at,
+        updated_at: draft.updated_at,
 
-        reviewed_at:
-          draft.reviewed_at,
+        reviewed_at: draft.reviewed_at,
 
-        published_at:
-          draft.published_at,
+        published_at: draft.published_at,
       },
     });
   } catch (error) {
-    console.error(
-      "[admin/passage-bank/drafts/[draftId]] Unexpected error",
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : String(error),
-      },
-    );
+    console.error("[admin/passage-bank/drafts/[draftId]] Unexpected error", {
+      error: error instanceof Error ? error.message : String(error),
+    });
 
     return NextResponse.json(
       {
-        error:
-          "Failed to retrieve passage-bank draft.",
+        error: "Failed to retrieve passage-bank draft.",
       },
       {
         status: 500,
@@ -459,24 +373,20 @@ console.log("Review Events:: ", reviewEvents)
  * This endpoint saves edits but does not run the complete package validator.
  * Any content edit marks the previous validation snapshot as stale.
  */
-export async function PATCH(
-  request,
-  { params },
-) {
+export async function PATCH(request, { params }) {
   try {
     /*
      * ----------------------------------------------------------
      * 1. Authenticate and authorize admin
      * ----------------------------------------------------------
      */
-    const adminAuth =
-  await requirePassageBankAdmin();
+    const adminAuth = await requirePassageBankAdmin();
 
-if (!adminAuth.success) {
-  return adminAuth.response;
-}
+    if (!adminAuth.success) {
+      return adminAuth.response;
+    }
 
-const { user } = adminAuth;
+    const { user } = adminAuth;
 
     /*
      * ----------------------------------------------------------
@@ -484,15 +394,12 @@ const { user } = adminAuth;
      * ----------------------------------------------------------
      */
 
-    const {
-      draftId,
-    } = await params;
+    const { draftId } = await params;
 
     if (!isUuid(draftId)) {
       return NextResponse.json(
         {
-          error:
-            "A valid draftId is required.",
+          error: "A valid draftId is required.",
         },
         {
           status: 400,
@@ -509,13 +416,11 @@ const { user } = adminAuth;
     let body;
 
     try {
-      body =
-        await request.json();
+      body = await request.json();
     } catch {
       return NextResponse.json(
         {
-          error:
-            "Request body must contain valid JSON.",
+          error: "Request body must contain valid JSON.",
         },
         {
           status: 400,
@@ -526,8 +431,7 @@ const { user } = adminAuth;
     if (!isPlainObject(body)) {
       return NextResponse.json(
         {
-          error:
-            "Request body must be a JSON object.",
+          error: "Request body must be a JSON object.",
         },
         {
           status: 400,
@@ -535,17 +439,14 @@ const { user } = adminAuth;
       );
     }
 
-    const passage =
-      body.passage;
+    const passage = body.passage;
 
-    const questions =
-      body.questions;
+    const questions = body.questions;
 
     if (!isPlainObject(passage)) {
       return NextResponse.json(
         {
-          error:
-            "passage must be a JSON object.",
+          error: "passage must be a JSON object.",
         },
         {
           status: 400,
@@ -553,14 +454,10 @@ const { user } = adminAuth;
       );
     }
 
-    if (
-      !Array.isArray(questions) ||
-      questions.length === 0
-    ) {
+    if (!Array.isArray(questions) || questions.length === 0) {
       return NextResponse.json(
         {
-          error:
-            "questions must contain at least one question.",
+          error: "questions must contain at least one question.",
         },
         {
           status: 400,
@@ -568,32 +465,17 @@ const { user } = adminAuth;
       );
     }
 
-    const subject =
-      normalizeRequiredString(
-        passage.subject,
-      );
+    const subject = normalizeRequiredString(passage.subject);
 
-    const gradeLevel =
-      normalizeRequiredString(
-        String(
-          passage.grade_level ?? "",
-        ),
-      );
+    const gradeLevel = normalizeRequiredString(
+      String(passage.grade_level ?? ""),
+    );
 
-    const teksStandard =
-      normalizeRequiredString(
-        passage.teks_standard,
-      );
+    const teksStandard = normalizeRequiredString(passage.teks_standard);
 
-    const passageFormat =
-      normalizeRequiredString(
-        passage.passage_format,
-      );
+    const passageFormat = normalizeRequiredString(passage.passage_format);
 
-    const passageText =
-      normalizeRequiredString(
-        passage.passage,
-      );
+    const passageText = normalizeRequiredString(passage.passage);
 
     if (
       !subject ||
@@ -619,49 +501,37 @@ const { user } = adminAuth;
      * ----------------------------------------------------------
      */
 
-    const serviceSupabase =
-      await createV2ServiceClient();
+    const serviceSupabase = await createV2ServiceClient();
 
-    const {
-      data: existingDraft,
-      error: existingDraftError,
-    } = await serviceSupabase
-      .from(
-        "passage_bank_draft_packages",
-      )
-      .select(
-        `
+    const { data: existingDraft, error: existingDraftError } =
+      await serviceSupabase
+        .from("passage_bank_draft_packages")
+        .select(
+          `
           id,
           status,
           validation_json,
           published_passage_bank_id
         `,
-      )
-      .eq(
-        "id",
-        draftId,
-      )
-      .maybeSingle();
+        )
+        .eq("id", draftId)
+        .maybeSingle();
 
     if (existingDraftError) {
       console.error(
         "[admin/passage-bank/drafts/[draftId]] Draft lookup failed before update",
         {
-          error:
-            existingDraftError.message,
+          error: existingDraftError.message,
 
-          draft_id:
-            draftId,
+          draft_id: draftId,
 
-          admin_user_id:
-            user.id,
+          admin_user_id: user.id,
         },
       );
 
       return NextResponse.json(
         {
-          error:
-            "Failed to retrieve passage-bank draft.",
+          error: "Failed to retrieve passage-bank draft.",
         },
         {
           status: 500,
@@ -672,8 +542,7 @@ const { user } = adminAuth;
     if (!existingDraft) {
       return NextResponse.json(
         {
-          error:
-            "Passage-bank draft was not found.",
+          error: "Passage-bank draft was not found.",
         },
         {
           status: 404,
@@ -681,10 +550,7 @@ const { user } = adminAuth;
       );
     }
 
-    if (
-      existingDraft.status ===
-      "published"
-    ) {
+    if (existingDraft.status === "published") {
       return NextResponse.json(
         {
           error:
@@ -696,22 +562,16 @@ const { user } = adminAuth;
       );
     }
 
-    if (
-      existingDraft.status ===
-      "archived"
-    ) {
+    if (existingDraft.status === "archived") {
       return NextResponse.json(
         {
-          error:
-            "Archived drafts cannot be edited.",
+          error: "Archived drafts cannot be edited.",
         },
         {
           status: 409,
         },
       );
     }
-
-
 
     /*
      * ----------------------------------------------------------
@@ -720,53 +580,171 @@ const { user } = adminAuth;
      */
 
     const updatedDraftPackage = {
-  passage,
-  questions,
-};
+      passage,
+      questions,
+    };
 
-const sharedPassage =
-  typeof updatedDraftPackage?.passage?.passage ===
-  "string"
-    ? updatedDraftPackage.passage.passage
-    : "";
+    const sharedPassage =
+      typeof updatedDraftPackage?.passage?.passage === "string"
+        ? updatedDraftPackage.passage.passage
+        : "";
 
-const synchronizedQuestions =
-  updatedDraftPackage.questions.map(
-    (question) => {
-      if (
-        !question?.question_json ||
-        typeof question.question_json !==
-          "object" ||
-        Array.isArray(
-          question.question_json,
+    const sharedTeksStandard =
+      typeof updatedDraftPackage?.passage?.teks_standard === "string"
+        ? updatedDraftPackage.passage.teks_standard
+        : "";
+
+    const synchronizedQuestions = updatedDraftPackage.questions.map(
+      (question) => {
+        const questionJson = isPlainObject(question?.question_json)
+          ? question.question_json
+          : {};
+
+        const questionTeksStandard =
+          normalizeRequiredString(
+            question.teks_standard ?? questionJson.teks_standard,
+          ) || sharedTeksStandard;
+
+        const questionType =
+          normalizeRequiredString(
+            question.question_type ?? questionJson.question_type,
+          ) || "multiple_choice";
+        const dokLevel = Number(
+          question.dok_level ?? questionJson.dok_level ?? 1,
+        );
+
+        const currentDokLevel =
+          Number.isInteger(dokLevel) && dokLevel >= 1 && dokLevel <= 3
+            ? dokLevel
+            : 1;
+
+        const skillFocus = normalizeOptionalString(
+          question.skill_focus ?? questionJson.skill_focus,
+        );
+
+        const assessmentMove = normalizeOptionalString(
+          question.assessment_move ?? questionJson.assessment_move,
+        );
+
+        const correctTargetKey = normalizeOptionalString(
+          question.correct_target_key ?? questionJson.correct_target_key,
+        );
+
+        const correctTargetText = normalizeOptionalString(
+          question.correct_target_text ?? questionJson.correct_target_text,
+        );
+
+        const correctDokLevel = Math.min(3, currentDokLevel + 1);
+
+        const incorrectDokLevel = Math.max(1, currentDokLevel - 1);
+
+        const existingNextLogic = isPlainObject(
+          questionJson.next_question_logic,
         )
-      ) {
-        return question;
-      }
+          ? questionJson.next_question_logic
+          : {};
 
-      if (
-        !Object.prototype.hasOwnProperty.call(
-          question.question_json,
-          "passage",
+        const existingIfCorrect = isPlainObject(existingNextLogic.if_correct)
+          ? existingNextLogic.if_correct
+          : {};
+
+        const existingIfIncorrect = isPlainObject(
+          existingNextLogic.if_incorrect,
         )
-      ) {
-        return question;
-      }
+          ? existingNextLogic.if_incorrect
+          : {};
 
-      return {
-        ...question,
-        question_json: {
-          ...question.question_json,
-          passage: sharedPassage,
-        },
-      };
-    },
-  );
+        const normalizedNextLogic = {
+          ...existingNextLogic,
 
-const synchronizedDraftPackage = {
-  ...updatedDraftPackage,
-  questions: synchronizedQuestions,
-};
+          if_correct: {
+            ...existingIfCorrect,
+
+            action:
+              normalizeRequiredString(existingIfCorrect.action) ||
+              "increase_difficulty",
+
+            dok_level: [1, 2, 3].includes(Number(existingIfCorrect.dok_level))
+              ? Number(existingIfCorrect.dok_level)
+              : correctDokLevel,
+          },
+
+          if_incorrect: {
+            ...existingIfIncorrect,
+
+            action:
+              normalizeRequiredString(existingIfIncorrect.action) ||
+              "decrease_difficulty",
+
+            dok_level: [1, 2, 3].includes(Number(existingIfIncorrect.dok_level))
+              ? Number(existingIfIncorrect.dok_level)
+              : incorrectDokLevel,
+          },
+        };
+
+        const dramaticFunction =
+          normalizeOptionalString(question.dramatic_function) ||
+          normalizeOptionalString(questionJson.dramatic_function) ||
+          null;
+
+        const targetScene =
+          normalizeOptionalString(question.target_scene) ||
+          normalizeOptionalString(questionJson.target_scene) ||
+          null;
+
+        return {
+          ...question,
+
+          teks_standard: questionTeksStandard,
+
+          question_type: questionType,
+
+          dok_level: currentDokLevel,
+          skill_focus: skillFocus,
+          assessment_move: assessmentMove,
+
+          dramatic_function: dramaticFunction,
+
+          target_scene: targetScene,
+          correct_target_key: correctTargetKey,
+          correct_target_text: correctTargetText,
+
+          question_json: {
+            ...questionJson,
+
+            passage: sharedPassage,
+
+            question_type: questionType,
+
+            answer_options:
+              questionType === "hot_text" ||
+              questionType === "constructed_response"
+                ? null
+                : Array.isArray(questionJson.answer_options)
+                  ? questionJson.answer_options
+                  : [],
+
+            teks_standard: questionTeksStandard,
+
+            dok_level: currentDokLevel,
+
+            dramatic_function: dramaticFunction,
+            skill_focus: skillFocus,
+            assessment_move: assessmentMove,
+            target_scene: targetScene,
+            correct_target_key: correctTargetKey,
+            correct_target_text: correctTargetText,
+
+            next_question_logic: normalizedNextLogic,
+          },
+        };
+      },
+    );
+
+    const synchronizedDraftPackage = {
+      ...updatedDraftPackage,
+      questions: synchronizedQuestions,
+    };
     /*
      * Any content change invalidates the previous structural-validation
      * snapshot. The dedicated validation endpoint will replace this stale
@@ -780,48 +758,25 @@ const synchronizedDraftPackage = {
       errors: [],
       warnings: [],
 
-      message:
-        "This draft was edited after its most recent validation.",
+      message: "This draft was edited after its most recent validation.",
 
-      previous_validation:
-        isPlainObject(
-          existingDraft.validation_json,
-        )
-          ? {
-              success:
-                existingDraft
-                  .validation_json
-                  .success === true,
+      previous_validation: isPlainObject(existingDraft.validation_json)
+        ? {
+            success: existingDraft.validation_json.success === true,
 
-              error_count:
-                Array.isArray(
-                  existingDraft
-                    .validation_json
-                    .errors,
-                )
-                  ? existingDraft
-                      .validation_json
-                      .errors.length
-                  : 0,
+            error_count: Array.isArray(existingDraft.validation_json.errors)
+              ? existingDraft.validation_json.errors.length
+              : 0,
 
-              warning_count:
-                Array.isArray(
-                  existingDraft
-                    .validation_json
-                    .warnings,
-                )
-                  ? existingDraft
-                      .validation_json
-                      .warnings.length
-                  : 0,
-            }
-          : null,
+            warning_count: Array.isArray(existingDraft.validation_json.warnings)
+              ? existingDraft.validation_json.warnings.length
+              : 0,
+          }
+        : null,
 
-      invalidated_at:
-        new Date().toISOString(),
+      invalidated_at: new Date().toISOString(),
 
-      invalidated_by:
-        user.id,
+      invalidated_by: user.id,
     };
 
     /*
@@ -830,58 +785,35 @@ const synchronizedDraftPackage = {
      * ----------------------------------------------------------
      */
 
-    const {
-      data: updatedDraft,
-      error: updateError,
-    } = await serviceSupabase
-      .from(
-        "passage_bank_draft_packages",
-      )
+    const { data: updatedDraft, error: updateError } = await serviceSupabase
+      .from("passage_bank_draft_packages")
       .update({
         /*
          * Editing an in-review, approved, or rejected package returns it
          * to draft status. It must be validated and reviewed again.
          */
-        status:
-          "draft",
+        status: "draft",
 
         subject,
-        grade_level:
-          gradeLevel,
-        teks_standard:
-          teksStandard,
-        passage_format:
-          passageFormat,
+        grade_level: gradeLevel,
+        teks_standard: teksStandard,
+        passage_format: passageFormat,
 
-        content_focus_key:
-          normalizeOptionalString(
-            passage.content_focus_key,
-          ),
+        content_focus_key: normalizeOptionalString(passage.content_focus_key),
 
-        title:
-          normalizeOptionalString(
-            passage.title,
-          ),
+        title: normalizeOptionalString(passage.title),
 
-        draft_json:
-          synchronizedDraftPackage,
+        draft_json: synchronizedDraftPackage,
 
-        validation_json:
-          staleValidation,
+        validation_json: staleValidation,
 
-        updated_by:
-          user.id,
+        updated_by: user.id,
 
-        reviewed_by:
-          null,
+        reviewed_by: null,
 
-        reviewed_at:
-          null,
+        reviewed_at: null,
       })
-      .eq(
-        "id",
-        draftId,
-      )
+      .eq("id", draftId)
       .select(
         `
           id,
@@ -898,35 +830,25 @@ const synchronizedDraftPackage = {
       )
       .single();
 
-    if (
-      updateError ||
-      !updatedDraft
-    ) {
+    if (updateError || !updatedDraft) {
       console.error(
         "[admin/passage-bank/drafts/[draftId]] Draft update failed",
         {
-          error:
-            updateError?.message ||
-            "No updated draft was returned.",
+          error: updateError?.message || "No updated draft was returned.",
 
-          draft_id:
-            draftId,
+          draft_id: draftId,
 
-          admin_user_id:
-            user.id,
+          admin_user_id: user.id,
         },
       );
 
       return NextResponse.json(
         {
-          error:
-            "Failed to update passage-bank draft.",
+          error: "Failed to update passage-bank draft.",
 
           details:
-            process.env.NODE_ENV ===
-            "development"
-              ? updateError?.message ||
-                "No updated draft was returned."
+            process.env.NODE_ENV === "development"
+              ? updateError?.message || "No updated draft was returned."
               : undefined,
         },
         {
@@ -944,66 +866,47 @@ const synchronizedDraftPackage = {
     return NextResponse.json({
       success: true,
 
-      validation_required:
-        true,
+      validation_required: true,
 
       draft: {
-        id:
-          updatedDraft.id,
+        id: updatedDraft.id,
 
-        status:
-          updatedDraft.status,
+        status: updatedDraft.status,
 
-        subject:
-          updatedDraft.subject,
+        subject: updatedDraft.subject,
 
-        grade_level:
-          updatedDraft.grade_level,
+        grade_level: updatedDraft.grade_level,
 
-        teks_standard:
-          updatedDraft.teks_standard,
+        teks_standard: updatedDraft.teks_standard,
 
-        passage_format:
-          updatedDraft.passage_format,
+        passage_format: updatedDraft.passage_format,
 
-        content_focus_key:
-          updatedDraft
-            .content_focus_key,
+        content_focus_key: updatedDraft.content_focus_key,
 
-        title:
-          updatedDraft.title,
+        title: updatedDraft.title,
 
-        question_count:
-          synchronizedQuestions.length,
+        question_count: synchronizedQuestions.length,
 
-        structurally_valid:
-          false,
+        structurally_valid: false,
 
-        validation_stale:
-          true,
+        validation_stale: true,
 
-        updated_by:
-          updatedDraft.updated_by,
+        updated_by: updatedDraft.updated_by,
 
-        updated_at:
-          updatedDraft.updated_at,
+        updated_at: updatedDraft.updated_at,
       },
     });
   } catch (error) {
     console.error(
       "[admin/passage-bank/drafts/[draftId]] Unexpected update error",
       {
-        error:
-          error instanceof Error
-            ? error.message
-            : String(error),
+        error: error instanceof Error ? error.message : String(error),
       },
     );
 
     return NextResponse.json(
       {
-        error:
-          "Failed to update passage-bank draft.",
+        error: "Failed to update passage-bank draft.",
       },
       {
         status: 500,

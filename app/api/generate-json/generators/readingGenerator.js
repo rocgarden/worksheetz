@@ -334,7 +334,7 @@ Return only valid JSON as shown above. Remember: 5 MC + 1 OE for guided, 11 MC +
   if (type === "reading" && genre === "nonfiction") {
     //const story = ws?.independent_practice?.story || "";
     if (!hasPassageShape) {
-      console.warn("⚠️ Nonfiction story invalid structure, missing paragraphs or subheading", story);
+      console.warn("⚠️ Nonfiction story invalid structure, missing paragraphs or subheading");
       return false;
     }
   }

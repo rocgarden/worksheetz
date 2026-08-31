@@ -16,6 +16,7 @@ const Header = () => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [user, setUser] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
   const supabase = createClient();
@@ -27,6 +28,7 @@ const Header = () => {
     const getUser = async () => {
       const { data } = await supabase.auth.getUser();
       setUser(data.user);
+      setAuthReady(true);
     };
 
     getUser();
@@ -35,8 +37,16 @@ const Header = () => {
       (event, session) => {
         if (event === "SIGNED_OUT" || !session) {
           setUser(null);
+          setAuthReady(true);
+
+          //close popup/secondary auth windows
+          if(window.opener){
+            window.close();
+          }
         } else {
-          getUser();
+          //getUser(); //set to session user
+          setUser(session.user);
+          setAuthReady(true);
         }
       }
     );
@@ -125,6 +135,7 @@ const Header = () => {
 
         {/* Desktop navigation */}
         <div className="hidden lg:flex lg:items-center justify-between px-6 lg:gap-30">
+          {authReady && ( 
           <ButtonSignin
             extraStyle="hidden"
             // renderLinks={({ user }) => (
@@ -149,16 +160,19 @@ const Header = () => {
               </>
             )}
           />
+         )}
         </div>
 
         {/* CTA (Sign in/out) */}
         <div className="hidden lg:flex lg:justify-end lg:flex-1">
+          {authReady && (
           <ButtonSignin
             user={user}
             redirectTo={`/dashboard`}
             // redirectTo={`/checkout?priceId=${config.stripe.plans[0].priceId}`}
             extraStyle="btn-primary"
           />
+           )}
         </div>
 
         {/* Mobile burger */}
@@ -194,22 +208,6 @@ const Header = () => {
           {/* <div className="w-4/5 max-w-sm h-full shadow-xl px-6 py-6 flex flex-col justify-between animate-slideIn"> */}
           {/* <div className="bg-gray-800/50 rounded-sm "> */}
           <div className="flex items-center justify-between mb-6">
-            {/* <Link
-                  href="/"
-                  className="flex items-center gap-2"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <Image
-                    src={logo}
-                    alt="Logo"
-                    width={36}
-                    height={36}
-                    className="rounded-md"
-                  />
-                  <span className="font-extrabold text-white/70 text-lg">
-                    {config.appName}
-                  </span>
-                </Link> */}
             <button
               onClick={() => setIsOpen(false)}
               className="p-2 rounded-md hover:bg-base-300 transition"
@@ -233,6 +231,7 @@ const Header = () => {
 
           {/* Mobile links */}
           <div className="flex flex-col space-y-4">
+            {authReady && ( 
             <ButtonSignin
               user={user}
               extraStyle="hidden"
@@ -265,6 +264,7 @@ const Header = () => {
                 </>
               )}
             />
+            )}
           </div>
 
           {/* CTA button */}

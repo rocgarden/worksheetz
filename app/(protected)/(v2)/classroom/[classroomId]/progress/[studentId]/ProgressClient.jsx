@@ -209,7 +209,7 @@ function ScoringCallout({ sessionCount }) {
               <span className="font-semibold">{sessionCount} sessions</span> in this window.
               The score shown is the{" "}
               <span className="font-semibold">weighted average across all of them</span> — so a
-              classroom-wide assignment with multiple TEKS standards won't overwrite earlier results.
+              classroom-wide assignment with multiple TEKS standards won&apos;t overwrite earlier results.
             </p>
           ) : (
             <p>
@@ -668,7 +668,7 @@ export default function ProgressClient({
                             <span className="text-sm font-medium text-gray-400"> / {session.session_total}</span>
                           </p>
                           <p className="text-xs text-gray-400 mt-0.5">
-                            correct
+                            Weighted
                             {session.session_score != null && (
                               <span className="ml-1 font-semibold text-purple-600">· {session.session_score}%</span>
                             )}
@@ -686,18 +686,22 @@ export default function ProgressClient({
                       {session.completed_at && (
                         <p><span className="font-medium text-gray-500">Completed:</span> {fmtDateTime(session.completed_at)}</p>
                       )}
-                   {session.status === "completed" && (
+                
+                     {/* View Session */}
+                      {session.status === "completed" && (
                         <div className="mt-2">
-                          <span
-                            title="Session answer key — coming soon"
-                            className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-lg border border-purple-200 text-purple-300 bg-white cursor-not-allowed select-none"
+                          <button
+                            onClick={() =>
+                              router.push(`/classroom/${classroomId}/sessions/${session.id}`)
+                            }
+                            className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-lg border border-purple-300 text-purple-600 bg-white hover:bg-purple-50 hover:border-purple-500 active:scale-95 transition"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
                               <path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" />
                               <path fillRule="evenodd" d="M1.38 8a6.5 6.5 0 1 1 13.24 0A6.5 6.5 0 0 1 1.38 8ZM8 3a5 5 0 1 0 0 10A5 5 0 0 0 8 3Z" clipRule="evenodd" />
                             </svg>
                             View Session
-                          </span>
+                          </button>
                         </div>
                       )}
                     </div>

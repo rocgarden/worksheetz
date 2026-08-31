@@ -71,7 +71,7 @@ export default async function Page() {
         </section> */}
         {renderFAQSchema(faqSchemaItems)}
         <Hero isAuthenticated={!!user} />
-        <Problem />
+        <Problem /> 
         <FeaturesListicle />
         <InteractivePracticeBeta />
         <SamplePdfCarousel />

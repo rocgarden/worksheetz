@@ -7,89 +7,222 @@
 // Grade 7 — Cells & Organisms, Genetics, Evolution, Earth History, Ecosystems
 // Grade 8 — Force & Motion, Energy, Waves, Matter Properties, Earth & Space
 //
-// Shape matches teksReadingMap.js: { gradeN: { bucketKey: ["X.YZ"] } }
 // Bucket keys are shared with TEKS_SCIENCE_BUCKET_LABELS below for human-readable labels.
 
 export const TEKS_SCIENCE_MAP = {
   // ── Grade 6 ────────────────────────────────────────────────────────────────
   grade6: {
-    // Matter & Energy — properties, changes, and conservation
-    matter_properties:        ["6.5A", "6.5B", "6.5C"],
-    matter_changes:           ["6.5D", "6.5E"],
+     sci_investigations: [
+      "6.1A", "6.1B", "6.1C", "6.1D",
+      "6.1E", "6.1F", "6.1G", "6.1H"
+    ],
 
-    // Force & Motion — describing and calculating motion
-    force_motion:             ["6.8A", "8.8B"],
-    force_net:                ["6.8C", "6.8D"],
+    // S.6.2 — Data Analysis & Interpretation
+    sci_data_analysis: [
+      "6.2A", "6.2B", "6.2C", "6.2D", "6.2E"
+    ],
 
-    // Earth & Space — Earth systems and space science
-    earth_systems:            ["6.10A", "6.10B", "6.10C"],
-    earth_space:              ["6.11A", "6.11B", "6.11C"],
+    // S.6.3 — Explanations & Communication
+    sci_explanations: [
+      "6.3A", "6.3B", "6.3C"
+    ],
 
-    // Organisms & Environments — ecology and ecosystems
-    organisms_structure:      ["6.12A", "6.12B"],
-    ecosystems_interactions:  ["6.12C", "6.12D", "6.12E"],
+    // S.6.4 — Science & Society
+    sci_society: [
+      "6.4A", "6.4B", "6.4C"
+    ],
 
-    // Science Process & Lab Skills
-    sci_process:              ["6.2A", "6.2B", "6.2C", "6.2D", "6.2E"],
-    sci_tools_safety:         ["6.4A", "6.4B"],
+    // S.6.5 — Recurring Themes & Concepts
+    recurring_themes: [
+      "6.5A", "6.5B", "6.5C", "6.5D",
+      "6.5E", "6.5F", "6.5G"
+    ],
+
+    // S.6.6 — Matter & Energy
+    matter_energy: [
+      "6.6A", "6.6B", "6.6C", "6.6D", "6.6E"
+    ],
+
+    // S.6.7 — Force & Motion
+    force_motion: [
+      "6.7A", "6.7B", "6.7C"
+    ],
+
+    // S.6.8 — Energy & Waves
+    energy_waves: [
+      "6.8A", "6.8B", "6.8C", "6.8D"
+    ],
+
+    // S.6.9 — Earth–Sun–Moon System
+    earth_sun_moon: [
+      "6.9A", "6.9B"
+    ],
+
+    // S.6.10 — Earth Systems & Structure
+    earth_systems: [
+      "6.10A", "6.10B", "6.10C"
+    ],
+
+    // S.6.11 — Resources & Human Impact
+    earth_resources: [
+      "6.11A", "6.11B", "6.11C"
+    ],
+
+    // S.6.12 — Ecosystems & Interactions
+    ecosystems: [
+      "6.12A", "6.12B", "6.12C",
+      "6.12D", "6.12E"
+    ],
+
+    // S.6.13 — Organisms & Variation
+    organisms: [
+      "6.13A", "6.13B", "6.13C"
+    ]
   },
 
   // ── Grade 7 ────────────────────────────────────────────────────────────────
-  grade7: {
-    // Cells — structure and function
-    cells_structure:          ["7.12A", "7.12B", "7.12C"],
-    cells_processes:          ["7.12D", "7.12E"],
+grade7: {
+  // S.7.1 — Scientific & Engineering Practices: Investigations
+  sci_investigations: [
+    "7.1A", "7.1B", "7.1C", "7.1D",
+    "7.1E", "7.1F", "7.1G", "7.1H"
+  ],
 
-    // Genetics — heredity and variation
-    genetics_heredity:        ["7.14A", "7.14B"],
-    genetics_variation:       ["7.14C", "7.14D"],
+  // S.7.2 — Data Analysis & Interpretation
+  sci_data_analysis: [
+    "7.2A", "7.2B", "7.2C", "7.2D"
+  ],
 
-    // Evolution — natural selection and adaptation
-    evolution_natural_sel:    ["7.13A", "7.13B"],
-    evolution_adaptations:    ["7.13C", "7.13D"],
+  // S.7.3 — Explanations & Communication
+  sci_explanations: [
+    "7.3A", "7.3B", "7.3C"
+  ],
 
-    // Earth History — geologic time and change
-    earth_history:            ["7.8A", "7.8B", "7.8C"],
-    earth_geologic_time:      ["7.8D", "7.8E"],
+  // S.7.4 — Science & Society
+  sci_society: [
+    "7.4A", "7.4B", "7.4C"
+  ],
 
-    // Ecosystems — interactions and interdependence
-    ecosystems_roles:         ["7.11A", "7.11B"],
-    ecosystems_food_webs:     ["7.11C", "7.11D"],
-    ecosystems_biotic_ab:     ["7.11E", "7.11F"],
+  // S.7.5 — Recurring Themes & Concepts
+  recurring_themes: [
+    "7.5A", "7.5B", "7.5C", "7.5D",
+    "7.5E", "7.5F", "7.5G"
+  ],
 
-    // Science Process & Lab Skills
-    sci_process:              ["7.2A", "7.2B", "7.2C", "7.2D", "7.2E"],
-    sci_tools_safety:         ["7.4A", "7.4B"],
-  },
+  // S.7.6 — Matter & Energy
+  matter_energy: [
+    "7.6A", "7.6B", "7.6C", "7.6D", "7.6E"
+  ],
 
+  // S.7.7 — Force & Motion
+  force_motion: [
+    "7.7A", "7.7B", "7.7C", "7.7D"
+  ],
+
+  // S.7.8 — Thermal Energy
+  thermal_energy: [
+    "7.8A", "7.8B", "7.8C"
+  ],
+
+  // S.7.9 — Solar System & Gravity
+  solar_system: [
+    "7.9A", "7.9B", "7.9C"
+  ],
+
+  // S.7.10 — Plate Tectonics
+  plate_tectonics: [
+    "7.10A", "7.10B"
+  ],
+
+  // S.7.11 — Human Impact on Hydrosphere
+  hydrosphere: [
+    "7.11A", "7.11B"
+  ],
+
+  // S.7.12 — Ecosystems: Energy & Matter
+  ecosystems_energy: [
+    "7.12A", "7.12B"
+  ],
+
+  // S.7.13 — Organisms: Systems & Reproduction
+  organisms_systems: [
+    "7.13A", "7.13B", "7.13C", "7.13D"
+  ],
+
+  // S.7.14 — Taxonomy & Kingdoms
+  taxonomy: [
+    "7.14A", "7.14B"
+  ]
+},
   // ── Grade 8 ────────────────────────────────────────────────────────────────
-  grade8: {
-    // Force & Motion — speed, velocity, acceleration
-    force_speed_velocity:     ["8.6A", "8.6B"],
-    force_acceleration:       ["8.6C", "8.6D"],
-    force_newtons_laws:       ["8.6E", "8.6F"],
+ grade8: {
+  // S.8.1 — Scientific & Engineering Practices: Investigations
+  sci_investigations: [
+    "8.1A", "8.1B", "8.1C", "8.1D",
+    "8.1E", "8.1F", "8.1G", "8.1H"
+  ],
 
-    // Energy — types, transformations, conservation
-    energy_types:             ["8.7A", "8.7B"],
-    energy_transformations:   ["8.7C", "8.7D"],
+  // S.8.2 — Data Analysis & Interpretation
+  sci_data_analysis: [
+    "8.2A", "8.2B", "8.2C", "8.2D"
+  ],
 
-    // Waves — properties and behavior
-    waves_properties:         ["8.7E", "8.7F"],
-    waves_em_spectrum:        ["8.7G"],
+  // S.8.3 — Explanations & Communication
+  sci_explanations: [
+    "8.3A", "8.3B", "8.3C"
+  ],
 
-    // Matter — properties and periodic table
-    matter_periodic_table:    ["8.5A", "8.5B", "8.5C"],
-    matter_bonding:           ["8.5D", "8.5E", "8.5F"],
+  // S.8.4 — Science & Society
+  sci_society: [
+    "8.4A", "8.4B", "8.4C"
+  ],
 
-    // Earth & Space — solar system, universe, plate tectonics
-    earth_plate_tectonics:    ["8.9A", "8.9B", "8.9C"],
-    earth_solar_system:       ["8.10A", "8.10B", "8.10C"],
-    earth_universe:           ["8.10D", "8.10E"],
+  // S.8.5 — Recurring Themes & Concepts
+  recurring_themes: [
+    "8.5A", "8.5B", "8.5C", "8.5D",
+    "8.5E", "8.5F", "8.5G"
+  ],
 
-    // Science Process & Lab Skills
-    sci_process:              ["8.2A", "8.2B", "8.2C", "8.2D", "8.2E"],
-    sci_tools_safety:         ["8.4A", "8.4B"],
-  },
+  // S.8.6 — Matter & Energy
+  matter_energy: [
+    "8.6A", "8.6B", "8.6C", "8.6D", "8.6E"
+  ],
+
+  // S.8.7 — Force & Motion
+  force_motion: [
+    "8.7A", "8.7B"
+  ],
+
+  // S.8.8 — Waves & EM Spectrum
+  waves_energy: [
+    "8.8A", "8.8B"
+  ],
+
+  // S.8.9 — Universe & Stars
+  universe: [
+    "8.9A", "8.9B", "8.9C"
+  ],
+
+  // S.8.10 — Weather, Climate & Earth Systems
+  weather_climate: [
+    "8.10A", "8.10B", "8.10C"
+  ],
+
+  // S.8.11 — Climate Change & Human Impact
+  climate_change: [
+    "8.11A", "8.11B", "8.11C"
+  ],
+
+  // S.8.12 — Ecosystems & Stability
+  ecosystems: [
+    "8.12A", "8.12B", "8.12C"
+  ],
+
+  // S.8.13 — Cells, Genetics & Adaptations
+  organisms: [
+    "8.13A", "8.13B", "8.13C"
+  ]
+ },
 };
 
 // ── Bucket label map ──────────────────────────────────────────────────────────
@@ -141,102 +274,241 @@ export const TEKS_SCIENCE_BUCKET_LABELS = {
 
 export const TEKS_SCIENCE_LABELS = {
   // ── Grade 6 ──────────────────────────────────────────────────────────────────
-  "6.2A": "6.2A — Plan and implement descriptive, comparative, and experimental investigations",
-  "6.2B": "6.2B — Collect and record data using appropriate tools and units",
-  "6.2C": "6.2C — Construct tables and graphs to organize and summarize data",
-  "6.2D": "6.2D — Analyze data and identify trends to construct reasonable explanations",
-  "6.2E": "6.2E — Communicate valid conclusions using evidence and reasoning",
-  "6.4A": "6.4A — Use appropriate tools, including lab equipment and technology, safely",
-  "6.4B": "6.4B — Collect and analyze information using tools such as microscopes and balances",
-  "6.5A": "6.5A — Classify matter based on physical properties including mass, volume, and density",
-  "6.5B": "6.5B — Identify and compare chemical and physical properties of matter",
-  "6.5C": "6.5C — Describe the relationship between mass, volume, and density",
-  "6.5D": "6.5D — Distinguish between physical and chemical changes in matter",
-  "6.5E": "6.5E — Describe how elements combine to form compounds with new properties",
-  "6.8A": "6.8A — Measure and calculate average speed using distance and time",
-  "6.8B": "6.8B — Investigate and describe how position, direction, and speed relate to motion",
-  "6.8C": "6.8C — Identify and describe the effects of force on objects",
-  "6.8D": "6.8D — Explain how unbalanced forces cause changes in the speed or direction of motion",
-  "6.10A": "6.10A — Describe the layers of the Earth including the core, mantle, and crust",
-  "6.10B": "6.10B — Explain how the rock cycle, plate tectonics, and weathering shape Earth's surface",
-  "6.10C": "6.10C — Describe how natural events like volcanoes and earthquakes affect Earth's surface",
-  "6.11A": "6.11A — Describe the physical characteristics of the universe and our solar system",
-  "6.11B": "6.11B — Explain how gravity controls the motion of planets and moons",
-  "6.11C": "6.11C — Describe the role of the Sun as the primary source of energy in our solar system",
-  "6.12A": "6.12A — Describe the structure and function of cells in living organisms",
-  "6.12B": "6.12B — Differentiate between unicellular and multicellular organisms",
-  "6.12C": "6.12C — Describe the flow of energy through food webs and food chains",
-  "6.12D": "6.12D — Identify the roles of producers, consumers, and decomposers in an ecosystem",
-  "6.12E": "6.12E — Describe the effects of environmental changes on ecosystems",
+  
+     // Science & Engineering Practices (S.6.1)
+  "6.1A": "Ask Questions",
+  "6.1B": "Plan Investigations",
+  "6.1C": "Safety Practices",
+  "6.1D": "Use Science Tools",
+  "6.1E": "Collect Data (SI Units)",
+  "6.1F": "Create Tables & Graphs",
+  "6.1G": "Use Models",
+  "6.1H": "Hypotheses, Theories & Laws",
+
+  // Data Analysis & Interpretation (S.6.2)
+  "6.2A": "Model Limitations",
+  "6.2B": "Analyze Data",
+  "6.2C": "Math in Data",
+  "6.2D": "Evaluate Designs",
+  "6.2E": "Communicate Conclusions",
+
+  // Explanations & Communication (S.6.3)
+  "6.3A": "Explain & Propose Solutions",
+  "6.3B": "Communicate Findings",
+  "6.3C": "Scientific Argumentation",
+
+  // Science & Society (S.6.4)
+  "6.4A": "Impact of Research",
+  "6.4B": "Evaluate Sources",
+  "6.4C": "Explore STEM Careers",
+
+  // Recurring Themes & Concepts (S.6.5)
+  "6.5A": "Identify Patterns",
+  "6.5B": "Cause & Effect",
+  "6.5C": "Scale & Proportion",
+  "6.5D": "Systems & Interactions",
+  "6.5E": "Energy & Matter Cycles",
+  "6.5F": "Structure & Function",
+  "6.5G": "Stability & Change",
+
+  // Matter & Energy (S.6.6)
+  "6.6A": "States of Matter",
+  "6.6B": "Properties of Matter",
+  "6.6C": "Periodic Table Groups",
+  "6.6D": "Density Comparisons",
+  "6.6E": "Chemical Change Evidence",
+
+  // Force, Motion & Energy (S.6.7)
+  "6.7A": "Forces on Objects",
+  "6.7B": "Net Force",
+  "6.7C": "Newton’s Third Law",
+
+  // Energy & Waves (S.6.8)
+  "6.8A": "Potential vs. Kinetic Energy",
+  "6.8B": "Energy Transfers",
+  "6.8C": "Waves & Energy",
+  "6.8D": "Wave Interactions",
+
+  // Earth & Space (S.6.9–6.11)
+  "6.9A": "Seasons & Earth’s Tilt",
+  "6.9B": "Tides",
+
+  "6.10A": "Earth’s Spheres",
+  "6.10B": "Earth’s Layers",
+  "6.10C": "Rock Cycle",
+
+  "6.11A": "Resource Management",
+  "6.11B": "Conservation & Efficiency",
+  "6.11C": "Human Impact on Resources",
+
+  // Organisms & Environments (S.6.12–6.13)
+  "6.12A": "Ecosystem Interactions",
+  "6.12B": "Symbiosis & Relationships",
+  "6.12C": "Levels of Organization",
+  "6.12D": "Ecosystem Stability",
+  "6.12E": "Environmental Change",
+
+  "6.13A": "Cell Theory",
+  "6.13B": "Types of Organisms",
+  "6.13C": "Adaptations & Survival",
+
 
   // ── Grade 7 ──────────────────────────────────────────────────────────────────
-  "7.2A": "7.2A — Plan and implement descriptive, comparative, and experimental investigations",
-  "7.2B": "7.2B — Collect and record data using appropriate tools and units",
-  "7.2C": "7.2C — Construct tables and graphs to organize and summarize data",
-  "7.2D": "7.2D — Analyze data to identify patterns and construct explanations",
-  "7.2E": "7.2E — Communicate valid conclusions supported by data",
-  "7.4A": "7.4A — Use appropriate lab tools and equipment safely",
-  "7.4B": "7.4B — Collect and analyze information using technology and lab tools",
-  "7.8A": "7.8A — Interpret the fossil record as evidence of how life has changed over time",
-  "7.8B": "7.8B — Describe how relative and absolute dating are used to determine age of rock layers",
-  "7.8C": "7.8C — Explain how index fossils are used to correlate rock strata",
-  "7.8D": "7.8D — Identify major events on the geologic time scale",
-  "7.8E": "7.8E — Relate changes in Earth's climate to changes in life over geologic time",
-  "7.11A": "7.11A — Describe the roles of organisms in a food web",
-  "7.11B": "7.11B — Explain the cycling of matter through ecosystems (carbon, water, nitrogen cycles)",
-  "7.11C": "7.11C — Describe how energy flows through a food web and is lost at each level",
-  "7.11D": "7.11D — Interpret food webs and energy pyramids",
-  "7.11E": "7.11E — Distinguish between biotic and abiotic factors in an ecosystem",
-  "7.11F": "7.11F — Describe how changes in abiotic factors affect organisms in an ecosystem",
-  "7.12A": "7.12A — Describe the structure and function of cell organelles including the nucleus and mitochondria",
-  "7.12B": "7.12B — Compare the structures of prokaryotic and eukaryotic cells",
-  "7.12C": "7.12C — Relate cell structure to cell function in plant and animal cells",
-  "7.12D": "7.12D — Describe the process of photosynthesis and its role in the carbon cycle",
-  "7.12E": "7.12E — Describe the process of cellular respiration and its relationship to photosynthesis",
-  "7.13A": "7.13A — Explain how natural selection leads to changes in a population over time",
-  "7.13B": "7.13B — Describe how environmental changes can lead to the extinction of species",
-  "7.13C": "7.13C — Identify structural, behavioral, and physiological adaptations of organisms",
-  "7.13D": "7.13D — Explain how adaptations increase the survival of organisms in an environment",
-  "7.14A": "7.14A — Describe the role of DNA in heredity and protein synthesis",
-  "7.14B": "7.14B — Predict the results of monohybrid crosses using Punnett squares",
-  "7.14C": "7.14C — Distinguish between dominant and recessive traits",
-  "7.14D": "7.14D — Describe how mutations can affect genetic variation in a population",
+  // S.7.1 — Scientific & Engineering Practices: Investigations
+  "7.1A": "Ask Questions",
+  "7.1B": "Plan Investigations",
+  "7.1C": "Safety Practices",
+  "7.1D": "Use Science Tools",
+  "7.1E": "Collect Data (SI Units)",
+  "7.1F": "Create Tables & Graphs",
+  "7.1G": "Use Models",
+  "7.1H": "Hypotheses, Theories & Laws",
+
+  // S.7.2 — Data Analysis & Interpretation
+  "7.2A": "Model Limitations",
+  "7.2B": "Analyze Data",
+  "7.2C": "Math in Data",
+  "7.2D": "Evaluate Designs",
+
+  // S.7.3 — Explanations & Communication
+  "7.3A": "Explain & Propose Solutions",
+  "7.3B": "Communicate Findings",
+  "7.3C": "Scientific Argumentation",
+
+  // S.7.4 — Science & Society
+  "7.4A": "Impact of Research",
+  "7.4B": "Evaluate Sources",
+  "7.4C": "Explore STEM Careers",
+
+  // S.7.5 — Recurring Themes & Concepts
+  "7.5A": "Identify Patterns",
+  "7.5B": "Cause & Effect",
+  "7.5C": "Scale & Proportion",
+  "7.5D": "Systems & Interactions",
+  "7.5E": "Energy & Matter Cycles",
+  "7.5F": "Structure & Function",
+  "7.5G": "Stability & Change",
+
+  // S.7.6 — Matter & Energy
+  "7.6A": "Elements vs. Compounds",
+  "7.6B": "Interpret Chemical Formulas",
+  "7.6C": "Physical vs. Chemical Changes",
+  "7.6D": "Properties of Solutions",
+  "7.6E": "Rate of Dissolution",
+
+  // S.7.7 — Force & Motion
+  "7.7A": "Calculate Average Speed",
+  "7.7B": "Speed vs. Velocity",
+  "7.7C": "Distance–Time Graphs",
+  "7.7D": "Balanced & Unbalanced Forces",
+
+  // S.7.8 — Thermal Energy
+  "7.8A": "Thermal Energy Transfer",
+  "7.8B": "Thermal Equilibrium",
+  "7.8C": "Temperature & Particle Motion",
+
+  // S.7.9 — Solar System & Gravity
+  "7.9A": "Solar System Components",
+  "7.9B": "Gravity in the Solar System",
+  "7.9C": "Conditions for Life on Earth",
+
+  // S.7.10 — Plate Tectonics
+  "7.10A": "Evidence of Earth’s Changes",
+  "7.10B": "Plate Tectonics & Earth Events",
+
+  // S.7.11 — Hydrosphere & Human Impact
+  "7.11A": "Human Impact on Watersheds",
+  "7.11B": "Human Impact on Oceans",
+
+  // S.7.12 — Ecosystems: Energy & Matter
+  "7.12A": "Energy Flow in Ecosystems",
+  "7.12B": "Matter Cycling in Ecosystems",
+
+  // S.7.13 — Organisms: Systems & Reproduction
+  "7.13A": "Human Body Systems",
+  "7.13B": "Levels of Organization",
+  "7.13C": "Asexual vs. Sexual Reproduction",
+  "7.13D": "Natural & Artificial Selection",
+
+  // S.7.14 — Taxonomy & Kingdoms
+  "7.14A": "Taxonomic Classification",
+  "7.14B": "Characteristics of Kingdoms",
 
   // ── Grade 8 ──────────────────────────────────────────────────────────────────
-  "8.2A": "8.2A — Plan and implement descriptive, comparative, and experimental investigations",
-  "8.2B": "8.2B — Collect and record data using the International System of Units",
-  "8.2C": "8.2C — Construct graphs and tables to organize and summarize data",
-  "8.2D": "8.2D — Analyze data to identify patterns and construct explanations",
-  "8.2E": "8.2E — Communicate valid, peer-reviewed conclusions supported by evidence",
-  "8.4A": "8.4A — Use and maintain appropriate lab equipment safely",
-  "8.4B": "8.4B — Use tools including triple beam balances, spring scales, and calculators",
-  "8.5A": "8.5A — Describe the structure of atoms including protons, neutrons, and electrons",
-  "8.5B": "8.5B — Interpret the periodic table to identify elements, groups, and periods",
-  "8.5C": "8.5C — Describe how the periodic table organizes elements by properties",
-  "8.5D": "8.5D — Distinguish between ionic and covalent bonds",
-  "8.5E": "8.5E — Describe how atoms combine to form molecules and compounds",
-  "8.5F": "8.5F — Identify evidence of chemical reactions including changes in temperature, color, and gas production",
-  "8.6A": "8.6A — Describe and calculate average speed using the formula d = rt",
-  "8.6B": "8.6B — Describe the relationship between speed, velocity, and acceleration",
-  "8.6C": "8.6C — Calculate net force and describe how balanced and unbalanced forces affect motion",
-  "8.6D": "8.6D — Interpret distance-time and speed-time graphs",
-  "8.6E": "8.6E — Describe Newton's first law: objects in motion stay in motion unless acted on by a force",
-  "8.6F": "8.6F — Apply Newton's second law (F = ma) to calculate force, mass, or acceleration",
-  "8.7A": "8.7A — Differentiate between potential and kinetic energy",
-  "8.7B": "8.7B — Describe the law of conservation of energy",
-  "8.7C": "8.7C — Identify and describe transformations between different forms of energy",
-  "8.7D": "8.7D — Explain how thermal energy is transferred through conduction, convection, and radiation",
-  "8.7E": "8.7E — Describe the properties of waves including amplitude, wavelength, and frequency",
-  "8.7F": "8.7F — Explain how the speed of a wave is related to wavelength and frequency",
-  "8.7G": "8.7G — Describe the electromagnetic spectrum and the properties of different types of waves",
-  "8.9A": "8.9A — Describe the evidence for plate tectonics including fossil records and seafloor spreading",
-  "8.9B": "8.9B — Explain how plate movement causes earthquakes, volcanoes, and mountain building",
-  "8.9C": "8.9C — Identify convergent, divergent, and transform plate boundaries and their features",
-  "8.10A": "8.10A — Describe the physical characteristics of the components of our solar system",
-  "8.10B": "8.10B — Explain the role of gravity and inertia in orbital motion",
-  "8.10C": "8.10C — Describe the relationship between the Sun, Moon, and Earth including tides and phases",
-  "8.10D": "8.10D — Describe characteristics of stars including size, temperature, and life cycle",
-  "8.10E": "8.10E — Explain the Big Bang theory and evidence for the expanding universe",
+// S.8.1 — Scientific & Engineering Practices
+  "8.1A": "Ask Questions",
+  "8.1B": "Plan Investigations",
+  "8.1C": "Safety Practices",
+  "8.1D": "Use Science Tools",
+  "8.1E": "Collect Data (SI Units)",
+  "8.1F": "Create Tables & Graphs",
+  "8.1G": "Use Models",
+  "8.1H": "Hypotheses, Theories & Laws",
+
+  // S.8.2 — Data Analysis & Interpretation
+  "8.2A": "Model Limitations",
+  "8.2B": "Analyze Data",
+  "8.2C": "Math in Data",
+  "8.2D": "Evaluate Designs",
+
+  // S.8.3 — Explanations & Communication
+  "8.3A": "Explain & Propose Solutions",
+  "8.3B": "Communicate Findings",
+  "8.3C": "Scientific Argumentation",
+
+  // S.8.4 — Science & Society
+  "8.4A": "Impact of Research",
+  "8.4B": "Evaluate Sources",
+  "8.4C": "Explore STEM Careers",
+
+  // S.8.5 — Recurring Themes & Concepts
+  "8.5A": "Identify Patterns",
+  "8.5B": "Cause & Effect",
+  "8.5C": "Scale & Proportion",
+  "8.5D": "Systems & Interactions",
+  "8.5E": "Energy & Matter Cycles",
+  "8.5F": "Structure & Function",
+  "8.5G": "Stability & Change",
+
+  // S.8.6 — Matter & Energy
+  "8.6A": "Classify Matter",
+  "8.6B": "Atoms in Reactions",
+  "8.6C": "Water Properties",
+  "8.6D": "Acids & Bases",
+  "8.6E": "Conservation of Mass",
+
+  // S.8.7 — Force & Motion
+  "8.7A": "Newton’s Second Law",
+  "8.7B": "Newton’s Laws in Systems",
+
+  // S.8.8 — Waves & EM Spectrum
+  "8.8A": "Wave Characteristics",
+  "8.8B": "Uses of EM Waves",
+
+  // S.8.9 — Universe & Stars
+  "8.9A": "Life Cycle of Stars",
+  "8.9B": "Galaxies & Milky Way",
+  "8.9C": "Origin of the Universe",
+
+  // S.8.10 — Weather & Climate
+  "8.10A": "Sun–Earth–Atmosphere Interactions",
+  "8.10B": "Global Wind Patterns",
+  "8.10C": "Ocean Currents & Storms",
+
+  // S.8.11 — Climate Change
+  "8.11A": "Natural Climate Influences",
+  "8.11B": "Human Impact on Climate",
+  "8.11C": "Carbon Cycle",
+
+  // S.8.12 — Ecosystems & Stability
+  "8.12A": "Ecosystem Disruptions",
+  "8.12B": "Ecological Succession",
+  "8.12C": "Biodiversity & Stability",
+
+  // S.8.13 — Cells, Genetics & Adaptations
+  "8.13A": "Cell Structures & Functions",
+  "8.13B": "Genes & Traits",
+  "8.13C": "Adaptations & Survival"
 };
 
 // ── Flat code list builder ─────────────────────────────────────────────────────

@@ -346,7 +346,7 @@ function numberSentencesPreserveParagraphs(rawText) {
 
                 {q.type === "choose-a-line" ? (
                   <div className="text-sm opacity-80">
-                    This item type uses line numbers. Ensure <code>answer</code> is like ["5"].
+                    This item type uses line numbers. Ensure <code>answer</code> is like [&quot;5&quot;].
                     Stored as object: {JSON.stringify(q.answer.lineIndex || {}, null, 2)}
                   </div>
                 ) : (
@@ -364,7 +364,8 @@ function numberSentencesPreserveParagraphs(rawText) {
                       </div>
                     ))}
                     <div className="text-xs opacity-70">
-                      Answer should be an array of choice IDs (ex: ["b"] or ["a","d"]).
+                      Answer should be an array of choice IDs
+                      (ex: [&quot;b&quot;] or [&quot;a&quot;,&quot;d&quot;]).
                     </div>
                   </>
                 )}

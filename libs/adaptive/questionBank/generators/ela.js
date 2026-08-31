@@ -29,11 +29,7 @@ import { adaptiveQuestionGenerator } from "@/libs/adaptive";
  * @returns {boolean}
  */
 function isPlainObject(value) {
-  return (
-    value !== null &&
-    typeof value === "object" &&
-    !Array.isArray(value)
-  );
+  return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
 /**
@@ -61,9 +57,7 @@ function normalizeStringArray(value) {
 
   return [
     ...new Set(
-      value
-        .map((item) => normalizeOptionalString(item))
-        .filter(Boolean),
+      value.map((item) => normalizeOptionalString(item)).filter(Boolean),
     ),
   ];
 }
@@ -124,24 +118,12 @@ function extractStimulus(generatedResult) {
   return (
     normalizeOptionalString(generatedResult.stimulus) ||
     normalizeOptionalString(generatedResult.passage) ||
-    normalizeOptionalString(
-      generatedResult.generated_stimulus,
-    ) ||
-    normalizeOptionalString(
-      generatedResult.generatedStimulus,
-    ) ||
-    normalizeOptionalString(
-      generatedResult.data?.stimulus,
-    ) ||
-    normalizeOptionalString(
-      generatedResult.data?.passage,
-    ) ||
-    normalizeOptionalString(
-      generatedResult.question?.stimulus,
-    ) ||
-    normalizeOptionalString(
-      generatedResult.question_json?.stimulus,
-    ) ||
+    normalizeOptionalString(generatedResult.generated_stimulus) ||
+    normalizeOptionalString(generatedResult.generatedStimulus) ||
+    normalizeOptionalString(generatedResult.data?.stimulus) ||
+    normalizeOptionalString(generatedResult.data?.passage) ||
+    normalizeOptionalString(generatedResult.question?.stimulus) ||
+    normalizeOptionalString(generatedResult.question_json?.stimulus) ||
     null
   );
 }
@@ -159,24 +141,12 @@ function extractGeneratedTitle(generatedResult) {
 
   return (
     normalizeOptionalString(generatedResult.title) ||
-    normalizeOptionalString(
-      generatedResult.passage_title,
-    ) ||
-    normalizeOptionalString(
-      generatedResult.passageTitle,
-    ) ||
-    normalizeOptionalString(
-      generatedResult.data?.title,
-    ) ||
-    normalizeOptionalString(
-      generatedResult.data?.passage_title,
-    ) ||
-    normalizeOptionalString(
-      generatedResult.question?.passage_title,
-    ) ||
-    normalizeOptionalString(
-      generatedResult.question_json?.passage_title,
-    ) ||
+    normalizeOptionalString(generatedResult.passage_title) ||
+    normalizeOptionalString(generatedResult.passageTitle) ||
+    normalizeOptionalString(generatedResult.data?.title) ||
+    normalizeOptionalString(generatedResult.data?.passage_title) ||
+    normalizeOptionalString(generatedResult.question?.passage_title) ||
+    normalizeOptionalString(generatedResult.question_json?.passage_title) ||
     null
   );
 }
@@ -189,31 +159,21 @@ function extractGeneratedTitle(generatedResult) {
  * @param {string[]} keys
  * @returns {string|null}
  */
-function extractStringMetadata(
-  generatedResult,
-  questionJson,
-  keys,
-) {
+function extractStringMetadata(generatedResult, questionJson, keys) {
   for (const key of keys) {
-    const topLevelValue = normalizeOptionalString(
-      generatedResult?.[key],
-    );
+    const topLevelValue = normalizeOptionalString(generatedResult?.[key]);
 
     if (topLevelValue) {
       return topLevelValue;
     }
 
-    const dataValue = normalizeOptionalString(
-      generatedResult?.data?.[key],
-    );
+    const dataValue = normalizeOptionalString(generatedResult?.data?.[key]);
 
     if (dataValue) {
       return dataValue;
     }
 
-    const questionValue = normalizeOptionalString(
-      questionJson?.[key],
-    );
+    const questionValue = normalizeOptionalString(questionJson?.[key]);
 
     if (questionValue) {
       return questionValue;
@@ -231,11 +191,7 @@ function extractStringMetadata(
  * @param {number} fallbackDokLevel
  * @returns {number}
  */
-function extractDokLevel(
-  generatedResult,
-  questionJson,
-  fallbackDokLevel,
-) {
+function extractDokLevel(generatedResult, questionJson, fallbackDokLevel) {
   const possibleDokLevel = Number(
     generatedResult?.dok_level ??
       generatedResult?.data?.dok_level ??
@@ -262,18 +218,61 @@ function extractQuestionType(
   fallbackQuestionType,
 ) {
   return (
-    normalizeOptionalString(
-      generatedResult?.question_type,
-    ) ||
-    normalizeOptionalString(
-      generatedResult?.data?.question_type,
-    ) ||
-    normalizeOptionalString(
-      questionJson?.question_type,
-    ) ||
+    normalizeOptionalString(generatedResult?.question_type) ||
+    normalizeOptionalString(generatedResult?.data?.question_type) ||
+    normalizeOptionalString(questionJson?.question_type) ||
     normalizeOptionalString(questionJson?.type) ||
     fallbackQuestionType
   );
+}
+
+function extractHotTextCorrectTarget(questionJson) {
+  if (!isPlainObject(questionJson)) {
+    return {
+      key: null,
+      text: null,
+    };
+  }
+
+  const targets = Array.isArray(questionJson.hot_text_targets)
+    ? questionJson.hot_text_targets
+    : [];
+
+  const correctAnswerKeys = Array.isArray(questionJson.correct_answer)
+    ? questionJson.correct_answer
+        .map((value) => normalizeOptionalString(String(value ?? "")))
+        .filter(Boolean)
+    : [
+        normalizeOptionalString(String(questionJson.correct_answer ?? "")),
+      ].filter(Boolean);
+
+  const correctTarget = targets.find((target) => {
+    if (!isPlainObject(target)) {
+      return false;
+    }
+
+    const targetId = normalizeOptionalString(target.id);
+
+    return (
+      target.is_correct === true ||
+      (targetId && correctAnswerKeys.includes(targetId))
+    );
+  });
+
+  if (!correctTarget) {
+    return {
+      key: correctAnswerKeys[0] || null,
+
+      text: null,
+    };
+  }
+
+  return {
+    key:
+      normalizeOptionalString(correctTarget.id) || correctAnswerKeys[0] || null,
+
+    text: normalizeOptionalString(correctTarget.text),
+  };
 }
 
 /**
@@ -288,15 +287,27 @@ function extractQuestionType(
 function buildDraftQuestion({
   generatedResult,
   questionJson,
+  requestedTeksStandard,
   requestedQuestionType,
   requestedDokLevel,
 }) {
+  const questionType = extractQuestionType(
+    generatedResult,
+    questionJson,
+    requestedQuestionType,
+  );
+
+  const hotTextCorrectTarget =
+    questionType === "hot_text"
+      ? extractHotTextCorrectTarget(questionJson)
+      : {
+          key: null,
+          text: null,
+        };
   return {
-    question_type: extractQuestionType(
-      generatedResult,
-      questionJson,
-      requestedQuestionType,
-    ),
+    teks_standard: requestedTeksStandard,
+
+    question_type: questionType,
 
     dok_level: extractDokLevel(
       generatedResult,
@@ -304,47 +315,48 @@ function buildDraftQuestion({
       requestedDokLevel,
     ),
 
-    skill_focus: extractStringMetadata(
-      generatedResult,
-      questionJson,
-      ["skill_focus", "skillFocus"],
-    ),
+    skill_focus: extractStringMetadata(generatedResult, questionJson, [
+      "skill_focus",
+      "skillFocus",
+    ]),
 
-    assessment_move: extractStringMetadata(
-      generatedResult,
-      questionJson,
-      ["assessment_move", "assessmentMove"],
-    ),
+    assessment_move: extractStringMetadata(generatedResult, questionJson, [
+      "assessment_move",
+      "assessmentMove",
+    ]),
 
-    dramatic_function: extractStringMetadata(
-      generatedResult,
-      questionJson,
-      ["dramatic_function", "dramaticFunction"],
-    ),
+    dramatic_function: extractStringMetadata(generatedResult, questionJson, [
+      "dramatic_function",
+      "dramaticFunction",
+    ]),
 
-    target_scene: extractStringMetadata(
-      generatedResult,
-      questionJson,
-      ["target_scene", "targetScene"],
-    ),
+    target_scene: extractStringMetadata(generatedResult, questionJson, [
+      "target_scene",
+      "targetScene",
+    ]),
 
-    correct_target_text: extractStringMetadata(
-      generatedResult,
-      questionJson,
-      ["correct_target_text", "correctTargetText"],
-    ),
+    correct_target_text:
+      extractStringMetadata(generatedResult, questionJson, [
+        "correct_target_text",
+        "correctTargetText",
+      ]) || hotTextCorrectTarget.text,
 
-    correct_target_key: extractStringMetadata(
-      generatedResult,
-      questionJson,
-      ["correct_target_key", "correctTargetKey"],
-    ),
+    correct_target_key:
+      extractStringMetadata(generatedResult, questionJson, [
+        "correct_target_key",
+        "correctTargetKey",
+      ]) || hotTextCorrectTarget.key,
 
-    question_json: questionJson,
+    question_json: {
+      ...questionJson,
 
-    // AI-generated content always begins as an inactive draft.
+      teks_standard: requestedTeksStandard,
+    },
+
     review_status: "draft",
+
     is_active: false,
+
     times_used: 0,
   };
 }
@@ -364,21 +376,85 @@ function buildDraftQuestion({
  * @param {Array<object>} generatedQuestions
  * @returns {Array<object>}
  */
-function buildPriorBankQuestionSummary(
-  generatedQuestions,
-) {
-  return generatedQuestions.map((question) => ({
-    question_type: question.question_type,
-    dok_level: question.dok_level,
-    skill_focus: question.skill_focus,
-    assessment_move: question.assessment_move,
-    dramatic_function:
-      question.dramatic_function,
-    target_scene: question.target_scene,
-    correct_target_key:
-      question.correct_target_key,
-    correct_target_text:
-      question.correct_target_text,
+function buildPriorBankQuestionSummary(generatedQuestions) {
+  return generatedQuestions.map((question) => {
+    const questionJson = isPlainObject(question?.question_json)
+      ? question.question_json
+      : {};
+
+    const correctAnswer = questionJson.correct_answer;
+
+    const answerOptions = Array.isArray(questionJson.answer_options)
+      ? questionJson.answer_options
+      : [];
+
+    const correctAnswerText =
+      typeof correctAnswer === "string"
+        ? (answerOptions.find((option) => option?.id === correctAnswer)?.text ??
+          null)
+        : null;
+
+    return {
+      question_type: question.question_type,
+
+      dok_level: question.dok_level,
+
+      skill_focus: question.skill_focus ?? questionJson.skill_focus ?? null,
+
+      assessment_move:
+        question.assessment_move ?? questionJson.assessment_move ?? null,
+
+      dramatic_function:
+        question.dramatic_function ?? questionJson.dramatic_function ?? null,
+
+      target_scene: question.target_scene ?? questionJson.target_scene ?? null,
+
+      stem: normalizeOptionalString(questionJson.stem),
+
+      correct_answer_text: normalizeOptionalString(correctAnswerText),
+
+      explanation: normalizeOptionalString(questionJson.explanation),
+
+      correct_target_key:
+        question.correct_target_key ?? questionJson.correct_target_key ?? null,
+
+      correct_target_text:
+        question.correct_target_text ??
+        questionJson.correct_target_text ??
+        null,
+    };
+  });
+}
+
+function normalizePriorBankQuestions(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter(isPlainObject).map((question) => ({
+    question_type:
+      normalizeOptionalString(question.question_type) ||
+      normalizeOptionalString(question.question_json?.question_type),
+
+    dok_level: [1, 2, 3].includes(
+      Number(question.dok_level ?? question.question_json?.dok_level),
+    )
+      ? Number(question.dok_level ?? question.question_json?.dok_level)
+      : null,
+
+    skill_focus: normalizeOptionalString(question.skill_focus),
+
+    assessment_move: normalizeOptionalString(question.assessment_move),
+
+    dramatic_function: normalizeOptionalString(question.dramatic_function),
+
+    target_scene: normalizeOptionalString(question.target_scene),
+
+    correct_target_key: normalizeOptionalString(question.correct_target_key),
+
+    correct_target_text: normalizeOptionalString(question.correct_target_text),
+
+    stem: normalizeOptionalString(question.question_json?.stem),
   }));
 }
 
@@ -387,12 +463,14 @@ function buildPriorBankQuestionSummary(
  *
  * @param {object} params
  * @returns {Promise<object>}
- * 
+ *
  */
 
 async function generateElaPassage({
   gradeLevel,
   teksStandard,
+  primaryTeks = null,
+  supportedTeks = [],
   passageFormat,
   contentFocus,
   contentFocusKey,
@@ -404,6 +482,9 @@ async function generateElaPassage({
 
     grade_level: gradeLevel,
     teks_standard: teksStandard,
+
+    primary_teks: primaryTeks ?? teksStandard,
+    supported_teks: supportedTeks,
 
     /*
      * These values satisfy the existing adaptive dispatcher contract.
@@ -421,8 +502,7 @@ async function generateElaPassage({
 
     stimulus: null,
 
-    generation_mode:
-      "question_bank_passage",
+    generation_mode: "question_bank_passage",
 
     admin_generation: true,
 
@@ -433,6 +513,8 @@ async function generateElaPassage({
 async function generateElaQuestion({
   gradeLevel,
   teksStandard,
+  primaryTeks = null,
+  supportedTeks = [],
   passageFormat,
   contentFocus,
   contentFocusKey,
@@ -441,33 +523,34 @@ async function generateElaQuestion({
   instruction,
   priorQuestions,
   generatorOptions,
-  title
+  title,
 }) {
   return adaptiveQuestionGenerator({
     subject: "ELA",
 
     grade_level: gradeLevel,
     teks_standard: teksStandard,
+        // Individual question TEKS
+    teks_standard: teksStandard,
 
-    question_type:
-      instruction.question_type,
+    // Whole package TEKS context
+    primary_teks: primaryTeks ?? teksStandard,
 
-    dok_level:
-      instruction.dok_level,
+    supported_teks: supportedTeks,
 
-    passage_format:
-      passageFormat,
+    question_type: instruction.question_type,
 
-    content_focus:
-      contentFocus,
+    dok_level: instruction.dok_level,
 
-    content_focus_key:
-      contentFocusKey,
+    passage_format: passageFormat,
 
-    testing_window:
-      testingWindow,
+    content_focus: contentFocus,
 
-    stimulus,
+    content_focus_key: contentFocusKey,
+
+    testing_window: testingWindow,
+
+    // stimulus,
 
     title,
     /*
@@ -476,22 +559,26 @@ async function generateElaQuestion({
      *
      * The existing generator may initially ignore them.
      */
-generation_mode: "question_bank_question",
-    admin_generation: true,
 
     /*
      * This supports future prompt-level repetition prevention.
      */
-    prior_bank_questions:
-      buildPriorBankQuestionSummary(priorQuestions),
+    ...generatorOptions,
 
+    generation_mode: "question_bank_question",
+
+    admin_generation: true,
+
+    stimulus,
+
+    prior_bank_questions: buildPriorBankQuestionSummary(priorQuestions),
     /*
      * Optional extra values from the dispatcher or future admin UI.
      *
      * Place these last so subject-specific administrative options can be
      * added without changing this file's function signature.
      */
-    ...generatorOptions,
+    // ...generatorOptions,
   });
 }
 
@@ -545,6 +632,11 @@ export async function generateElaPassageQuestionBankDraft({
   contentFocus = null,
   contentFocusKey = null,
 
+  primaryTeks = teksStandard,
+  supportedTeks = [],
+  passageFamily = null,
+  questionTeksPlan = [],
+
   title = null,
   skillTags = [],
   difficultyLevel = 2,
@@ -570,17 +662,93 @@ export async function generateElaPassageQuestionBankDraft({
     );
   }
 
+  const normalizedPrimaryTeks = String(
+    primaryTeks || teksStandard || "",
+  ).trim();
+
+  if (!normalizedPrimaryTeks) {
+    throw new Error("ELA bank generator requires a primary TEKS.");
+  }
+
+  const normalizedSupportedTeks = Array.isArray(supportedTeks)
+    ? [
+        ...new Set(
+          supportedTeks
+            .map((value) => String(value ?? "").trim())
+            .filter(Boolean),
+        ),
+      ]
+    : [];
+
+  const normalizedPassageFamily = normalizeOptionalString(passageFamily);
+
+  const normalizedQuestionTeksPlan = Array.isArray(questionTeksPlan)
+    ? questionTeksPlan
+        .map((row) => ({
+          teks_standard: String(row?.teks_standard ?? "").trim(),
+
+          count: Number(row?.count ?? 0),
+        }))
+        .filter(
+          (row) =>
+            row.teks_standard && Number.isInteger(row.count) && row.count > 0,
+        )
+    : [];
+
+  const expandedQuestionTeks = normalizedQuestionTeksPlan.flatMap((row) =>
+    Array.from(
+      {
+        length: row.count,
+      },
+      () => row.teks_standard,
+    ),
+  );
+
+  if (
+    expandedQuestionTeks.length > 0 &&
+    expandedQuestionTeks.length !== expandedQuestionPlan.length
+  ) {
+    throw new Error(
+      `ELA questionTeksPlan contains ${expandedQuestionTeks.length} questions, but expandedQuestionPlan contains ${expandedQuestionPlan.length}.`,
+    );
+  }
+
+  const existingStimulus = normalizeOptionalString(
+    generatorOptions?.existing_stimulus,
+  );
+
+  const existingPriorQuestions = normalizePriorBankQuestions(
+    generatorOptions?.prior_bank_questions,
+  );
+
   const generatedQuestions = [];
+
+  const generationPlan = expandedQuestionPlan.map((instruction, index) => ({
+    ...instruction,
+
+    teks_standard: expandedQuestionTeks[index] || normalizedPrimaryTeks,
+  }));
   /*
    * ------------------------------------------------------------
    * 1. Generate the reusable passage separately
    * ------------------------------------------------------------
    */
 
-  const generatedPassageResult =
-    await generateElaPassage({
+  let generatedPassageResult = null;
+
+  let sharedStimulus = existingStimulus;
+  console.log(
+  "[ELA BANK GENERATED PASSAGE]\n",
+  sharedStimulus,
+);
+
+  if (!sharedStimulus) {
+    generatedPassageResult = await generateElaPassage({
       gradeLevel,
-      teksStandard,
+      primaryTeks: normalizedPrimaryTeks,
+      supportedTeks: normalizedSupportedTeks,
+      teksStandard: normalizedPrimaryTeks,
+
       passageFormat,
       contentFocus,
       contentFocusKey,
@@ -588,62 +756,63 @@ export async function generateElaPassageQuestionBankDraft({
       generatorOptions,
     });
 
-  const sharedStimulus =
-    extractStimulus(
-      generatedPassageResult,
-    );
+    sharedStimulus = extractStimulus(generatedPassageResult);
+  }
+  console.log(
+  "[ELA BANK GENERATED PASSAGE]\n",
+  sharedStimulus,
+);
 
   if (!sharedStimulus) {
     throw new Error(
-      "ELA bank passage generator did not return a reusable passage.",
+      "ELA bank generator requires either an existing stimulus or a newly generated reusable passage.",
     );
   }
 
   const generatedPassageTitle =
     normalizeOptionalString(title) ||
-    extractGeneratedTitle(
-      generatedPassageResult,
-    ) ||
-    `${teksStandard} ${passageFormat} draft`;
-
+    extractGeneratedTitle(generatedPassageResult) ||
+    `${normalizedPrimaryTeks} ${passageFormat} draft`;
   /*
    * ------------------------------------------------------------
    * 2. Generate every question from the frozen passage
    * ------------------------------------------------------------
    */
 
-  for (
-    let index = 0;
-    index < expandedQuestionPlan.length;
-    index += 1
-  ) {
-    const instruction =
-      expandedQuestionPlan[index];
+  for (let index = 0; index < generationPlan.length; index += 1) {
+    const instruction = generationPlan[index];
 
-    const generatedResult =
-      await generateElaQuestion({
-        gradeLevel,
-        teksStandard,
-        passageFormat,
-        contentFocus,
-        contentFocusKey,
-        testingWindow,
-        title,
+    const questionTeksStandard =
+      instruction.teks_standard || normalizedPrimaryTeks;
 
-        stimulus: sharedStimulus,
+    const generatedResult = await generateElaQuestion({
+      gradeLevel,
 
-        instruction,
+      // The TEKS assigned to this individual question
+      teksStandard: questionTeksStandard,
 
-        priorQuestions:
-          generatedQuestions,
+      // The main TEKS for the full passage package
+      primaryTeks: normalizedPrimaryTeks,
 
-        generatorOptions,
-      });
+      // The other TEKS supported by the shared passage
+      supportedTeks: normalizedSupportedTeks,
 
-    const questionJson =
-      extractQuestionJson(
-        generatedResult,
-      );
+      passageFormat,
+      contentFocus,
+      contentFocusKey,
+      testingWindow,
+      title,
+
+      stimulus: sharedStimulus,
+
+      instruction,
+
+      priorQuestions: [...existingPriorQuestions, ...generatedQuestions],
+
+      generatorOptions,
+    });
+
+    const questionJson = extractQuestionJson(generatedResult);
 
     if (!questionJson) {
       throw new Error(
@@ -656,73 +825,74 @@ export async function generateElaPassageQuestionBankDraft({
         generatedResult,
         questionJson,
 
-        requestedQuestionType:
-          instruction.question_type,
+        requestedTeksStandard: questionTeksStandard,
 
-        requestedDokLevel:
-          instruction.dok_level,
+        requestedQuestionType: instruction.question_type,
+
+        requestedDokLevel: instruction.dok_level,
       }),
     );
   }
 
-  const normalizedSkillTags =
-    normalizeStringArray(skillTags);
+  const normalizedSkillTags = normalizeStringArray(skillTags);
 
   return {
     passage: {
       subject: "ELA",
       grade_level: gradeLevel,
-      teks_standard: teksStandard,
+      teks_standard: normalizedPrimaryTeks,
 
-      passage_format:
-        passageFormat,
+      passage_format: passageFormat,
 
-      content_focus_key:
-        normalizeOptionalString(
-          contentFocusKey,
-        ),
+      content_focus_key: normalizeOptionalString(contentFocusKey),
 
-      content_focus:
-        normalizeOptionalString(
-          contentFocus,
-        ),
+      content_focus: normalizeOptionalString(contentFocus),
 
-      title:
-        generatedPassageTitle,
+      title: generatedPassageTitle,
 
-      passage:
-        sharedStimulus,
+      passage: sharedStimulus,
 
-      skill_tags:
-        normalizedSkillTags,
+      skill_tags: normalizedSkillTags,
 
-      difficulty_level:
-        difficultyLevel,
+      difficulty_level: difficultyLevel,
 
       // Human review must occur before publishing and activation.
       is_active: false,
     },
 
-    questions:
-      generatedQuestions,
+    questions: generatedQuestions,
 
     generation: {
       subject: "ELA",
       grade_level: gradeLevel,
-      teks_standard: teksStandard,
+      teks_standard: normalizedPrimaryTeks,
+      primary_teks_standard: normalizedPrimaryTeks,
+
+      supported_teks: normalizedSupportedTeks,
+
+      passage_family: normalizedPassageFamily,
+
+      question_teks_plan: normalizedQuestionTeksPlan,
+
       passage_format: passageFormat,
 
-      question_plan:
-        questionPlan,
+      content_focus_key: normalizeOptionalString(contentFocusKey),
 
-      total_questions:
-        generatedQuestions.length,
+      content_focus: normalizeOptionalString(contentFocus),
 
-      shared_stimulus_reused:
-        true,
+      question_plan: questionPlan,
 
-      generated_as:
-        "question_bank_draft",
+      total_questions: generatedQuestions.length,
+
+      shared_stimulus_reused: true,
+
+      generated_as: existingStimulus
+        ? "question_bank_add_question"
+        : "question_bank_draft",
+
+      used_existing_stimulus: Boolean(existingStimulus),
+
+      prior_question_count: existingPriorQuestions.length,
     },
   };
 }
