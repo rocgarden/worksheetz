@@ -1,8 +1,9 @@
+//data/faq-Schema.js
 export const faqSchemaItems = [
   {
     question: "What do I get exactly?",
     answer:
-      "You get access to AI-powered tools that help you generate customized quizzes and worksheets. Depending on your plan, you can download PDFs, regenerate content, and access priority support. Starter Plan: 2 worksheet generations + 1 PDF download per month. Pro Plan: 10 worksheet generations + 5 PDF downloads per month.",
+      "You get access to tools that help you generate customized worksheets and practice materials. Depending on your plan, you can download PDFs, regenerate content, and access priority support. Starter Plan: 2 worksheet generations + 1 PDF download per month. Pro Plan: 10 worksheet generations + 5 PDF downloads per month.",
   },
   {
     question: "Can I get a refund?",
@@ -17,7 +18,7 @@ export const faqSchemaItems = [
   {
     question: "What happens if I reach my monthly limit?",
     answer:
-      "Once you reach your monthly limit for worksheet generations or PDF downloads, you’ll need to wait until your usage resets next month or upgrade to a higher plan.",
+      "Once you reach your monthly limit for worksheet generations or PDF downloads, you'll need to wait until your usage resets next month or upgrade to a higher plan.",
   },
   {
     question: "Do unused credits roll over?",
@@ -36,6 +37,6 @@ export const faqSchemaItems = [
   },
   {
     question: "I have another question",
-    answer: "Reach out to us by email and we’ll be happy to help.",
+    answer: "Reach out to us by email and we'll be happy to help.",
   },
 ];
