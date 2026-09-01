@@ -1,10 +1,8 @@
 const config = {
   // REQUIRED
-  appName: "TEKS Portfolio",
-  // REQUIRED: a short description of your app for SEO tags (can be overwritten)
+  appName: "Teks Portfolio",
   appDescription:
-    "TEKS Portfolio helps K–12 teachers create standards‑aligned worksheets for reading, grammar, math, and social studies. Classroom‑safe, no student data, and built for school districts.",
-  // REQUIRED (no https://, not trialing slash at the end, just the naked domain)
+    "Teks Portfolio helps Texas K-12 teachers track student growth with adaptive, TEKS-aligned assessments, plus standards-based worksheets for reading, grammar, and social studies. Built for school districts.",
   domainName: "teksportfolio.com",
   crisp: {
     // Crisp website ID. IF YOU DON'T USE CRISP: just remove this => Then add a support email in this config file (resend.supportEmail) otherwise customer support won't work.
@@ -23,23 +21,22 @@ const config = {
         // "price_1Sg8J5INKxz4XaqKUsGnItXQ", //-- testing id
         //  REQUIRED - Name of the plan, displayed on the pricing page
         name: "Starter",
-        // A friendly description of the plan, displayed on the pricing page. Tip: explain why this plan and not others
-        description: "Perfect for teachers getting started with AI worksheets.",
+        description:
+          "Perfect for teachers getting started with worksheet generation.",
         // The price you want to display, the one user will be charged on Stripe.
         price: 0 + "/mo",
         isFree: false,
-        // If you have an anchor price (i.e. $29) that you want to display crossed out, put it here. Otherwise, leave it empty
         // priceAnchor: 0,
         monthlyGenerations: 2,
         monthlyPdfs: 1,
         features: [
           {
-            name: "Access to advanced AI-powered UI models for smarter worksheet creation",
+            name: "Standards-aligned worksheet generation, matched to grade level",
           },
           {
-            name: "Generate quizzes tailored to specific subjects and grade levels",
+            name: "Generate practice tailored to specific subjects and grade levels",
           },
-          { name: "Download up to 1 custom PDFs per month" },
+          { name: "Download up to 1 custom PDF per month" },
           {
             name: "Regenerate worksheets up to 2 times for refinement and variation",
           },
@@ -55,7 +52,7 @@ const config = {
         priceId: "price_1Sct5VEZ6GaUMPgO7lXmcKjB", //--live id
         name: "Teacher Plus",
         description:
-          "Unlock enhanced AI capabilities and expanded worksheet generation limits for serious educators.",
+          "Unlock expanded worksheet generation limits for serious educators.",
         price: 5 + "/mo",
         isFree: false,
         priceAnchor: 9,
@@ -63,10 +60,10 @@ const config = {
         monthlyPdfs: 5,
         features: [
           {
-            name: "Access to advanced AI-powered UI models for smarter worksheet creation",
+            name: "Standards-aligned worksheet generation, matched to grade level",
           },
           {
-            name: "Generate quizzes tailored to specific subjects and grade levels",
+            name: "Generate practice tailored to specific subjects and grade levels",
           },
           { name: "Download up to 5 custom PDFs per month" },
           {
@@ -92,7 +89,7 @@ const config = {
     fromAdmin: `Teks Portfolio <support@support.teksportfolio.com>`,
     // Email shown to customer if need support. Leave empty if not needed => if empty, set up Crisp above, otherwise you won't be able to offer customer support."
     supportEmail: "hello@teksportfolio.com",
-    replyTo: "hello@teksportfolio.com", 
+    replyTo: "hello@teksportfolio.com",
   },
   email: {
     replyTo: "hello@teksportfolio.com",
