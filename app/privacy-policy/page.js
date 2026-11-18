@@ -1,3 +1,4 @@
+//app/privacy-policy/page.js
 import Link from "next/link";
 import { getSEOTags } from "@/libs/seo";
 import config from "@/config";
@@ -157,42 +158,80 @@ We do not knowingly collect personal data from children through the account crea
 We may revise this Privacy Policy from time to time.
 The latest version will always be available on our website.
 
-10. Google User Data
+10. Google User Data and Google OAuth Privacy Disclosure
 
-Our application supports sign-in using Google OAuth. When you choose to sign in with Google, we request access only to the following non-sensitive Google account information:
+Teks Portfolio uses Google OAuth to allow teachers and adult educators to securely sign in to their accounts.
 
-Data Accessed
-- Basic account information associated with your Google account, including:
-  - Your email address
-  - Your name
-  - Your profile picture
-- A unique Google account identifier used for authentication purposes
+Google Information We Collect
 
-These permissions correspond to the following Google OAuth scopes:
-- openid
-- https://www.googleapis.com/auth/userinfo.email
-- https://www.googleapis.com/auth/userinfo.profile
+When you choose to sign in using Google, Teks Portfolio may access the following information through Google Sign-In:
 
-Google Sign-In is available to teachers only. Students never use Google Sign-In and do not connect a Google account to the Service.
+Your Google account name.
+Your Google account email address.
+Your Google profile picture.
+Your unique Google account identifier.
 
-Data Usage
-We use this Google user data solely to:
-- Authenticate you and allow secure sign-in to your account
-- Create and manage your user account within Teks Portfolio
-- Display basic account information (such as your name or profile image) within the application
+Our application requests only the following OAuth scopes:
 
-We do not use Google user data for advertising, marketing, or profiling purposes.
+openid
+https://www.googleapis.com/auth/userinfo.email
+https://www.googleapis.com/auth/userinfo.profile
 
-Data Storage
-- We store only the minimum information necessary to operate your account (such as your email address, name, and profile image URL).
-- Google access tokens, if stored, are secured and used only to maintain your login session.
+Teks Portfolio does not request access to Gmail messages, Google Drive files, Google Calendar events, Google Contacts, or other Google account content through these scopes.
 
-Data Sharing
-- We do not sell, rent, or trade Google user data.
-- Google user data is not shared with third parties except as necessary to operate the Service (such as secure hosting or database providers), or if required by law.
+How We Use Google Information
 
-Data Deletion
-You may request deletion of your account and associated data at any time by contacting us at hello@teksportfolio.com. Upon deletion, any stored Google account information will be permanently removed.
+We use information received from Google exclusively for the following purposes:
+
+Authenticate your identity when you sign in.
+Create and maintain your Teks Portfolio account.
+Associate your Google identity with your existing account when applicable.
+Display your name, email address, and profile picture within the application.
+Maintain secure account access and prevent unauthorized account access.
+
+We do not use Google user information for advertising, selling personal information, targeted marketing, or building advertising profiles.
+
+How We Store Google Information
+
+Google account information necessary to operate your Teks Portfolio account may be stored in our application database.
+
+We apply reasonable security measures to protect this information, including encrypted connections (HTTPS), access controls, and security measures provided by our hosting and database providers.
+
+Google OAuth access tokens and authentication credentials are handled securely. We retain authentication tokens only when necessary for the authentication functionality implemented by our application.
+
+How We Share Google Information
+
+We do not sell, rent, or trade Google user data.
+
+Google user information is not shared with advertisers, marketing companies, or data brokers.
+
+Information may be processed by our hosting and database service providers only when necessary to operate, maintain, and secure Teks Portfolio. These providers are expected to protect the information they process.
+
+We disclose Google user information when required by applicable law or legal process.
+
+Data Retention and Deletion
+
+We retain Google account information only for as long as necessary to provide your Teks Portfolio account and associated services.
+
+You may request deletion of your account and associated personal information by contacting:
+
+hello@teksportfolio.com
+
+Upon processing an account deletion request, we will delete associated Google account information from our active application records, subject to applicable legal retention requirements.
+
+Google API Services Limited Use Disclosure
+
+Teks Portfolio's use and transfer of information received from Google APIs to any other application will adhere to the Google API Services User Data Policy, including the Limited Use requirements where applicable.
+
+We use Google user information only to provide the user-facing authentication and account functionality described in this Privacy Policy. We do not use Google user data for advertising, sell it to third parties, or use it for purposes unrelated to providing the application's functionality.
+
+Google Account Authorization
+
+By choosing Google Sign-In, you authorize Teks Portfolio to access the basic Google account information described in this section for the purposes explained above.
+
+You can manage or revoke Teks Portfolio's Google account access through your Google Account security settings.
+
+For questions about Google user data or privacy requests, contact hello@teksportfolio.com.
 
 11. Children's Internet Protection Act (CIPA)
 Teks Portfolio complies with the Children's Internet Protection Act by ensuring that no harmful or inappropriate content is accessible through the platform.
