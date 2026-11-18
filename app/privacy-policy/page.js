@@ -66,14 +66,27 @@ Analytics Data: from Google Analytics and hosting tools (e.g., Vercel).
 
 We may also record general device and browser information for site performance.
 
-Student Information (Adaptive Assessment & Portfolio only)
-If a teacher uses the adaptive assessment and portfolio features, a limited amount of information about students in that teacher's classroom is collected:
+Student Information (Adaptive Assessment & Portfolio)
 
-- Student first name, entered by the student when joining a session with a teacher-issued join code.
-- A student code, generated automatically by the platform and used in place of the student's name wherever possible in reports and internal records.
-- Assessment responses and performance data (such as which questions were answered correctly and time spent), used to track progress toward Texas standards.
+Teks Portfolio provides an adaptive assessment feature that allows teachers to create assessment sessions for students.
 
-Students do not create accounts, do not set a password, and are not asked for an email address, date of birth, or any other contact or identifying information. Only teachers can view, manage, or delete student records for their own classroom.
+The process works as follows:
+
+A teacher creates an assessment session through their authenticated teacher account.
+The platform generates a unique session ID or join code.
+The teacher shares the session ID with students so they can access the assigned assessment.
+Students enter the session ID and their first name to join the assessment session.
+
+When a student joins a session, Teks Portfolio collects the following limited information:
+
+First Name: Entered by the student when joining the teacher-created assessment session.
+Session ID: Used to associate the student with the correct teacher-created assessment session.
+Student Code: An identifier generated automatically by the platform to distinguish student records and reduce the use of student names in internal records and reports.
+Assessment Responses and Performance Data: Information such as answers, assessment results, and time spent completing questions, used to track progress toward educational standards.
+
+Students do not create accounts, establish passwords, or sign in using Google or other third-party authentication services. Students are not asked to provide email addresses, dates of birth, or other contact information.
+
+Teachers initiate and manage assessment sessions and are responsible for distributing session IDs to their students. Teachers can view, manage, and delete student records associated with their own classrooms.
 
 2. How We Use Your Information
 
@@ -95,24 +108,40 @@ Analyze traffic and improve performance.
 
 3. Data Storage and Security
 
-Data is stored securely using managed services (e.g., MongoDB, Supabase, or equivalent).
-We use SSL encryption and industry-standard measures to protect user information.
+Teks Portfolio uses Supabase as its primary database and authentication provider.
 
-However, no online system is 100% secure, and you use the Service at your own risk.
+Supabase is used to store and manage information necessary to operate the Service, including:
+
+Teacher account information, including names, email addresses, and authentication identifiers.
+Teacher account settings and application activity.
+Classroom records and student information entered or generated through the adaptive assessment feature.
+Student assessment responses, performance data, and portfolio progress records.
+Other information necessary to provide the application's features.
+
+Supabase Authentication manages user authentication and application sessions, including sessions established through Google Sign-In.
+
+We use security measures such as HTTPS encryption, authentication controls, database access restrictions, and security features provided by our infrastructure providers to protect stored information.
+
+Where supported by our providers and enabled in our configuration, data is also encrypted at rest.
+
+Access to stored information is restricted according to the permissions required to operate the Service.
+
+No internet-based storage system can guarantee absolute security.
 
 4. Sharing of Information
 
 We may share limited user data with:
+Supabase - Authentication, database storage, and account management
 
-Stripe – payment and billing processing
+Stripe – Payment processing and subscription billing
 
-Google Analytics – website performance metrics
+Google Analytics – Website traffic and performance analytics
 
-Zenvoice – invoice creation
+Zenvoice – Invoice creation and billing records
 
-Byedispute – fraud prevention
+Byedispute – Payment fraud prevention
 
-Hosting and database providers – infrastructure support
+Vercel – Website hosting and infrastructure
 
 We do not sell or trade personal data, including student data. Student information collected through the adaptive assessment feature is shared only with the hosting and database providers necessary to operate the Service, and is not sent to advertising, analytics, or marketing services.
 
@@ -129,6 +158,8 @@ Resolve disputes
 You can request deletion of your account and associated data at any time by contacting us.
 
 Student data (first name, student code, and assessment results) is retained only as long as the associated teacher account and classroom roster remain active. A teacher can remove an individual student from their roster at any time, which deletes that student's stored records. Deleting a teacher account also deletes all student data associated with that teacher's classrooms.
+
+When an account or student record is deleted, associated information is removed from active application records in accordance with our deletion procedures. Certain information may remain temporarily in encrypted backups, security logs, or records maintained to comply with legal obligations. Such information is retained only as necessary and is not used for ordinary application functionality.
 
 6. Cookies and Tracking
 
@@ -197,7 +228,19 @@ Google account information necessary to operate your Teks Portfolio account may 
 
 We apply reasonable security measures to protect this information, including encrypted connections (HTTPS), access controls, and security measures provided by our hosting and database providers.
 
-Google OAuth access tokens and authentication credentials are handled securely. We retain authentication tokens only when necessary for the authentication functionality implemented by our application.
+Authentication and Token Management
+
+Teks Portfolio uses Supabase Authentication to manage Google Sign-In.
+
+When a user chooses Google Sign-In, Google provides authentication information that is processed through Supabase Authentication to verify the user's identity and establish an authenticated session.
+
+Supabase manages the authentication session and associated session credentials used to maintain access to Teks Portfolio.
+
+Our application uses the authenticated user's Google account information to identify the user and associate the Google identity with their Teks Portfolio account.
+
+Google provider access and refresh tokens, if issued and retained by the authentication integration, are handled according to the Supabase Authentication configuration. They are not used to access Gmail, Google Drive, Google Calendar, or other Google services.
+
+Teks Portfolio does not independently use Google authentication credentials for advertising, marketing, or unrelated purposes.
 
 How We Share Google Information
 
@@ -221,9 +264,13 @@ Upon processing an account deletion request, we will delete associated Google ac
 
 Google API Services Limited Use Disclosure
 
-Teks Portfolio's use and transfer of information received from Google APIs to any other application will adhere to the Google API Services User Data Policy, including the Limited Use requirements where applicable.
+Teks Portfolio's use and transfer of information received from Google APIs to any other application will adhere to the Google API Services User Data Policy, including the Limited Use requirements.
 
-We use Google user information only to provide the user-facing authentication and account functionality described in this Privacy Policy. We do not use Google user data for advertising, sell it to third parties, or use it for purposes unrelated to providing the application's functionality.
+Specifically, Teks Portfolio's use of information received from Google APIs will comply with the requirements concerning limited use, including restrictions on transferring, using, or sharing Google user data except as permitted by the Google API Services User Data Policy.
+
+Google user data will only be accessed, used, and shared as necessary to provide the user-facing features and functionality described in this Privacy Policy, and will not be used for advertising, sold to third parties, or used for purposes unrelated to providing the Service.
+
+Google API Services User Data Policy: https://developers.google.com/terms/api-services-user-data-policy
 
 Google Account Authorization
 
@@ -237,19 +284,47 @@ For questions about Google user data or privacy requests, contact hello@teksport
 Teks Portfolio complies with the Children's Internet Protection Act by ensuring that no harmful or inappropriate content is accessible through the platform.
 Teks Portfolio does not provide access to social networking, messaging, or user-generated content. The worksheet generation feature is intended solely for educators, and no student accounts or student data are collected through it. The adaptive assessment feature collects only the minimal student information described in Section 1 (first name, an auto-generated student code, and assessment results), all under the direction and control of the student's teacher.
 
-12. FERPA Alignment
-Teks Portfolio is primarily a teacher-facing tool. Students do not create accounts or log in with credentials at any point.
+12. FERPA and Educational Information
 
-For the worksheet generation feature, we do not collect, store, or process any student personal information, student identifiers, student work, or student behavioral data.
+Teks Portfolio is primarily a teacher-facing educational tool. Teachers create and manage accounts, classrooms, and assessment sessions.
 
-For the adaptive assessment and portfolio feature, a limited amount of student information (first name, an auto-generated student code, and assessment results) is collected at the direction of the student's teacher for educational purposes, consistent with the "school official" exception under FERPA. This data is accessible only to the teacher who created the classroom, is not used for any purpose outside instruction and progress tracking, and is never sold, shared for advertising, or disclosed to third parties beyond the infrastructure providers described in Section 4.
+Students do not create accounts or authenticate using individual login credentials.
+
+For the worksheet generation feature, Teks Portfolio does not collect or store student personal information.
+
+For the adaptive assessment and portfolio feature, teachers initiate assessment sessions and generate unique session IDs or join codes. Teachers distribute these codes to students, who enter the session ID and their first name to participate.
+
+The platform collects limited student information, including first names, automatically generated student codes, assessment responses, and performance results.
+
+This information is processed solely to provide the educational assessment, track student progress, and generate reports for the teacher who created the session.
+
+Student information is accessible to authorized teachers associated with the relevant classroom and is not sold or used for advertising.
+
+Teks Portfolio is designed to support educational use consistent with applicable student privacy requirements. Schools and teachers are responsible for determining the appropriate authorization for student participation and use of the Service.
 
 13. Children's Online Privacy Protection Act (COPPA)
-Because middle school students may be under the age of 13, the adaptive assessment feature is designed to collect the minimum information necessary — a first name and an auto-generated student code — and only when a teacher has set up a classroom and issued a join code for that purpose. We do not collect student email addresses, dates of birth, or other contact information.
 
-We rely on the school/teacher's authorization to use the Service for a legitimate educational purpose, consistent with FTC guidance permitting schools and teachers to consent on behalf of parents when a service is used solely for education and not for commercial purposes such as advertising or marketing. Student information collected is used only to run the assessment and generate progress results for the teacher, and is never used for advertising or behavioral profiling.
+Teks Portfolio is designed for use by adult educators and does not provide independent student accounts.
 
-Teachers and schools may contact us at hello@teksportfolio.com to review, request deletion of, or ask questions about student data collected for their classroom.
+The adaptive assessment feature allows teachers to create assessment sessions and distribute unique session IDs or join codes to students.
+
+To participate, a student enters the session ID and their first name. The platform uses this information to associate the student with the teacher-created assessment session.
+
+We collect only the information reasonably necessary to provide the educational assessment functionality, including:
+
+Student first name.
+Automatically generated student code.
+Assessment responses and performance information.
+
+We do not require students to provide email addresses, passwords, dates of birth, or other contact information to participate.
+
+Student information is used exclusively to provide educational assessment functionality and generate progress information for the responsible teacher. It is not used for targeted advertising or behavioral advertising.
+
+Teks Portfolio does not knowingly collect additional personal information from children beyond what is described in this policy.
+
+Teachers and schools may contact us at hello@teksportfolio.com to request access to, correction of, or deletion of student information.
+
+Where required by applicable law, the appropriate school or parent authorization must be obtained before collecting personal information from children.
 
 14. Legal Basis for Processing
 We process personal data based on:
