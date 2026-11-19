@@ -13,6 +13,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import NoSubLibrarySection from "@/components/NoSubLibrarySection";
 import AdminPublishPanel from "@/components/AdminPublishPanel";
+import DeleteAccountSection from "@/components/DeleteAccountSection";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -308,6 +309,8 @@ export default async function DashboardPage({ searchParams }) {
             </div>
           </div>
         </div>
+        
+{!isAdmin && <DeleteAccountSection />}
 
         {isAdmin && (
           <div className="space-y-6">

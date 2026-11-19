@@ -109,3 +109,34 @@ export const findCheckoutSession = async (sessionId) => {
     return null;
   }
 };
+
+// Cancels every non-canceled subscription for a customer.
+// Used by account deletion so a deleted teacher is never billed again.
+// A customer that doesn't exist in Stripe has nothing to cancel, so that
+// case returns quietly. Any other Stripe error throws so the caller aborts.
+export const cancelAllSubscriptions = async (customerId) => {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+  let subscriptions;
+  try {
+    subscriptions = await stripe.subscriptions.list({
+      customer: customerId,
+      status: "all",
+      limit: 100,
+    });
+  } catch (err) {
+    if (err?.code === "resource_missing" && err?.param === "customer") {
+      console.warn(`[cancelAllSubscriptions] Customer ${customerId} not found in Stripe — nothing to cancel.`);
+      return;
+    }
+    throw err;
+  }
+
+  const toCancel = subscriptions.data.filter(
+    (sub) => !["canceled", "incomplete_expired"].includes(sub.status),
+  );
+
+  for (const sub of toCancel) {
+    await stripe.subscriptions.cancel(sub.id);
+  }
+};
