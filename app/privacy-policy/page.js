@@ -232,11 +232,11 @@ How We Use Google Information
 
 We use information received from Google exclusively for the following purposes:
 
-Authenticate your identity when you sign in.
-Create and maintain your Teks Portfolio account.
-Associate your Google identity with your existing account when applicable.
-Display your name, email address, and profile picture within the application.
-Maintain secure account access and prevent unauthorized account access.
+-Authenticate your identity when you sign in.
+-Create and maintain your Teks Portfolio account.
+-Associate your Google identity with your existing account when applicable.
+-Display your name, email address, and profile picture within the application.
+-Maintain secure account access and prevent unauthorized account access.
 
 We do not use Google user information for advertising, selling personal information, targeted marketing, or building advertising profiles.
 
