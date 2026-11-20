@@ -145,21 +145,39 @@ Vercel – Website hosting and infrastructure
 
 We do not sell or trade personal data, including student data. Student information collected through the adaptive assessment feature is shared only with the hosting and database providers necessary to operate the Service, and is not sent to advertising, analytics, or marketing services.
 
-5. Data Retention
+5. Data Retention and Deletion
 
-We retain teacher account data for as long as the account is active or as needed to:
+Teks Portfolio retains personal information only for as long as necessary to fulfill the purposes described in this Privacy Policy, provide and maintain the Service, comply with applicable legal obligations, resolve disputes, enforce our agreements, and protect the security of our platform.
 
-Provide the Service
+Teacher Account Information
 
-Comply with legal obligations
+We retain teacher account information, including names, email addresses, authentication information, and account activity, for as long as the teacher account remains active or as otherwise necessary to provide the Service and fulfill the purposes outlined in this Privacy Policy.
 
-Resolve disputes
+If a teacher requests account deletion, we will delete the associated personal information from our active application records, subject to any information we are legally required or permitted to retain.
 
-You can request deletion of your account and associated data at any time by contacting us.
+Student Information
 
-Student data (first name, student code, and assessment results) is retained only as long as the associated teacher account and classroom roster remain active. A teacher can remove an individual student from their roster at any time, which deletes that student's stored records. Deleting a teacher account also deletes all student data associated with that teacher's classrooms.
+Student information collected through the adaptive assessment and portfolio features, including first names, student codes, assessment responses, and performance records, is retained only for as long as necessary to provide the educational services associated with the teacher's account and classroom.
 
-When an account or student record is deleted, associated information is removed from active application records in accordance with our deletion procedures. Certain information may remain temporarily in encrypted backups, security logs, or records maintained to comply with legal obligations. Such information is retained only as necessary and is not used for ordinary application functionality.
+Teachers may delete individual student records or remove students from their classroom rosters at any time through the available platform features. When a teacher account is deleted, the student information associated with that teacher's classrooms is also deleted from our active application records.
+
+Data Deletion and Retention Periods
+
+We retain personal information for periods consistent with our business purposes and the purposes described in this Privacy Policy, unless a longer retention period is required or permitted by applicable law.
+
+When the retention period for a particular type of information expires, we will delete or securely destroy that information, or otherwise ensure that it is no longer identifiable, in accordance with our data deletion procedures.
+
+You may request the deletion of your personal information, including your teacher account and associated records, by contacting us at:
+
+**hello@teksportfolio.com**
+
+We will review and process deletion requests in accordance with applicable privacy laws.
+
+Backups and Legal Retention
+
+Following a deletion request, certain information may temporarily remain in encrypted backups, security logs, or records maintained to comply with legal obligations. Such information will be retained only for as long as necessary for those purposes and will not be used for ordinary application functionality.
+
+Once the applicable retention period expires, this information will be permanently deleted or securely destroyed in accordance with our retention and deletion procedures.
 
 6. Cookies and Tracking
 
